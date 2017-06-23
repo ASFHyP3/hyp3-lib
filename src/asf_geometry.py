@@ -5,7 +5,7 @@ import sys
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
-from osgeo.gdalconst import *
+from osgeo.gdalconst import GA_ReadOnly
 
 
 # Determine the boundary polygon of a GeoTIFF file
@@ -34,7 +34,7 @@ def geotiff2polygon(geotiff):
 
 
 def geotiff_overlap(firstFile, secondFile, type):
-  
+
   # Check map projections
   raster = gdal.Open(firstFile)
   proj = raster.GetProjection()
@@ -42,27 +42,27 @@ def geotiff_overlap(firstFile, secondFile, type):
   pixelSize = gt[1]
   raster = None
 
-  # Extract boundary polygons  
+  # Extract boundary polygons
   firstPolygon = geotiff2polygon(firstFile)
   secondPolygon = geotiff2polygon(secondFile)
-  
+
   if type == 'intersection':
     overlap = firstPolygon.Intersection(secondPolygon)
   elif type == 'union':
     overlap = firstPolygon.Union(secondPolygon)
-  
+
   return (firstPolygon, secondPolygon, overlap, proj, pixelSize)
 
 
 def overlap_indices(polygon, boundary, pixelSize):
-  
+
   polyEnv = polygon.GetEnvelope()
   boundEnv = boundary.GetEnvelope()
   xOff = int((boundEnv[0] - polyEnv[0]) / pixelSize)
   yOff = int((polyEnv[3] - boundEnv[3]) / pixelSize)
   xCount = int((boundEnv[1] - boundEnv[0]) / pixelSize)
   yCount = int((boundEnv[3] - boundEnv[2]) / pixelSize)
- 
+
   return (xOff, yOff, xCount, yCount)
 
 
