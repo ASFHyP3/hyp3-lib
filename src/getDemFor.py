@@ -35,57 +35,44 @@
 from lxml import etree
 import get_dem
 import os
+import math
 import argparse
-from getSubSwath import get_bounding_box
+from getSubSwath import get_bounding_box_file
+from execute import execute
+from osgeo import gdal
+import shutil
 
-def getDemFile(infile,utmflag):
-    mydir = "%s/annotation" %  infile
-    myxml = ""
-    name = ""
+def get_zone(lon_min,lon_max):
+    center_lon = (lon_min+lon_max)/2;
+    zf = (center_lon+180)/6+1
+    zone = math.floor(zf)
+    return zone
 
-    # Get corners from first and last swath
-    name = "001.xml"
-    for myfile in os.listdir(mydir):
-        if name in myfile:
-            myxml = "%s/annotation/%s" % (infile,myfile)
-    (lat1,lat2,lon1,lon2) = get_bounding_box(myxml)
-    lat1 = lat1 + 0.15;
-    lat2 = lat2 - 0.15;
-    lon1 = lon1 + 0.15;
-    lon2 = lon2 - 0.15;
+def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None):
+    lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)
+    if opentopoFlag:
+        cmd = "wget -O%s \"http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff\"" % (outfile,lon_min,lat_min,lon_max,lat_max)
+        execute(cmd)
+        if utmFlag:
+	    zone = get_zone(lon_min,lon_max) 
+	    if (lat_min+lat_max)/2 > 0:
+                proj = ('EPSG:326%02d' % int(zone))
+            else:
+                proj = ('EPSG:327%02d' % int(zone))
+            gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
+	    shutil.move("tmpdem.tif","%s" % outfile)
+    else:
+        get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag)
 
-    name = "003.xml"
-    for myfile in os.listdir(mydir):
-        if name in myfile:
-            myxml = "%s/annotation/%s" % (infile,myfile)
-    (lat3,lat4,lon3,lon4) = get_bounding_box(myxml)
-    lat3 = lat3 + 0.15;
-    lat4 = lat4 - 0.15;
-    lon3 = lon3 + 0.15;
-    lon4 = lon4 - 0.15;
-
-    lon_max = -180
-    lon_min = 180
-    lat_max = -90
-    lat_min = 90
-
-    lat_max = max(lat1,lat2,lat3,lat4)
-    lat_min = min(lat1,lat2,lat3,lat4)
-    lon_max = max(lon1,lon2,lon3,lon4)
-    lon_min = min(lon1,lon2,lon3,lon4)
-    
-    get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,"area_dem.tif",utmflag)
-
-    return("area_dem.tif")
+    return(outfile)
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Get a DEM file for a given sentinel1 SAFE file")
     parser.add_argument("SAFEfile",help="S1 SAFE file")
+    parser.add_argument("outfile",help="Name of output geotiff DEM file")
+    parser.add_argument("-o","--opentopo",action="store_true",help="Use opentopo instead of get_dem")
     parser.add_argument("-u","--utm",action="store_true",help="Make DEM file in UTM coordinates (defaults is GCS)")
     args = parser.parse_args()
 
-    outfile = getDemFile(args.SAFEfile,args.utm)
-    print "Wrote DEM file %s" % outfile
-    
-     
-     
+    outfile = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,utmFlag=args.utm)
+    print "Wrote DEM file %s" % outfile    
