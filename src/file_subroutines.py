@@ -20,15 +20,15 @@ def prepare_files(csvFile):
             os.remove(myfile)
 
 #
-# Given blank lists, return lists of file names and 
-# file dates, sorted by date.  Includes all SAFE
-# directories found in the current directory.
+# Return lists of file names and file dates, sorted by date.
+# Includes all SAFE directories found in the current directory.
 #
-#
-def get_file_list(filenames,filedates):
+def get_file_list():
 
     files = []
-    
+    filenames = []
+    filedates = []
+
     # Set up the list of files to process
     i = 0
     for myfile in os.listdir("."):
@@ -45,3 +45,5 @@ def get_file_list(filenames,filedates):
     for i in range(len(files)): 
         filenames.append(files[i][0])
         filedates.append(files[i][1])
+
+    return(filenames,filedates)
