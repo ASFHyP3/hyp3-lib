@@ -1,6 +1,4 @@
-#!/opt/local/bin/python2.7
-#!/System/Library/Frameworks/Python.framework/Versions/2.5/bin/python
-
+#!/usr/bin/env python
 ###############################################################################
 # saa_func_lib.py 
 #
