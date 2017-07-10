@@ -105,7 +105,7 @@ def read_gdal_file_byscanline(filehandle,xsize,ysize,xoff,yoff,band=1):
 
 def read_gdal_file_geo(filehandle,band=1):
         geotransform = filehandle.GetGeoTransform()
-	geoproj = filehandle.GetProjection()
+        geoproj = filehandle.GetProjection()
         return filehandle.RasterXSize,filehandle.RasterYSize,geotransform,geoproj
 
 
@@ -219,7 +219,7 @@ def write_gdal_file_rgb(filename,geotransform,geoproj,b1,b2,b3,metadata=None):
         dst_datatype = gdal.GDT_Byte
         dst_ds = driver.Create(filename,y,x,3,dst_datatype,options)
         dst_ds.SetGeoTransform(geotransform)
-    	dst_ds.SetProjection(geoproj)
+        dst_ds.SetProjection(geoproj)
         if metadata is not None:
             dst_ds.SetMetadata(metadata)
         dst_ds.GetRasterBand(1).WriteArray(b1)
@@ -237,7 +237,7 @@ def write_gdal_file_rgba(filename,geotransform,geoproj,b1,b2,b3,b4):
         dst_datatype = gdal.GDT_Byte
         dst_ds = driver.Create(filename,y,x,4,dst_datatype,options)
         dst_ds.SetGeoTransform(geotransform)
-    	dst_ds.SetProjection(geoproj)
+        dst_ds.SetProjection(geoproj)
         dst_ds.GetRasterBand(1).WriteArray(b1)
         dst_ds.GetRasterBand(2).WriteArray(b2)
         dst_ds.GetRasterBand(3).WriteArray(b3)
