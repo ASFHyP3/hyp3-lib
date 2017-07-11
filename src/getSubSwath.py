@@ -31,6 +31,36 @@ from osgeo import ogr
 import glob
 from lxml import etree
 
+def get_bounding_box_file(safeFile):
+    mydir = "%s/annotation" %  safeFile
+    myxml = ""
+    name = ""
+
+    # Get corners from first and last swath
+    name = "001.xml"
+    for myfile in os.listdir(mydir):
+        if name in myfile:      
+            myxml = "%s/annotation/%s" % (safeFile,myfile)
+    (lat1,lat2,lon1,lon2) = get_bounding_box(myxml)
+    name = "003.xml"
+    for myfile in os.listdir(mydir):
+        if name in myfile:      
+            myxml = "%s/annotation/%s" % (safeFile,myfile)
+    (lat3,lat4,lon3,lon4) = get_bounding_box(myxml)
+
+    lat_max = max(lat1,lat2,lat3,lat4)
+    lat_min = min(lat1,lat2,lat3,lat4)
+    lon_max = max(lon1,lon2,lon3,lon4)
+    lon_min = min(lon1,lon2,lon3,lon4)
+
+    lat_max = lat_max + 0.15;
+    lat_min = lat_min - 0.15;
+    lon_max = lon_max + 0.15;
+    lon_min = lon_min - 0.15;
+    
+    return lat_max,lat_min,lon_max,lon_min
+
+
 def get_bounding_box(myxml):
     lon_max = -180
     lon_min = 180
