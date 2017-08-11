@@ -16,7 +16,7 @@ class FileException(Exception):
   """Could not download orbit file"""
 
 
-def getPageContents(url):
+def getPageContents(url, verify):
     hostname = urlparse(url).hostname
     session = requests.Session()
     session.mount(hostname, HTTPAdapter(max_retries=10))
@@ -61,8 +61,8 @@ def getOrbFile(s1Granule):
         files = getPageContents(url, True)
         orb = findOrbFile(plat,st,files)
     if orb == '':
-        error = ('Could not find orbit file on ASF website')
-	      raise FileException(error)
+        error = 'Could not find orbit file on ASF website'
+        raise FileException(error)
     return url+orb,orb
 
 
@@ -83,10 +83,8 @@ def getOrbitFileESA(dataFile):
   start_time = date - timedelta(days=1)
   url = precise+'?validity_start_time='+start_time.strftime('%Y-%m-%d')
   files = getPageContents(url, False)
-  print files
   if len(files) > 0:
     orbitFile = findOrbFile(plat, st, files)
-    print orbitFile
     url = precise+orbitFile
   else:
     start_time = date
@@ -100,7 +98,7 @@ def getOrbitFileESA(dataFile):
           url = restituted+orbitFile
           break;
   if len(orbitFile) == 0:
-    error = ('Could not find orbit file on ESA website')
+    error = 'Could not find orbit file on ESA website'
     raise FileException(error)
 
   return url, orbitFile
@@ -124,6 +122,9 @@ def downloadSentinelOrbitFile(granule, provider, directory):
     f = open(stateVecFile, 'w')
     f.write(request.text)
     f.close()
+    return stateVecFile
+  else:
+    return None
 
 
 if __name__ == "__main__":
@@ -141,4 +142,3 @@ if __name__ == "__main__":
         print orburl
         cmd = 'wget ' + orburl
         os.system(cmd)
-
