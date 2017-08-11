@@ -122,7 +122,9 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
   outRasterSRS.ImportFromWkt(inRaster.GetProjectionRef())
   outRaster.SetProjection(outRasterSRS.ExportToWkt())
   for i in range(numBands):
-    noDataValue = inRaster.GetRasterBand(i+1).GetNoDataValue()
+    noDataValueActual = inRaster.GetRasterBand(i+1).GetNoDataValue()
+    noDataValue = noDataValueActual
+    if noDataValueActual is None: noDataValue = 0
     inRasterData = np.array(inRaster.GetRasterBand(i+1).ReadAsArray())
     outRasterData = inRasterData[startY:endY, startX:endX]
     for y in range(rows):
@@ -132,7 +134,8 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
         if not point_within_polygon(pointX, pointY, intersection):
           outRasterData[y, x] = noDataValue
     outBand = outRaster.GetRasterBand(i+1)
-    outBand.SetNoDataValue(noDataValue)
+    if noDataValueActual is not None:
+        outBand.SetNoDataValue(noDataValue)
     outBand.WriteArray(outRasterData)
   outBand.FlushCache()
 
