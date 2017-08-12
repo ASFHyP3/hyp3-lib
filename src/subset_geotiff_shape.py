@@ -90,8 +90,7 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
 
   # Intersect polygons and determine subset parameters
   intersection = rasterPolygon.Intersection(vectorMultipolygon)
-  print intersection
-  if intersection.GetGeometryCount() == 0:
+  if intersection is None or intersection.GetGeometryCount() == 0:
     print('Image does not intersect with vector AOI')
     sys.exit(1)
   envelope = intersection.GetEnvelope()
@@ -115,7 +114,7 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
   # Write output GeoTIFF with subsetted image
   driver = gdal.GetDriverByName('GTiff')
   numBands = inRaster.RasterCount
-  outRaster = driver.Create(outGeoTIFF, cols, rows, 1, dataType,
+  outRaster = driver.Create(outGeoTIFF, cols, rows, numBands, dataType,
     ['COMPRESS=LZW'])
   outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
   outRasterSRS = osr.SpatialReference()
