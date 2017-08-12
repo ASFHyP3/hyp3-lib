@@ -8,7 +8,7 @@ import datetime
 import logging
 import numpy as np
 from osgeo import gdal, ogr, osr
-
+import shutil
 
 def point_within_polygon(x, y, polygon):
 
@@ -92,7 +92,9 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
   intersection = rasterPolygon.Intersection(vectorMultipolygon)
   if intersection is None or intersection.GetGeometryCount() == 0:
     print('Image does not intersect with vector AOI')
-    sys.exit(1)
+    shutil.copy(inGeoTIFF,outGeoTIFF)
+    return
+
   envelope = intersection.GetEnvelope()
   minX = envelope[0]
   minY = envelope[2]
