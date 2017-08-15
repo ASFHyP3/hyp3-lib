@@ -11,7 +11,7 @@ from osgeo import gdal, ogr, osr
 
 
 def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
-  teal=False, amp=False):
+  teal=False, amp=False, float=False):
 
   # Suppress GDAL warnings
   gdal.UseExceptions()
@@ -84,7 +84,12 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
 
   # Write output GeoTIFF
   driver = gdal.GetDriverByName('GTiff')
-  outRaster = driver.Create(geotiff, cols, rows, 3, gdal.GDT_Byte, ['COMPRESS=LZW'])
+  if float == True:
+    outRaster = driver.Create(geotiff, cols, rows, 3, gdal.GDT_Float32,
+      ['COMPRESS=LZW'])
+  else:
+    outRaster = driver.Create(geotiff, cols, rows, 3, gdal.GDT_Byte,
+      ['COMPRESS=LZW'])
   outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
   outRasterSRS = osr.SpatialReference()
   outRasterSRS.ImportFromWkt(fullpol.GetProjectionRef())
@@ -94,17 +99,26 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
 
   print('Calculate red channel and save in GeoTIFF')
   outBand = outRaster.GetRasterBand(1)
-  red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)*255
+  if float == True:
+    red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)
+  else:
+    red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)*255
   outBand.WriteArray(red)
   red = None
   print('Calculate green channel and save in GeoTIFF')
   outBand = outRaster.GetRasterBand(2)
-  green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)*255
+  if float == True:
+    green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)
+  else:
+    green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)*255
   outBand.WriteArray(green)
   green = None
   print('Calculate blue channel and save in GeoTIFF')
   outBand = outRaster.GetRasterBand(3)
-  blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)*255
+  if float == True:
+    blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)
+  else:
+    blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)*255
   outBand.WriteArray(blue)
   blue = None
   xp = None
@@ -127,10 +141,11 @@ if __name__ == '__main__':
   parser.add_argument('-cleanup', action='store_true', help='clean up artifacts in powerscale images')
   parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
   parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
+  parser.add_argument('-float', action='store_true', help='save as floating point')
   if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
   args = parser.parse_args()
 
   rtc2color(args.fullpol, args.crosspol, args.threshold, args.geotiff,
-    args.cleanup, args.teal, args.amp)
+    args.cleanup, args.teal, args.amp, args.float)
