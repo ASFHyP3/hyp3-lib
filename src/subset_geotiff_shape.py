@@ -8,13 +8,34 @@ import datetime
 import logging
 import numpy as np
 from osgeo import gdal, ogr, osr
+import shutil
+
+def point_within_polygon(x, y, polygon):
+
+  ring = polygon.GetGeometryRef(0)
+  nPoints = ring.GetPointCount()
+  inside = False
+
+  p1x, p1y, p1z = ring.GetPoint(0)
+  for i in range(nPoints + 1):
+    p2x, p2y, p2z = ring.GetPoint(i % nPoints)
+    if y > min(p1y, p2y):
+      if y <= max(p1y, p2y):
+        if x <= max(p1x, p2x):
+          if p1y != p2y:
+            xInt = (y - p1y)*(p2x - p1x)/(p2y -p1y) + p1x
+          if p1x == p2x or x < xInt:
+            inside = not inside
+    p1x, p1y = p2x, p2y
+
+  return inside
 
 
 def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
-  
+
   print('Subsetting GeoTIFF file (%s) using an AOI from a shapefile (%s)' %
     (inGeoTIFF, shapeFile))
-  
+
   # Suppress GDAL warnings
   gdal.UseExceptions()
   gdal.PushErrorHandler('CPLQuietErrorHandler')
@@ -34,7 +55,7 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
   ulX = originX
   ulY = originY
   urX = originX + gt[1]*cols
-  urY = originY 
+  urY = originY
   lrX = originX + gt[1]*cols + gt[2]*rows
   lrY = originY + gt[4]*cols + gt[5]*rows
   llX = originX
@@ -66,15 +87,15 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
         geometry.Transform(coordTrans)
       vectorMultipolygon.AddGeometry(geometry)
   shape.Destroy()
-  
+
   # Intersect polygons and determine subset parameters
   intersection = rasterPolygon.Intersection(vectorMultipolygon)
-  print intersection
-  if intersection.GetGeometryCount() == 0:
+  if intersection is None or intersection.GetGeometryCount() == 0:
     print('Image does not intersect with vector AOI')
-    sys.exit(1)
+    shutil.copy(inGeoTIFF,outGeoTIFF)
+    return
+
   envelope = intersection.GetEnvelope()
-  print('envelope: {0}'.format(envelope))
   minX = envelope[0]
   minY = envelope[2]
   maxX = envelope[1]
@@ -94,20 +115,27 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
 
   # Write output GeoTIFF with subsetted image
   driver = gdal.GetDriverByName('GTiff')
-  outRaster = driver.Create(outGeoTIFF, cols, rows, 1, dataType, ['COMPRESS=LZW'])
+  numBands = inRaster.RasterCount
+  outRaster = driver.Create(outGeoTIFF, cols, rows, numBands, dataType,
+    ['COMPRESS=LZW'])
   outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
   outRasterSRS = osr.SpatialReference()
   outRasterSRS.ImportFromWkt(inRaster.GetProjectionRef())
   outRaster.SetProjection(outRasterSRS.ExportToWkt())
-  numBands = inRaster.RasterCount
-  pt = ogr.Geometry(ogr.wkbPoint)
-  pt.AssignSpatialReference(outRasterSRS)
   for i in range(numBands):
-    noDataValue = inRaster.GetRasterBand(i+1).GetNoDataValue()
+    noDataValueActual = inRaster.GetRasterBand(i+1).GetNoDataValue()
+    noDataValue = noDataValueActual
+    if noDataValueActual is None: noDataValue = 0
     inRasterData = np.array(inRaster.GetRasterBand(i+1).ReadAsArray())
     outRasterData = inRasterData[startY:endY, startX:endX]
+    for y in range(rows):
+      for x in range(cols):
+        pointX = originX + x*pixelWidth
+        pointY = originY + y*pixelHeight
+        if not point_within_polygon(pointX, pointY, intersection):
+          outRasterData[y, x] = noDataValue
     outBand = outRaster.GetRasterBand(i+1)
-    if noDataValue is not None:
+    if noDataValueActual is not None:
         outBand.SetNoDataValue(noDataValue)
     outBand.WriteArray(outRasterData)
   outBand.FlushCache()
