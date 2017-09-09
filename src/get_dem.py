@@ -162,7 +162,7 @@ def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
         print "DEM will be SRTMGL3"
 	anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south");
     else:
-        print "ERROR: Failed to find a DEM"
+        print "ERROR: Unable to find a DEM"
 	sys.exit()
 
 def anti_meridian_kludge(dem_file,dem_name,south):
