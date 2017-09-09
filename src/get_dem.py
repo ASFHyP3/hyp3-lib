@@ -89,7 +89,7 @@ def get_best_dem(lat_min,lat_max,lon_min,lon_max):
 
     if best_pct < .20:
         print "ERROR: Unable to find a DEM file for that area"
-	sys.exit()
+	sys.exit(1)
     print best_name
     print best_tile_list
     return(best_name, best_tile_list)
@@ -163,7 +163,7 @@ def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
 	anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south");
     else:
         print "ERROR: Unable to find a DEM"
-	sys.exit()
+	sys.exit(1)
 
 def anti_meridian_kludge(dem_file,dem_name,south):
 
@@ -186,7 +186,7 @@ def anti_meridian_kludge(dem_file,dem_name,south):
 	       
     if not os.path.isfile(dem_file):
         print "ERROR: unable to copy DEM file"
-	sys.exit()
+	sys.exit(1)
 
     # Now project lat/lon extents into UTM
     f = open("coords.txt","w")
@@ -238,11 +238,11 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     if lon_min < -180 or lon_max > 180:
         print "lon_min = %f; lon_max = %f" % (lon_min,lon_max)
         print "ERROR: Please using longitude in range (-180,180)"
-	sys.exit()
+	sys.exit(1)
    
     if lat_min < -90 or lat_max > 90:
         print "ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max)
-	sys.exit()
+	sys.exit(1)
 	
     if lon_min > lon_max:
         print "WARNING: minimum longitude > maximum longitude - swapping"
@@ -258,7 +258,7 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
             handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile)
 	else:
 	    print "ERROR: May only create a DEM file over anti-meridian using UTM coordinates"
-	sys.exit()
+	sys.exit(1)
 	
     # Figure out which DEM and get the tile list 
     (demname, tile_list) = get_best_dem(lat_min,lat_max,lon_min,lon_max)
