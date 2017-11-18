@@ -20,8 +20,31 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
   raster = gdal.Open(geotiff)
   bandCount = raster.RasterCount
 
+  # Downsample by multiples of pixel size to avoid interpolation issues
+  # (if needed)
+  orgExt = os.path.splitext(outFile)[1]
+  resampleFile = None
+  gt = raster.GetGeoTransform()
+  pixelWidth = gt[1]
+  pixelHeight = gt[5]
+  cols = raster.RasterXSize
+  rows = raster.RasterYSize
+  scale = cols / float(width)
+  while (scale > 4.0):
+    pixelWidth *= 2
+    pixelHeight *= 2
+    scale /= 2.0
+  if pixelWidth > gt[1]:
+    tmpExt = ('_resamp{0}.tif'.format(os.getpid()))
+    resampleFile = outFile.replace(orgExt, tmpExt)
+    gdal.Translate(resampleFile, raster, resampleAlg=GRIORA_Bilinear, 
+      xRes=pixelWidth, yRes=pixelWidth)
+    raster = gdal.Open(resampleFile)
+
+  # Resample image using cubic interpolation
+  # Save it in the various image formats
   if outFormat.upper() == 'GEOTIFF':
-    gdal.Translate(outFile, raster, resampleArg=GRIORA_Cubic, width=width)
+    gdal.Translate(outFile, raster, resampleAlg=GRIORA_Cubic, width=width)
   elif outFormat.upper() == 'JPEG' or outFormat.upper() == 'JPG':
     gdal.Translate(outFile, raster, format='JPEG', resampleAlg=GRIORA_Cubic,
       width=width)
@@ -35,8 +58,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
   elif outFormat.upper() == 'KML':
 
     # Reproject to geographic coordinates first
-    orgExt = os.path.splitext(outFile)[1]
-    tmpExt = ('_{0}.tif'.format(os.getpid()))
+    tmpExt = ('_geo{0}.tif'.format(os.getpid()))
     tmpFile = outFile.replace(orgExt, tmpExt)
     if bandCount == 1:
       gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
@@ -94,6 +116,9 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
     os.remove(pngFile)
     os.remove(pngFile + '.aux.xml')
     os.remove(kmlFile)
+
+  if resampleFile is not None:
+    os.remove(resampleFile)
 
 
 if __name__ == '__main__':
