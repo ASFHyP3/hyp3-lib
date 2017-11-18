@@ -4,12 +4,23 @@ import re
 import requests
 from lxml import html
 import os
-import datetime
+from datetime import datetime, timedelta
 import sys
 import argparse
+import requests
+from requests.adapters import HTTPAdapter
+from urlparse import urlparse
 
-def getPageContents(url):
-    page = requests.get(url)
+
+class FileException(Exception):
+  """Could not download orbit file"""
+
+
+def getPageContents(url, verify):
+    hostname = urlparse(url).hostname
+    session = requests.Session()
+    session.mount(hostname, HTTPAdapter(max_retries=10))
+    page = session.get(url, timeout=60, verify=verify)
     tree = html.fromstring(page.content)
     l = tree.xpath('//a[@href]/text()')
     ret = []
@@ -41,19 +52,80 @@ def getOrbFile(s1Granule):
     url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/'
     t = re.split('_+',s1Granule)
     st = t[4].replace('T','')
-    # Try url1
     url = url1
-    files = getPageContents(url)
+    files = getPageContents(url, True)
     plat = s1Granule[0:3]
     orb = findOrbFile(plat,st,files)
     if orb == '':
         url = url2
-        files = getPageContents(url)
+        files = getPageContents(url, True)
         orb = findOrbFile(plat,st,files)
     if orb == '':
-        print("ERROR: Orbit file not found!!!")
-	sys.exit(-1)
+        error = 'Could not find orbit file on ASF website'
+        raise FileException(error)
     return url+orb,orb
+
+
+def getOrbitFileESA(dataFile):
+
+  precise = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
+  restituted = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
+
+  year = os.path.basename(dataFile)[17:21]
+  month = os.path.basename(dataFile)[21:23]
+  day = os.path.basename(dataFile)[23:25]
+  date = datetime.strptime(year+'-'+month+'-'+day, '%Y-%m-%d')
+
+  t = re.split('_+',dataFile)
+  st = t[4].replace('T','')
+  plat = dataFile[0:3]
+
+  start_time = date - timedelta(days=1)
+  url = precise+'?validity_start_time='+start_time.strftime('%Y-%m-%d')
+  files = getPageContents(url, False)
+  if len(files) > 0:
+    orbitFile = findOrbFile(plat, st, files)
+    url = precise+orbitFile
+  else:
+    start_time = date
+    for page in range(1, 5):
+      url = ('{0}?page={1}&validity_start_time={2}'.format(restituted, page,
+        start_time.strftime('%Y-%m-%d')))
+      files = getPageContents(url, False)
+      if len(files) > 0:
+        orbitFile = findOrbFile(plat, st, files)
+        if len(orbitFile) > 0:
+          url = restituted+orbitFile
+          break;
+  if len(orbitFile) == 0:
+    error = 'Could not find orbit file on ESA website'
+    raise FileException(error)
+
+  return url, orbitFile
+
+
+def downloadSentinelOrbitFile(granule, provider, directory):
+
+  if provider.upper() == 'ASF':
+    urlOrb, fileNameOrb = getOrbFile(granule)
+    verify = True
+  elif provider.upper() == 'ESA':
+    urlOrb, fileNameOrb = getOrbitFileESA(granule)
+    verify = False
+
+  if len(fileNameOrb) > 0:
+    hostname = urlparse(urlOrb).hostname
+    session = requests.Session()
+    session.mount(hostname, HTTPAdapter(max_retries=10))
+    request = session.get(urlOrb, timeout=60, verify=verify)
+    stateVecFile = os.path.join(directory, fileNameOrb)
+    f = open(stateVecFile, 'w')
+    f.write(request.text)
+    f.close()
+    return stateVecFile
+  else:
+    return None
+
 
 if __name__ == "__main__":
 
@@ -70,4 +142,3 @@ if __name__ == "__main__":
         print orburl
         cmd = 'wget ' + orburl
         os.system(cmd)
-
