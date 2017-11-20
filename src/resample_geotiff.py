@@ -12,6 +12,12 @@ import zipfile
 
 def resample_geotiff(geotiff, width, outFormat, outFile):
 
+  # Check output format
+  formats = ['GEOTIFF', 'JPEG', 'JPG', 'PNG', 'KML']
+  if outFormat.upper() not in formats:
+    print('Unkown output format ({0})!'.format(outFormat.upper()))
+    sys.exit(1)
+
   # Suppress GDAL warnings
   gdal.UseExceptions()
   gdal.PushErrorHandler('CPLQuietErrorHandler')
@@ -19,6 +25,8 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
   # Extract information from GeoTIFF
   raster = gdal.Open(geotiff)
   bandCount = raster.RasterCount
+  band = raster.GetRasterBand(1)
+  colorTable = band.GetColorTable()
 
   # Downsample by multiples of pixel size to avoid interpolation issues
   # (if needed)
@@ -37,7 +45,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
   if pixelWidth > gt[1]:
     tmpExt = ('_resamp{0}.tif'.format(os.getpid()))
     resampleFile = outFile.replace(orgExt, tmpExt)
-    gdal.Translate(resampleFile, raster, resampleAlg=GRIORA_Bilinear, 
+    gdal.Translate(resampleFile, raster, resampleAlg=GRIORA_Bilinear,
       xRes=pixelWidth, yRes=pixelWidth)
     raster = gdal.Open(resampleFile)
 
@@ -46,8 +54,12 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
   if outFormat.upper() == 'GEOTIFF':
     gdal.Translate(outFile, raster, resampleAlg=GRIORA_Cubic, width=width)
   elif outFormat.upper() == 'JPEG' or outFormat.upper() == 'JPG':
-    gdal.Translate(outFile, raster, format='JPEG', resampleAlg=GRIORA_Cubic,
-      width=width)
+    if colorTable == None:
+      gdal.Translate(outFile, raster, format='JPEG', resampleAlg=GRIORA_Cubic,
+        width=width)
+    else:
+      gdal.Translate(outFile, raster, format='JPEG', resampleAlg=GRIORA_Cubic,
+        width=width, rgbExpand='RGB')
   elif outFormat.upper() == 'PNG':
     if bandCount == 1:
       gdal.Translate(outFile, raster, format='PNG', resampleAlg=GRIORA_Cubic,
@@ -60,9 +72,18 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
     # Reproject to geographic coordinates first
     tmpExt = ('_geo{0}.tif'.format(os.getpid()))
     tmpFile = outFile.replace(orgExt, tmpExt)
+    rgbFile = None
     if bandCount == 1:
-      gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
-        srcNodata='0', dstSRS='EPSG:4326', dstAlpha=True)
+      if colorTable == None:
+        gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
+          srcNodata='0', dstSRS='EPSG:4326', dstAlpha=True)
+      else:
+        rgbExt = ('_rgb{0}.tif'.format(os.getpid()))
+        rgbFile = outFile.replace(orgExt, rgbExt)
+        gdal.Translate(rgbFile, raster, rgbExpand='RGB')
+        raster = gdal.Open(rgbFile)
+        gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
+          srcNodata='0', dstSRS='EPSG:4326', dstAlpha=True)
     elif bandCount == 3:
       gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
         srcNodata='0 0 0', dstSRS='EPSG:4326', dstAlpha=True)
@@ -116,6 +137,8 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
     os.remove(pngFile)
     os.remove(pngFile + '.aux.xml')
     os.remove(kmlFile)
+    if rgbFile is not None:
+      os.remove(rgbFile)
 
   if resampleFile is not None:
     os.remove(resampleFile)
