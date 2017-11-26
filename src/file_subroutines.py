@@ -34,7 +34,7 @@ def get_file_list():
     for myfile in os.listdir("."):
         if ".SAFE" in myfile and os.path.isdir(myfile):
             t = re.split('_+',myfile)
-            m = [myfile,t[4][0:8]]
+            m = [myfile,t[4][0:15]]
             files.append(m)
             i = i+1
 	
