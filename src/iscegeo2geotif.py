@@ -55,6 +55,7 @@ def makeKMZ(infile,outfile):
     kmzfile = outfile + ".kmz"
     pngfile = infile + ".png"
     outpng = outfile + ".png"
+    lrgfile = outfile + "_large.png"
     
     # Create the colorized kml file and png image
     cmd = "mdx.py {0} -kml {1}".format(infile,kmlfile)
@@ -64,8 +65,11 @@ def makeKMZ(infile,outfile):
     fixKmlPath(kmlfile)
 
     # scale the PNG image to browse size
-    gdal.Translate("temp.png",pngfile,format="PNG",width=0,height=1024)
+    gdal.Translate("temp.png",pngfile,format="PNG",width=1024,height=0)
+    gdal.Translate("tmpl.png",pngfile,format="PNG",width=2048,height=0)
+    
     shutil.move("temp.png",pngfile)
+    shutil.move("tmpl.png",lrgfile)
 
     # finally, zip the kmz up
     with zipfile.ZipFile(kmzfile,'w') as myzip:

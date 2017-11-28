@@ -114,7 +114,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
     kml = et.Element('kml', nsmap=ns)
     overlay = et.SubElement(kml, 'GroundOverlay')
     et.SubElement(overlay, 'name').text = \
-      geotiff.replace('.tif', '') + ' overlay'
+      os.path.basename(kmlFile).replace('.kml', '') + ' overlay'
     icon = et.SubElement(overlay, 'Icon')
     et.SubElement(icon, 'href').text = pngFile
     et.SubElement(icon, 'viewBoundScale').text = '0.75'

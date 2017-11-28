@@ -31,9 +31,12 @@ import os
 import sys
 import shutil
 import math
+import glob
 from osgeo import gdal
 import argparse
 import commands
+import dem2isce
+import saa_func_lib as saa
 
 def get_best_dem(lat_min,lat_max,lon_min,lon_max):
 
@@ -86,7 +89,7 @@ def get_best_dem(lat_min,lat_max,lon_min,lon_max):
 
     if best_pct < .20:
         print "ERROR: Unable to find a DEM file for that area"
-	sys.exit()
+	sys.exit(1)
     print best_name
     print best_tile_list
     return(best_name, best_tile_list)
@@ -159,8 +162,8 @@ def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
         print "DEM will be SRTMGL3"
 	anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south");
     else:
-        print "ERROR: Failed to find a DEM"
-	sys.exit()
+        print "ERROR: Unable to find a DEM"
+	sys.exit(1)
 
 def anti_meridian_kludge(dem_file,dem_name,south):
 
@@ -183,7 +186,7 @@ def anti_meridian_kludge(dem_file,dem_name,south):
 	       
     if not os.path.isfile(dem_file):
         print "ERROR: unable to copy DEM file"
-	sys.exit()
+	sys.exit(1)
 
     # Now project lat/lon extents into UTM
     f = open("coords.txt","w")
@@ -214,7 +217,14 @@ def anti_meridian_kludge(dem_file,dem_name,south):
     bounds = [e_min,n_min,e_max,n_max]
     print "Creating output file %s" % outfile
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
-    
+
+# GET DEM file and convert into ISCE format
+def get_ISCE_dem(west,south,east,north,demName,demXMLName):
+        get_dem(west,south,east,north,"temp_dem.tif",False)
+        gdal.Translate(demName,"temp_dem.tif",format="ENVI")
+        ext = os.path.splitext(demName)[1]
+        hdrName = demName.replace(ext,".hdr")
+        dem2isce.dem2isce(demName,hdrName,demXMLName)
 
 def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
 
@@ -228,11 +238,11 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     if lon_min < -180 or lon_max > 180:
         print "lon_min = %f; lon_max = %f" % (lon_min,lon_max)
         print "ERROR: Please using longitude in range (-180,180)"
-	sys.exit()
+	sys.exit(1)
    
     if lat_min < -90 or lat_max > 90:
         print "ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max)
-	sys.exit()
+	sys.exit(1)
 	
     if lon_min > lon_max:
         print "WARNING: minimum longitude > maximum longitude - swapping"
@@ -248,7 +258,7 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
             handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile)
 	else:
 	    print "ERROR: May only create a DEM file over anti-meridian using UTM coordinates"
-	sys.exit()
+	sys.exit(1)
 	
     # Figure out which DEM and get the tile list 
     (demname, tile_list) = get_best_dem(lat_min,lat_max,lon_min,lon_max)
@@ -271,6 +281,7 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
         proj = ('EPSG:327%02d' % int(zone))
 	
     tmpdem = "tempdem.tif"
+    tmpdem2 = "tempdem2.tif"
     tmputm = "temputm.tif"
     if os.path.isfile(tmpdem): 
         print "Removing old file tmpdem"
@@ -293,6 +304,27 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     
     print "Creating initial raster file"	
     gdal.Warp(tmpdem,"temp.vrt",xRes=gcssize,yRes=gcssize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+    
+    # If DEM is from NED collection, then it will have a NAD83 ellipse - need to convert to WGS84
+    # Also, need to convert from pixel as area to pixel as point
+    if "NED" in demname:
+        print "Converting to WGS84"
+        gdal.Warp("temp_dem_wgs84.tif",tmpdem, dstSRS="EPSG:4326")
+        print "Converting to pixel as point"
+        x1,y1,t1,p1,data = saa.read_gdal_file(saa.open_gdal_file("temp_dem_wgs84.tif"))
+        lon = t1[0]
+        resx = t1[1]
+        rotx = t1[2]
+        lat = t1[3]
+        roty = t1[4]
+        resy = t1[5]
+        lon = lon + resx/2.0
+        lat = lat + resy/2.0
+        t1 = [lon, resx, rotx, lat, roty, resy]
+        saa.write_gdal_file_float(tmpdem,t1,p1,data)
+    
+    gdal.Translate(tmpdem2,tmpdem,metadataOptions = ['AREA_OR_POINT=Point'])    
+    shutil.move(tmpdem2,tmpdem)
 
     if utmflag:
         print "Translating raster file to UTM coordinates"
