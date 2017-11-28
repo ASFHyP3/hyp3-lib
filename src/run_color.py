@@ -75,8 +75,7 @@ def run_color(inFile, threshold, teal=False):
   os.makedirs(fileSequence)
   productDir = os.path.abspath(fileSequence)
   geotiff = os.path.join(productDir, fileSequence + '.tif')
-  rtc2color(fullpolFile, crosspolFile, threshold, geotiff, teal=False,
-    amp=True)
+  rtc2color(fullpolFile, crosspolFile, threshold, geotiff, teal=False)
 
   # Generate KMZ file
   print('Generating KMZ file ...')
