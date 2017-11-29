@@ -50,11 +50,12 @@ def findOrbFile(plat,tm,lst):
 def getOrbFile(s1Granule):
     url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
     url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/'
-    t = re.split('_+',s1Granule)
+    Granule = os.path.basename(s1Granule)
+    t = re.split('_+',Granule)
     st = t[4].replace('T','')
     url = url1
     files = getPageContents(url, True)
-    plat = s1Granule[0:3]
+    plat = Granule[0:3]
     orb = findOrbFile(plat,st,files)
     if orb == '':
         url = url2
@@ -64,7 +65,6 @@ def getOrbFile(s1Granule):
         error = 'Could not find orbit file on ASF website'
         raise FileException(error)
     return url+orb,orb
-
 
 def getOrbitFileESA(dataFile):
 

@@ -65,8 +65,8 @@ def makeKMZ(infile,outfile):
     fixKmlPath(kmlfile)
 
     # scale the PNG image to browse size
-    gdal.Translate("temp.png",pngfile,format="PNG",width=1024,height=0)
-    gdal.Translate("tmpl.png",pngfile,format="PNG",width=2048,height=0)
+    gdal.Translate("temp.png",pngfile,format="PNG",width=0,height=1024)
+    gdal.Translate("tmpl.png",pngfile,format="PNG",width=0,height=2048)
     
     shutil.move("temp.png",pngfile)
     shutil.move("tmpl.png",lrgfile)
@@ -90,11 +90,9 @@ def convert_files(s1aFlag):
         if child.attrib['name'] == 'width':
             width_str = child[0].text
             width = int(width_str)
-            print "Image width %i" % width
         if child.attrib['name'] == 'length':
             length_str = child[0].text
 	    length = int(length_str)
-            print "Image length %i" % length
 
     fullAmp = np.zeros((length, width), dtype = np.float32)
     fullPhase = np.zeros((length, width), dtype = np.float32)
