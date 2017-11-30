@@ -6,10 +6,9 @@ import os
 import sys
 import time
 import datetime
-import shutil
+from glob import glob
 from osgeo import gdal, ogr, osr
 from asf_geometry import *
-from asf_utils import *
 from rtc2color import rtc2color
 from execute import execute
 
@@ -33,7 +32,7 @@ def check_pixelsize(preFullpol, postFullpol):
 
 
 # This function assumes that we are looking at UTM projected images
-def check_projection(tmpDir, preFullpol, preCrosspol, postFullpol, postCrosspol):
+def check_projection(dirName, preFullpol, preCrosspol, postFullpol, postCrosspol):
 
   pre = gdal.Open(preFullpol)
   gt = pre.GetGeoTransform()
@@ -67,12 +66,12 @@ def check_projection(tmpDir, preFullpol, preCrosspol, postFullpol, postCrosspol)
         proj = ('EPSG:326{0}'.format(preUtm))
       else:
         proj = ('EPSG:327{0}'.format(preUtm))
-      fullpol = os.path.join(tmpDir, 'postFullpol.tif')
+      fullpol = os.path.join(dirName, 'color_postFullpol.tif')
       cmd = ("gdalwarp -r bilinear -tr %f %f -t_srs %s %s %s" % \
         (pixelSize, pixelSize, proj, postFullpol, fullpol))
       execute(cmd)
       postFullpol = fullpol
-      crosspol = os.path.join(tmpDir, 'postCrosspol.tif')
+      crosspol = os.path.join(dirName, 'color_postCrosspol.tif')
       cmd = ("gdalwarp -r bilinear -tr %f %f -t_srs %s %s %s" % \
         (pixelSize, pixelSize, proj, postCrosspol, crosspol))
       execute(cmd)
@@ -83,11 +82,11 @@ def check_projection(tmpDir, preFullpol, preCrosspol, postFullpol, postCrosspol)
         proj = ('EPSG:326{0}'.format(postUtm))
       else:
         proj = ('EPSG:327{0}'.format(postUtm))
-      fullpol = os.path.join(tmpDir, 'preFullpol.tif')
+      fullpol = os.path.join(dirName, 'color_preFullpol.tif')
       execute("gdalwarp -r bilinear -tr %f %f -t_srs %s %s %s" % \
         (pixelSize, pixelSize, proj, preFullpol, fullpol))
       preFullpol = fullpol
-      crosspol = os.path.join(tmpDir, 'preCrosspol.tif')
+      crosspol = os.path.join(dirName, 'color_preCrosspol.tif')
       execute("gdalwarp -r bilinear -tr %f %f -t_srs %s %s %s" % \
         (pixelSize, pixelSize, proj, preCrosspol, crosspol))
       preCrosspol = crosspol
@@ -120,14 +119,13 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
 
   # Generating a temporary directory
   dirName = os.path.dirname(os.path.abspath(geotiff))
-  tmpDir = make_tmp_dir(dirName, 'color')
 
   # Check pixel sizes of pre- and post-event image
   check_pixelsize(preFullpol, postFullpol)
 
   # Reproject files if necessary
   (preFullpol, preCrosspol, postFullpol, postCrosspol) = \
-    check_projection(tmpDir, preFullpol, preCrosspol, postFullpol, postCrosspol)
+    check_projection(dirName, preFullpol, preCrosspol, postFullpol, postCrosspol)
 
   # Determine common overlap of pre- and post-event files
   (prePolygon, postPolygon, overlap, proj, pixelSize) = \
@@ -138,10 +136,10 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
     overlap_indices(postPolygon, overlap, pixelSize)
 
   # Calculating pre- and post-event RGB images
-  colorPreFile = os.path.join(tmpDir, 'preColor.tif')
+  colorPreFile = os.path.join(dirName, 'color_preColor.tif')
   rtc2color(preFullpol, preCrosspol, threshold, colorPreFile, amp=amp,
     float=True)
-  colorPostFile = os.path.join(tmpDir, 'postColor.tif')
+  colorPostFile = os.path.join(dirName, 'color_postColor.tif')
   rtc2color(postFullpol, postCrosspol, threshold, colorPostFile, amp=amp,
     float=True)
 
@@ -197,9 +195,8 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
   outRaster = None
 
   # Cleanup intermediate files
-  os.remove(os.path.join(tmpDir, colorPreFile))
-  os.remove(os.path.join(tmpDir, colorPostFile))
-  os.rmdir(tmpDir)
+  for fileName in glob(os.path.join(dirName, 'color*.tif')):
+    os.remove(fileName)
 
 
 if __name__ == '__main__':
