@@ -33,18 +33,20 @@ def findOrbFile(plat,tm,lst):
     d1 = 0
     best = ''
     for item in lst:
-        item = item.replace(' ','')
-        item1 = item
-        this_plat=item[0:3]
-        item=item.replace('T','')
-        item=item.replace('V','')
-        t = re.split('_',item)
-        start = t[6]
-        end = t[7].replace('.EOF','')
-        if start < tm and end > tm and plat == this_plat:
-            d = ((int(tm)-int(start))+(int(end)-int(tm)))/2
-            if d>d1:
-                best = item1.replace(' ','')
+        if 'S1' in item:
+            item = item.replace(' ','')
+            item1 = item
+            this_plat=item[0:3]
+            item=item.replace('T','')
+            item=item.replace('V','')
+            t = re.split('_',item)
+            if len(t) > 7:
+                start = t[6]
+                end = t[7].replace('.EOF','')
+                if start < tm and end > tm and plat == this_plat:
+                    d = ((int(tm)-int(start))+(int(end)-int(tm)))/2
+                    if d>d1:
+                        best = item1.replace(' ','')
     return best
 
 def getOrbFile(s1Granule):
