@@ -404,3 +404,30 @@ def aoi2tiles(aoiGeometry):
         tiles.append(tile)
 
   return (tiles, multipolygon)
+
+def get_latlon_extent(filename):
+  src = gdal.Open(filename)
+  ulx, xres, xskew, uly, yskew, yres  = src.GetGeoTransform()
+  lrx = ulx + (src.RasterXSize * xres)
+  lry = uly + (src.RasterYSize * yres)
+
+  source = osr.SpatialReference()
+  source.ImportFromWkt(src.GetProjection())
+
+  target = osr.SpatialReference()
+  target.ImportFromEPSG(4326)
+
+  transform = osr.CoordinateTransformation(source, target)
+
+  lon1, lat1, h = transform.TransformPoint(ulx, uly)
+  lon2, lat2, h = transform.TransformPoint(lrx, uly)
+  lon3, lat3, h = transform.TransformPoint(ulx, lry)
+  lon4, lat4, h = transform.TransformPoint(lrx, lry)
+
+  lat_min = min(lat1,lat2,lat3,lat4)
+  lat_max = max(lat1,lat2,lat3,lat4)
+  lon_min = min(lon1,lon2,lon3,lon4)
+  lon_max = max(lon1,lon2,lon3,lon4)
+
+  return lat_min, lat_max, lon_min, lon_max
+
