@@ -55,6 +55,7 @@ def makeKMZ(infile,outfile):
     kmzfile = outfile + ".kmz"
     pngfile = infile + ".png"
     outpng = outfile + ".png"
+    lrgfile = outfile + "_large.png"
     
     # Create the colorized kml file and png image
     cmd = "mdx.py {0} -kml {1}".format(infile,kmlfile)
@@ -65,7 +66,10 @@ def makeKMZ(infile,outfile):
 
     # scale the PNG image to browse size
     gdal.Translate("temp.png",pngfile,format="PNG",width=0,height=1024)
+    gdal.Translate("tmpl.png",pngfile,format="PNG",width=0,height=2048)
+    
     shutil.move("temp.png",pngfile)
+    shutil.move("tmpl.png",lrgfile)
 
     # finally, zip the kmz up
     with zipfile.ZipFile(kmzfile,'w') as myzip:
@@ -86,11 +90,9 @@ def convert_files(s1aFlag):
         if child.attrib['name'] == 'width':
             width_str = child[0].text
             width = int(width_str)
-            print "Image width %i" % width
         if child.attrib['name'] == 'length':
             length_str = child[0].text
 	    length = int(length_str)
-            print "Image length %i" % length
 
     fullAmp = np.zeros((length, width), dtype = np.float32)
     fullPhase = np.zeros((length, width), dtype = np.float32)
