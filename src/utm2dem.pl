@@ -98,11 +98,9 @@ print "\n\n";
 
 execute("gdal_translate -of ENVI $utm  $utm_tmp",$log);
 execute("swap_bytes $utm_tmp $dem 4", $log);
-execute("replace_values $dem 0 -1  $utm_tmp  $xsize 0 2", $log);
-execute("replace_values $utm_tmp -32767 -1  $utm_tmp2  $xsize 0 2", $log);
-execute("replace_values $utm_tmp2 -32768 -1  $dem  $xsize 0 2", $log);
+execute("replace_values $dem 0 -1  $utm_tmp  $xsize 0 2 1", $log);
+execute("replace_values $utm_tmp -32767 -1  $dem  $xsize 2 2", $log);
 execute("/bin/rm -f $utm_tmp",$log);
-execute("/bin/rm -f $utm_tmp2",$log);
 exit(0);
 
 sub execute{
