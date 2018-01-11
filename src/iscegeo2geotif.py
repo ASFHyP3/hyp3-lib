@@ -147,7 +147,7 @@ def makeEnviHdr(fileName,width,length,save1,save2):
     f.close()
 
 def main():
-  convert_files()
+  convert_files(True)
 
 if __name__ == "__main__":
   main()
