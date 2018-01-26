@@ -30,7 +30,7 @@
 ###############################################################################
 import subprocess
 
-def execute(cmd, expected=None):
+def execute(cmd, expected=None, logfile=None):
     print('Running command: ' + cmd)
     rcmd = cmd + ' 2>&1'
 
@@ -42,7 +42,9 @@ def execute(cmd, expected=None):
     for line in output.split('\n'):
         if len(line.rstrip()) > 0:
             print('Proc: ' + line)
-
+            if logfile is not None:
+                logfile.write("%s\n" % line)
+                
     print('Finished: ' + cmd)
 
     if return_val != 0:
