@@ -74,7 +74,7 @@ def makeKMZ(infile,outfile):
     # finally, zip the kmz up
     with zipfile.ZipFile(kmzfile,'w') as myzip:
         myzip.write(kmlfile)
-        myzip.write(pngfile)
+        myzip.write(lrgfile)
     shutil.move(pngfile,outpng)
     
 
