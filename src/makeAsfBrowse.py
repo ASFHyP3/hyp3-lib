@@ -10,7 +10,7 @@ def makeAsfBrowse(geotiff, baseName):
     kmzName = baseName + ".kmz"
     pngName = baseName + ".png"
     lrgName = baseName + "_large.png"
-    resample_geotiff(geotiff,1024,"KML",kmzName)
+    resample_geotiff(geotiff,2048,"KML",kmzName)
     resample_geotiff(geotiff,1024,"PNG",pngName)
     resample_geotiff(geotiff,2048,"PNG",lrgName)
 
