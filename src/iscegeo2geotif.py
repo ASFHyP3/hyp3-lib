@@ -37,15 +37,13 @@ from osgeo import gdal
 from execute import execute
 
 #
-# The kmlfile created by mdx.py contains the full path to the png file.
-# This won't work.  So, we change the text to be the last thing after
-# the last slash in the path name.
+# The kmlfile created by mdx.py contains the wrong png file name.
+# This won't work.  So, we change the text to be the new name.
 #
-def fixKmlPath(inKML):
+def fixKmlName(inKML,inName):
     tree = etree.parse(inKML)
     rt = tree.getroot()
-    newtext = rt[0][0][3][0].text.split("/")[-1]
-    rt[0][0][3][0].text = newtext
+    rt[0][0][3][0].text = inName
     of = open(inKML,'wb')
     of.write(b'<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n')
     tree.write(of,pretty_print=True)
@@ -61,8 +59,8 @@ def makeKMZ(infile,outfile):
     cmd = "mdx.py {0} -kml {1}".format(infile,kmlfile)
     execute(cmd)
     
-    # fix the path in the kml file!!!
-    fixKmlPath(kmlfile)
+    #fix the name in the kml file!!!
+    fixKmlName(kmlfile,lrgfile)
 
     # scale the PNG image to browse size
     gdal.Translate("temp.png",pngfile,format="PNG",width=0,height=1024)
@@ -76,7 +74,6 @@ def makeKMZ(infile,outfile):
         myzip.write(kmlfile)
         myzip.write(lrgfile)
     shutil.move(pngfile,outpng)
-    
 
 def convert_files(s1aFlag):
 
@@ -121,6 +118,16 @@ def convert_files(s1aFlag):
     makeEnviHdr("filt_topophase.unw.phase.bin.hdr",width,length,save1,save2)
     gdal.Translate("phase.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
     
+    # Create browse aux.xml files
+    gdal.Translate("phase.png","phase.tif",format="PNG",height=1024)
+    shutil.move("phase.png.aux.xml","colorized_unw.png.aux.xml")
+    shutil.copy("colorized_unw.png.aux.xml","color.png.aux.xml")
+    
+    # Create large browse aux.xml files
+    gdal.Translate("phase_large.png","phase.tif",format="PNG",height=2048)
+    shutil.move("phase_large.png.aux.xml","colorized_unw_large.png.aux.xml")
+    shutil.copy("colorized_unw_large.png.aux.xml","color_large.png.aux.xml")
+
     fullAmp.tofile("filt_topophase.unw.amp.bin")
     makeEnviHdr("filt_topophase.unw.amp.bin.hdr",width,length,save1,save2)
     gdal.Translate("amp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
