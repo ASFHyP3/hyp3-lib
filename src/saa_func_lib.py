@@ -148,7 +148,7 @@ def write_gdal_file_byscanline(driver,xoff,yoff,data,band=1):
         driver.GetRasterBand(band).WriteArray(data,xoff,yoff)
 
 def write_gdal_file(filename,geotransform,geoproj,data,gcps='',gcpproj=''):
-        print 'Writing Output file'
+        print 'Writing Output file '+ filename
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -195,8 +195,7 @@ def write_gdal_file_float(filename,geotransform,geoproj,data,nodata=None):
 
 def write_gdal_file_byte(filename,geotransform,geoproj,data):
 
-        print 'Writing Output file - %s' % filename
-
+        print 'Writing Output file '+ filename
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -211,7 +210,7 @@ def write_gdal_file_byte(filename,geotransform,geoproj,data):
 
 def write_gdal_file_rgb(filename,geotransform,geoproj,b1,b2,b3,metadata=None):
 
-        print 'Writing Output file'
+        print 'Writing Output file '+ filename
         options = []
         (x,y) = b1.shape
         format = "GTiff"
@@ -229,7 +228,7 @@ def write_gdal_file_rgb(filename,geotransform,geoproj,b1,b2,b3,metadata=None):
         return 1
 
 def write_gdal_file_rgba(filename,geotransform,geoproj,b1,b2,b3,b4):
-        print 'Writing Output file'
+        print 'Writing Output file '+ filename
         options = []
         (x,y) = b1.shape
         format = "GTiff"
