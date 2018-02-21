@@ -118,8 +118,8 @@ def makeChangeBrowse(geotiff):
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser(prog='MakeNiyiBrowse',
-    description='Creates browse images for Niyi change detection geotiffs')
+  parser = argparse.ArgumentParser(prog='MakeChangeBrowse',
+    description='Creates browse images for classified change detection geotiffs')
   parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
 
   if len(sys.argv) == 1:
