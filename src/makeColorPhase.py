@@ -86,7 +86,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,amp=None):
     const = samples / (2*rateReduction*np.pi)
     data[:] =  data[:] * const
 
-    data[data==1024] = 1023
+    data[data==samples]=samples-1
 
     # Convert to integer for indexing
     idata = np.zeros(data.shape,dtype=np.uint16)
