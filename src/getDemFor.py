@@ -62,9 +62,9 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None):
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
 	    shutil.move("tmpdem.tif","%s" % outfile)
     else:
-        get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag)
+        demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag)
 
-    return(outfile)
+    return(outfile,demtype)
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Get a DEM file for a given sentinel1 SAFE file")
@@ -74,5 +74,5 @@ if __name__ == '__main__':
     parser.add_argument("-u","--utm",action="store_true",help="Make DEM file in UTM coordinates (defaults is GCS)")
     args = parser.parse_args()
 
-    outfile = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,utmFlag=args.utm)
+    outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,utmFlag=args.utm)
     print "Wrote DEM file %s" % outfile    
