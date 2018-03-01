@@ -338,7 +338,8 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
             os.rename(tmputm,outfile)
     else:
         os.rename(tmpdem,outfile)
-		
+
+    return(demname)		
     
 
 if __name__ == "__main__":
