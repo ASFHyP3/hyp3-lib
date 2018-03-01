@@ -37,8 +37,16 @@ import saa_func_lib as saa
 import colorsys
 from osgeo import gdal
 
+def get2sigmacutoffs(fi):
+    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
+    stddev = np.std(data)
+    mean = np.mean(data)
+    lo = mean - 2*stddev
+    hi = mean + 2*stddev
+    del data
+    return lo,hi
 
-def makeColorPhase(inFile,rateReduction=1,shift=0,amp=None):
+def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None):
     #
     # Make the color LUT
     #
@@ -106,9 +114,83 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,amp=None):
     green[mask==0] = 0
     blue[mask==0] = 0
 
+    # Write out the RGB phase image
     fileName = inFile.replace(".tif","_rgb.tif")
     saa.write_gdal_file_rgb(fileName,trans,proj,red,green,blue)
 
+    # If we have amplitude, use that
+    if ampFile is not None:
+   
+        # Make the red, green, and blue versions
+        redf = np.zeros(data.shape)
+        greenf = np.zeros(data.shape)
+        bluef = np.zeros(data.shape)
+
+        # Scale from 0.0 to 1.0    
+        for j in range(x):
+            for i in range(y):
+                redf[i,j] = float(red[i,j])/255.0
+                greenf[i,j] = float(green[i,j])/255.0
+                bluef[i,j] = float(blue[i,j])/255.0
+
+        print "RED HISTOGRAM:"
+        hist = np.histogram(redf)
+        print hist[1]
+        print hist[0]
+
+        # Read in the ampltiude data
+        x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(ampFile))
+
+        # Rescale amplitude to 2-sigma byte range, otherwise may be all dark
+        myrange = get2sigmacutoffs(ampFile)
+        newFile = "tmp.tif"
+        gdal.Translate(newFile,ampFile,outputType=gdal.GDT_Byte,scaleParams=[myrange],resampleAlg="average")
+        x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(newFile))
+
+        # Scale amplitude from 0.0 to 1.0
+        ampf = np.zeros(data.shape)
+        ampf = amp / 255.0
+
+        # Perform color transformation 
+        h = np.zeros(data.shape)
+        l = np.zeros(data.shape)
+        s = np.zeros(data.shape)
+
+        for j in range(x):
+            for i in range(y):
+                h[i,j],l[i,j],s[i,j] = colorsys.rgb_to_hls(redf[i,j],greenf[i,j],bluef[i,j])
+                
+        print "LIGHTNESS HISTOGRAM:"
+        hist = np.histogram(l)
+        print hist[1]
+        print hist[0]
+                
+        l = l * ampf
+        
+        print "NEW LIGHTNESS HISTOGRAM:"
+        hist = np.histogram(l)
+        print hist[1]
+        print hist[0]
+
+        for j in range(x):
+            for i in range(y):
+                redf[i,j],greenf[i,j],bluef[i,j] = colorsys.hls_to_rgb(h[i,j],l[i,j],s[i,j]) 
+
+        red = redf * 255
+        green = greenf * 255
+        blue = bluef * 255
+       
+        print "TRANFORMED RED HISTOGRAM:"
+        hist = np.histogram(red)
+        print hist[1]
+        print hist[0]
+
+
+        # Write out the RGB phase image
+        fileName = inFile.replace(".tif","_amp_rgb.tif")
+        saa.write_gdal_file_rgb(fileName,trans,proj,red,green,blue)
+     
+ 
 #
 # This code makes an image to show off the color table
 #
@@ -128,16 +210,22 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='makeColorPhase',
       description='Create a colorize phase file from a phase geotiff',
       formatter_class=RawTextHelpFormatter)
-    parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
+    parser.add_argument('geotiff', help='name of GeoTIFF phase file (input)')
+    parser.add_argument('-a',help='Ampltiude image to use for intensity')
     parser.add_argument('-r',type=float,help='Reduction factor for phase rate',default=1)
     parser.add_argument('-s',type=float,help='Color cycle shift value (0..2pi)',default=0)
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
-        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
+        print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)
         sys.exit(1)
 
-    makeColorPhase(args.geotiff,rateReduction=args.r,shift=args.s)
+    if args.amp is not None:
+        if not os.path.exists(args.amp):
+            print('ERROR: Amplitude file (%s) does not exist!' % args.amp)
+            sys.exit(1)
+
+    makeColorPhase(args.geotiff,ampFile=args.a,rateReduction=args.r,shift=args.s)
 
 
 
