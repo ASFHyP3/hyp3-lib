@@ -46,7 +46,16 @@ def get2sigmacutoffs(fi):
     del data
     return lo,hi
 
-def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None):
+def createAmp(fi):
+    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
+    ampdata = np.sqrt(data)
+    outfile = fi.replace('.tif','-amp.tif')
+    print outfile
+    saa.write_gdal_file_float(outfile,trans,proj,ampdata)
+    return outfile
+
+
+def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
     #
     # Make the color LUT
     #
@@ -141,15 +150,52 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None):
         # Read in the ampltiude data
         x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(ampFile))
 
+        pinf = float('+inf')
+        ninf = float('-inf')
+        fnan = float('nan')
+        mask[:] = 1
+
+        mask[amp==pinf] = 0
+        mask[amp==ninf] = 0 
+        mask[np.isnan(amp)] = 0 
+        amp[mask==0]=0
+
+        ave = np.mean(amp)
+        print "Mean of amp data is {}".format(ave)
+        amp[mask==0]=ave
+
+        print "AMP HISTOGRAM:"
+        hist = np.histogram(amp)
+        print hist[1]
+        print hist[0]
+
+        ave = np.mean(amp)
+        print "Amp average is {}".format(ave)
+        print "Amp median is {}".format(np.median(amp))
+        print "Amp stddev is {}".format(np.std(amp))
+
         # Rescale amplitude to 2-sigma byte range, otherwise may be all dark
+        ampFile = createAmp(ampFile)
         myrange = get2sigmacutoffs(ampFile)
         newFile = "tmp.tif"
         gdal.Translate(newFile,ampFile,outputType=gdal.GDT_Byte,scaleParams=[myrange],resampleAlg="average")
         x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(newFile))
 
+        print "2-sigma AMP HISTOGRAM:"
+        hist = np.histogram(amp)
+        print hist[1]
+        print hist[0]
+
         # Scale amplitude from 0.0 to 1.0
         ampf = np.zeros(data.shape)
         ampf = amp / 255.0
+	ampf = ampf + float(scale)
+        ampf[ampf>1.0]=1.0
+        
+        print "SCALED AMP HISTOGRAM:"
+        hist = np.histogram(ampf)
+        print hist[1]
+        print hist[0]
 
         # Perform color transformation 
         h = np.zeros(data.shape)
@@ -185,6 +231,10 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None):
         print hist[1]
         print hist[0]
 
+        # Apply mask
+        red[mask==0]=0
+        green[mask==0]=0
+        blue[mask==0]=0
 
         # Write out the RGB phase image
         fileName = inFile.replace(".tif","_amp_rgb.tif")
@@ -212,20 +262,21 @@ if __name__ == '__main__':
       formatter_class=RawTextHelpFormatter)
     parser.add_argument('geotiff', help='name of GeoTIFF phase file (input)')
     parser.add_argument('-a',help='Ampltiude image to use for intensity')
+    parser.add_argument('-c',type=float,help='Scale the amplitude by this value (0-1)',default=0.0)
     parser.add_argument('-r',type=float,help='Reduction factor for phase rate',default=1)
     parser.add_argument('-s',type=float,help='Color cycle shift value (0..2pi)',default=0)
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
         print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)
-        sys.exit(1)
+        exit(1)
 
-    if args.amp is not None:
-        if not os.path.exists(args.amp):
-            print('ERROR: Amplitude file (%s) does not exist!' % args.amp)
-            sys.exit(1)
+    if args.a is not None:
+        if not os.path.exists(args.a):
+            print('ERROR: Amplitude file (%s) does not exist!' % args.a)
+            exit(1)
 
-    makeColorPhase(args.geotiff,ampFile=args.a,rateReduction=args.r,shift=args.s)
+    makeColorPhase(args.geotiff,ampFile=args.a,rateReduction=args.r,shift=args.s,scale=args.c)
 
 
 
