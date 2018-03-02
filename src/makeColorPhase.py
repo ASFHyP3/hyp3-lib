@@ -90,9 +90,16 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
     B[2*samples/3] = 255
     G[samples-1] = 255 
 
-    # Read in the phase data
-    x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(inFile))
-
+    # Read in the phase data    
+    x,y,trans,proj= saa.read_gdal_file_geo(saa.open_gdal_file(inFile))
+    if x > 4096 or y > 4096:
+        tmpFile = "{}_small.tif".format(os.path.basename(inFile.replace(".tif","")))
+        gdal.Translate(tmpFile,inFile,height=4096)
+        x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(tmpFile))
+        os.remove(tmpFile)
+    else:
+        x,y,trans,proj,data= saa.read_gdal_file(saa.open_gdal_file(inFile))
+        
     # Make a black mask for use after colorization
     mask = np.ones(data.shape,dtype=np.uint8)
     mask[data[:]==0] = 0 
@@ -148,7 +155,13 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         print hist[0]
 
         # Read in the ampltiude data
-        x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(ampFile))
+        if x > 4096 or y > 4096:
+            tmpFile = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
+            gdal.Translate(tmpFile,ampFile,height=4096)
+            x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(tmpFile))
+            os.remove(tmpFile)
+        else:
+            x,y,trans,proj,amp= saa.read_gdal_file(saa.open_gdal_file(ampFile))
 
         pinf = float('+inf')
         ninf = float('-inf')
@@ -180,7 +193,8 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         newFile = "tmp.tif"
         gdal.Translate(newFile,ampFile,outputType=gdal.GDT_Byte,scaleParams=[myrange],resampleAlg="average")
         x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(newFile))
-
+        os.remove("tmp.tif")
+        
         print "2-sigma AMP HISTOGRAM:"
         hist = np.histogram(amp)
         print hist[1]
