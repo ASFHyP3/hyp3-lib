@@ -155,6 +155,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         print hist[0]
 
         # Read in the ampltiude data
+        x,y,trans,proj = saa.read_gdal_file_geo(saa.open_gdal_file(ampFile))
         if x > 4096 or y > 4096:
             tmpFile = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
             gdal.Translate(tmpFile,ampFile,height=4096)
