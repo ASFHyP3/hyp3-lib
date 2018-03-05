@@ -36,14 +36,16 @@ from argparse import RawTextHelpFormatter
 import saa_func_lib as saa
 import colorsys
 from osgeo import gdal
+from cutGeotiffs import cutFiles
 
 def get2sigmacutoffs(fi):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
+    top = np.percentile(data,98)
+    data[data>top]=top
     stddev = np.std(data)
     mean = np.mean(data)
     lo = mean - 2*stddev
     hi = mean + 2*stddev
-    del data
     return lo,hi
 
 def createAmp(fi):
@@ -53,7 +55,6 @@ def createAmp(fi):
     print outfile
     saa.write_gdal_file_float(outfile,trans,proj,ampdata)
     return outfile
-
 
 def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
     #
@@ -90,15 +91,21 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
     B[2*samples/3] = 255
     G[samples-1] = 255 
 
+    #
     # Read in the phase data    
+    #
     x,y,trans,proj= saa.read_gdal_file_geo(saa.open_gdal_file(inFile))
+    
+    # If data if too big, resize it
     if x > 4096 or y > 4096:
-        tmpFile = "{}_small.tif".format(os.path.basename(inFile.replace(".tif","")))
-        gdal.Translate(tmpFile,inFile,height=4096)
-        x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(tmpFile))
-        os.remove(tmpFile)
+        phaseTmp = "{}_small.tif".format(os.path.basename(inFile.replace(".tif","")))
+        gdal.Translate(phaseTmp,inFile,height=4096)
+        x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(phaseTmp))
+        print "Created small tif of size {} x {}".format(x,y)
     else:
         x,y,trans,proj,data= saa.read_gdal_file(saa.open_gdal_file(inFile))
+        print "Using full size tif of size {} x {}".format(x,y)
+        phaseTmp = inFile
         
     # Make a black mask for use after colorization
     mask = np.ones(data.shape,dtype=np.uint8)
@@ -130,39 +137,44 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
     green[mask==0] = 0
     blue[mask==0] = 0
 
-    # Write out the RGB phase image
-    fileName = inFile.replace(".tif","_rgb.tif")
-    saa.write_gdal_file_rgb(fileName,trans,proj,red,green,blue)
+    if ampFile is None:
+        # Write out the RGB phase image
+        fileName = inFile.replace(".tif","_rgb.tif")
+        saa.write_gdal_file_rgb(fileName,trans,proj,red,green,blue)
 
     # If we have amplitude, use that
-    if ampFile is not None:
-   
-        # Make the red, green, and blue versions
+    else:
+        # Make the red, green, and blue floating point versions
         redf = np.zeros(data.shape)
         greenf = np.zeros(data.shape)
         bluef = np.zeros(data.shape)
 
-        # Scale from 0.0 to 1.0    
-        for j in range(x):
-            for i in range(y):
-                redf[i,j] = float(red[i,j])/255.0
-                greenf[i,j] = float(green[i,j])/255.0
-                bluef[i,j] = float(blue[i,j])/255.0
+ 	# Scale from 0 .. 1
+        redf[::] = red[::]/255.0
+        greenf[::] = green[::]/255.0
+        bluef[::] = blue[::]/255.0
 
-        print "RED HISTOGRAM:"
-        hist = np.histogram(redf)
-        print hist[1]
-        print hist[0]
+        # Read in the amplitude data
+        x1,y1,trans1,proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(ampFile))
 
-        # Read in the ampltiude data
-        x,y,trans,proj = saa.read_gdal_file_geo(saa.open_gdal_file(ampFile))
-        if x > 4096 or y > 4096:
-            tmpFile = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
-            gdal.Translate(tmpFile,ampFile,height=4096)
-            x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(tmpFile))
-            os.remove(tmpFile)
+	# If too large, resize the data
+        if x1 > 4096 or y1 > 4096:
+            ampTmp = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
+            gdal.Translate(ampTmp,ampFile,height=4096)
+            x1,y1,trans1,proj1,amp = saa.read_gdal_file(saa.open_gdal_file(ampTmp))
         else:
-            x,y,trans,proj,amp= saa.read_gdal_file(saa.open_gdal_file(ampFile))
+            x1,y1,trans1,proj1,amp= saa.read_gdal_file(saa.open_gdal_file(ampFile))
+            ampTmp = ampFile
+
+        if (x != x1) or (y != y1):
+            cutFiles([phaseTmp,ampTmp])
+            if phaseTmp != inFile:
+                os.remove(phaseTmp)
+            phaseTmp = phaseTmp.replace(".tif","_clip.tif")
+            
+            if ampTmp != ampFile:
+                os.remove(ampTmp)
+            ampTmp = ampTmp.replace(".tif","_clip.tif")
 
         pinf = float('+inf')
         ninf = float('-inf')
@@ -189,12 +201,15 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         print "Amp stddev is {}".format(np.std(amp))
 
         # Rescale amplitude to 2-sigma byte range, otherwise may be all dark
-        ampFile = createAmp(ampFile)
-        myrange = get2sigmacutoffs(ampFile)
+        amp2File = createAmp(ampTmp)
+        myrange = get2sigmacutoffs(amp2File)
         newFile = "tmp.tif"
-        gdal.Translate(newFile,ampFile,outputType=gdal.GDT_Byte,scaleParams=[myrange],resampleAlg="average")
+        gdal.Translate(newFile,amp2File,outputType=gdal.GDT_Byte,scaleParams=[myrange],resampleAlg="average")
         x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(newFile))
-        os.remove("tmp.tif")
+        if ampTmp != ampFile:
+            os.remove(ampTmp)
+        os.remove(amp2File)
+        os.remove(newFile)
         
         print "2-sigma AMP HISTOGRAM:"
         hist = np.histogram(amp)
@@ -254,7 +269,8 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         # Write out the RGB phase image
         fileName = inFile.replace(".tif","_amp_rgb.tif")
         saa.write_gdal_file_rgb(fileName,trans,proj,red,green,blue)
-     
+
+    return(fileName)        
  
 #
 # This code makes an image to show off the color table
