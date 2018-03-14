@@ -72,12 +72,10 @@ def cutFiles(arg):
         exit(0)
 
     file1 = arg[0]
-    print "Clipping geotiff files starting with %s as the base." % file1
    
     # Open file1, get projection and pixsize
     dst1 = gdal.Open(file1)
     p1 = dst1.GetProjection()
-    print p1
     
     # Make sure that UTM projections match
     ptr = p1.find("UTM zone ")
@@ -119,11 +117,17 @@ def cutFiles(arg):
 	pixSize = max(pixSize,tmp)
      
     # Finally, clip all scenes to the overlap region at the largest pixel size
+    lst = list(coords)
+    tmp = lst[3]
+    lst[3] = lst[1]
+    lst[1] = tmp
+    coords = tuple(lst)
     for x in range (len(arg)):
         file1 = arg[x]
         file1_new = file1.replace('.tif','_clip.tif')
-        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
-
+        print "    clipping file {} to create file {}".format(file1,file1_new)
+#        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
+        gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pixSize,yRes=-1*pixSize,creationOptions = ['COMPRESS=LZW'])
 
 if __name__ == "__main__":
 
