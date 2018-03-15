@@ -8,8 +8,9 @@ import re
 def getParameter(parFile,parameter):
     myfile = open(parFile,"r")
     value = None
+    parameter = parameter.lower()
     for line in myfile:
-        if re.search(parameter,line):
+        if parameter in line.lower():
             t = re.split(":",line)
             value = t[1].strip()
     myfile.close()
