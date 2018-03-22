@@ -56,40 +56,25 @@ def createAmp(fi):
     saa.write_gdal_file_float(outfile,trans,proj,ampdata)
     return outfile
 
-def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
-    #
-    # Make the color LUT
-    #
+def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CMY'):
+
     samples = 1024
-    R = np.zeros(samples,np.uint8)
-    G = np.zeros(samples,np.uint8)
-    B = np.zeros(samples,np.uint8)
-    
-    # Going from Yellow to Cyan
-    for i in range (1,samples/3):
-        val = i * math.pi / (samples/3)
-        G[i] = 255
-        R[i] = 128 + math.sin(val+math.pi/2)*128
-        B[i] = 128 + math.sin(val+3*math.pi/2)*128
 
-    # Going from Cyan to Magenta
-    for i in range(samples/3,2*samples/3):
-        val = i*math.pi/(samples/3)
-        B[i] = 255
-        R[i] = 128 + math.sin(val+math.pi/2)*128
-        G[i] = 128 + math.sin(val+3*math.pi/2)*128
+    pinf = float('+inf')
+    ninf = float('-inf')
+    fnan = float('nan')
 
-    # Going from Magenta to Yellow 
-    for i in range(2*samples/3,samples):
-        val = i*math.pi/(samples/3)
-        R[i] = 255
-        B[i] = 128 + math.sin(val+math.pi/2)*128
-        G[i] = 128 + math.sin(val+3*math.pi/2)*128
-
-    # Fix holes in color scheme
-    G[samples/3] = 255
-    B[2*samples/3] = 255
-    G[samples-1] = 255 
+    mod2pi = False 
+    if table=='CMY':
+        mod2pi = True
+        R, G, B = makeCycleColor(samples)
+    elif table=='RYB' :
+        R, G, B = makeContinuousColor(samples)
+    elif table=='RWB':
+        R, G, B = makeRWBColor(samples)
+    else:
+        print "ERROR: Unknown color table: {}".format(table)
+        exit(1)
 
     #
     # Read in the phase data    
@@ -113,9 +98,37 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
 
     # Scale to 0 .. samples-1
     data[:] = data[:] + shift
-    data[:] = data[:] % (2*rateReduction*np.pi)
-    const = samples / (2*rateReduction*np.pi)
-    data[:] =  data[:] * const
+    if mod2pi == True:
+        data[:] = data[:] % (2*rateReduction*np.pi)
+        const = samples / (2*rateReduction*np.pi)
+        data[:] =  data[:] * const
+    else:
+
+        mask = np.ones(data.shape,dtype=np.uint8)
+        mask[data==pinf] = 0
+        mask[data==ninf] = 0 
+        mask[np.isnan(data)] = 0 
+        data[mask==0]=0
+
+
+#        mini = np.min(data)
+#        maxi = np.max(data)
+
+        mini = np.percentile(data,2)
+        maxi = np.percentile(data,98)
+        data[data<mini] = mini
+        data[data>maxi] = maxi
+
+   
+        data[:] = (data[:] - mini) / (maxi - mini)
+        data[:] = data * float(samples)
+        
+        print np.max(data)
+        print np.min(data)
+        
+        hist = np.histogram(data)
+        print hist[1]
+        print hist[0]
 
     data[data==samples]=samples-1
 
@@ -160,27 +173,30 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
 	# If too large, resize the data
         if x1 > 4096 or y1 > 4096:
             ampTmp = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
-            gdal.Translate(ampTmp,ampFile,height=4096)
+            gdal.Translate(ampTmp,ampFile,height=y,width=x)
             x1,y1,trans1,proj1,amp = saa.read_gdal_file(saa.open_gdal_file(ampTmp))
         else:
-            x1,y1,trans1,proj1,amp= saa.read_gdal_file(saa.open_gdal_file(ampFile))
+            x1,y1,trans1,proj1,amp = saa.read_gdal_file(saa.open_gdal_file(ampFile))
             ampTmp = ampFile
 
         if (x != x1) or (y != y1):
             cutFiles([phaseTmp,ampTmp])
-            if phaseTmp != inFile:
-                os.remove(phaseTmp)
+#            if phaseTmp != inFile:
+#                os.remove(phaseTmp)
             phaseTmp = phaseTmp.replace(".tif","_clip.tif")
+            x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(phaseTmp))
             
-            if ampTmp != ampFile:
-                os.remove(ampTmp)
+#            if ampTmp != ampFile:
+#                os.remove(ampTmp)
             ampTmp = ampTmp.replace(".tif","_clip.tif")
+            x1,y1,trans1,proj1,amp = saa.read_gdal_file(saa.open_gdal_file(ampTmp))
 
-        pinf = float('+inf')
-        ninf = float('-inf')
-        fnan = float('nan')
-        mask[:] = 1
+        print "Data shape is {}".format(data.shape)
+        print "Amp shape is {}".format(amp.shape)
+       
 
+        # Make a black mask for use after colorization
+        mask = np.ones(amp.shape,dtype=np.uint8)
         mask[amp==pinf] = 0
         mask[amp==ninf] = 0 
         mask[np.isnan(amp)] = 0 
@@ -206,10 +222,10 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         newFile = "tmp.tif"
         gdal.Translate(newFile,amp2File,outputType=gdal.GDT_Byte,scaleParams=[myrange],resampleAlg="average")
         x,y,trans,proj,amp = saa.read_gdal_file(saa.open_gdal_file(newFile))
-        if ampTmp != ampFile:
-            os.remove(ampTmp)
-        os.remove(amp2File)
-        os.remove(newFile)
+#        if ampTmp != ampFile:
+#            os.remove(ampTmp)
+#        os.remove(amp2File)
+#        os.remove(newFile)
         
         print "2-sigma AMP HISTOGRAM:"
         hist = np.histogram(amp)
@@ -270,8 +286,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
         fileName = inFile.replace(".tif","_amp_rgb.tif")
         saa.write_gdal_file_rgb(fileName,trans,proj,red,green,blue)
 
-    return(fileName)        
- 
+
 #
 # This code makes an image to show off the color table
 #
@@ -286,6 +301,117 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0):
 #            rainbow_blue[i,j] = B[idx]
 #    saa.write_gdal_file_rgb("rainbow.tif",trans,proj,rainbow_red,rainbow_green,rainbow_blue)
 
+    return(fileName)        
+ 
+
+def makeContinuousColor(samples):
+
+    #
+    # Make the color LUT
+    #
+    R = np.zeros(samples,np.uint8)
+    G = np.zeros(samples,np.uint8)
+    B = np.zeros(samples,np.uint8)
+    
+    # Going from Red to Yellow
+    for i in range (1,samples/3):
+        val = i * math.pi / (samples/3)
+        R[i] = 255
+        G[i] = 128 + math.sin(val+3*math.pi/2)*128
+        B[i] = 0
+
+    # Going from Yellow to Green
+    for i in range(samples/3,2*samples/3):
+        val = i*math.pi/(samples/3)
+        R[i] = 128 + math.sin(val+3*math.pi/2)*128
+        G[i] = 255
+        B[i] = 0
+
+    # Going from Green to Blue 
+    for i in range(2*samples/3,samples):
+        val = i*math.pi/(samples/3)
+        R[i] = 0
+        G[i] = 128 + math.sin(val+math.pi/2)*128
+        B[i] = 128 + math.sin(val+3*math.pi/2)*128
+
+    R[0] = 255
+    R[samples/3] = 255
+    G[2*samples/3] = 255
+    B[samples-1] = 255 
+
+    R = R[::-1]
+    G = G[::-1]
+    B = B[::-1]
+    
+    return R, G, B   
+
+def makeRWBColor(samples):
+
+    #
+    # Make the color LUT
+    #
+    R = np.zeros(samples,np.uint8)
+    G = np.zeros(samples,np.uint8)
+    B = np.zeros(samples,np.uint8)
+    
+    # Going from Blue to White
+    for i in range(samples+1/2):
+        val = i * math.pi / (samples/2)
+        R[i] = 128 + math.sin(val+3*math.pi/2)*128
+        G[i] = 128 + math.sin(val+3*math.pi/2)*128
+        B[i] = 255
+
+    # Going from White to Red
+    for i in range(samples/2,samples):
+        val = i*math.pi/(samples/2)
+        R[i] = 255
+        G[i] = 128 + math.sin(val+3*math.pi/2)*128
+        B[i] = 128 + math.sin(val+3*math.pi/2)*128
+
+
+    R[samples/2] = 255
+    G[samples/2] = 255
+    B[samples/2] = 255
+    return R, G, B   
+
+def makeCycleColor(samples):
+
+    #
+    # Make the color LUT
+    #
+    R = np.zeros(samples,np.uint8)
+    G = np.zeros(samples,np.uint8)
+    B = np.zeros(samples,np.uint8)
+    
+    # Going from Yellow to Cyan
+    for i in range (1,samples/3):
+        val = i * math.pi / (samples/3)
+        G[i] = 255
+        R[i] = 128 + math.sin(val+math.pi/2)*128
+        B[i] = 128 + math.sin(val+3*math.pi/2)*128
+
+    # Going from Cyan to Magenta
+    for i in range(samples/3,2*samples/3):
+        val = i*math.pi/(samples/3)
+        B[i] = 255
+        R[i] = 128 + math.sin(val+math.pi/2)*128
+        G[i] = 128 + math.sin(val+3*math.pi/2)*128
+
+    # Going from Magenta to Yellow 
+    for i in range(2*samples/3,samples):
+        val = i*math.pi/(samples/3)
+        R[i] = 255
+        B[i] = 128 + math.sin(val+math.pi/2)*128
+        G[i] = 128 + math.sin(val+3*math.pi/2)*128
+
+    # Fix holes in color scheme
+    G[samples/3] = 255
+    B[2*samples/3] = 255
+    G[samples-1] = 255 
+
+    return R, G, B
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(prog='makeColorPhase',
@@ -296,6 +422,7 @@ if __name__ == '__main__':
     parser.add_argument('-c',type=float,help='Scale the amplitude by this value (0-1)',default=0.0)
     parser.add_argument('-r',type=float,help='Reduction factor for phase rate',default=1)
     parser.add_argument('-s',type=float,help='Color cycle shift value (0..2pi)',default=0)
+    parser.add_argument('-t',choices=['CMY','RYB','RWB'],help='Name of color table to use (default CMY)',default='CMY')
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
@@ -307,7 +434,7 @@ if __name__ == '__main__':
             print('ERROR: Amplitude file (%s) does not exist!' % args.a)
             exit(1)
 
-    makeColorPhase(args.geotiff,ampFile=args.a,rateReduction=args.r,shift=args.s,scale=args.c)
+    makeColorPhase(args.geotiff,ampFile=args.a,rateReduction=args.r,shift=args.s,scale=args.c,table=args.t)
 
 
 
