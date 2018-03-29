@@ -365,7 +365,6 @@ if __name__ == "__main__":
     outfile = args.outfile
     utmflag = args.utm
     use_aws_config = args.aws if args.aws else False
-    print use_aws_config
 
     if args.posting is not None:
         get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting)
