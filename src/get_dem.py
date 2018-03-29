@@ -5,22 +5,22 @@
 #
 # Project:  APD general tool
 # Purpose:  Get a DEM for a given bounding box
-#          
+#
 # Author:   Kirk Hogenson, Tom Logan
 #
 ###############################################################################
 # Copyright (c) 2017, Alaska Satellite Facility
-# 
+#
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
 # License as published by the Free Software Foundation; either
 # version 2 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Library General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Library General Public
 # License along with this library; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
@@ -98,6 +98,10 @@ def get_tile_for(demname,fi):
 
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
+
+    if use_aws_config:
+        myfile += '.aws'
+
     with open(myfile) as f:
         content = f.readlines()
         for item in content:
@@ -109,8 +113,8 @@ def get_tile_for(demname,fi):
 	            os.system("aws s3 cp %s DEM/%s.tif" % (myfile,fi))
 	        else:
                     myfile = os.path.join(mydir,"geotiff",fi) + ".tif"
-	            print myfile
-  	            shutil.copy(myfile,"DEM/%s" % fi + ".tif")
+                    output = "DEM/%s" % fi + ".tif"
+  	            shutil.copy(myfile, output)
 
 
 def parseString(string):
@@ -137,7 +141,7 @@ def get_cc(tmputm,post,pixsize):
             (east4,north4) = parseString(item)
 #	if "AREA_OR_POINT=Area" in item:
 #	    shift = pixsize / 2
-#	    print "Applying pixel shift of %f" % shift    
+#	    print "Applying pixel shift of %f" % shift
 
     e_min = min(east1,east2,east3,east4)
     e_max = max(east1,east2,east3,east4)
@@ -149,8 +153,8 @@ def get_cc(tmputm,post,pixsize):
     n_max = math.ceil(n_max/post)*post+shift
     n_min = math.floor(n_min/post)*post-shift
 
-    print "New coordinates: %f %f %f %f" % (e_max,e_min,n_max,n_min)    
-    return(e_min,e_max,n_min,n_max) 
+    print "New coordinates: %f %f %f %f" % (e_max,e_min,n_max,n_min)
+    return(e_min,e_max,n_min,n_max)
 
 
 def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
@@ -167,7 +171,7 @@ def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
 
 def anti_meridian_kludge(dem_file,dem_name,south):
 
-    # Get the appropriate file 
+    # Get the appropriate file
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
     with open(myfile) as f:
@@ -183,7 +187,7 @@ def anti_meridian_kludge(dem_file,dem_name,south):
                     myfile = os.path.join(mydir,dem_file)
 	            print myfile
   	            shutil.copy(myfile,".")
-	       
+
     if not os.path.isfile(dem_file):
         print "ERROR: unable to copy DEM file"
 	sys.exit(1)
@@ -195,7 +199,7 @@ def anti_meridian_kludge(dem_file,dem_name,south):
     f.write("%f %f\n" % (lon_max,lat_min))
     f.write("%f %f\n" % (lon_max,lat_max))
     f.close()
-    
+
     string = commands.getstatusoutput("cat coords.txt | cs2cs +proj=longlat +datum=WGS84 +to +proj=utm +zone=1 %s +datum=WGS84" % south)
     lst = string[1].split("\n")
     x = []
@@ -239,19 +243,19 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
         print "lon_min = %f; lon_max = %f" % (lon_min,lon_max)
         print "ERROR: Please using longitude in range (-180,180)"
 	sys.exit(1)
-   
+
     if lat_min < -90 or lat_max > 90:
         print "ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max)
 	sys.exit(1)
-	
+
     if lon_min > lon_max:
         print "WARNING: minimum longitude > maximum longitude - swapping"
         (lon_min, lon_max) = (lon_max, lon_min)
-	
+
     if lat_min > lat_max:
         print "WARNING: minimum latitude > maximum latitude - swapping"
         (lat_min, lat_max) = (lat_max, lat_min)
-    
+
     # Handle cases near anti-meridian
     if lon_min <= -178 and lon_max >= 178:
         if utmflag:
@@ -259,18 +263,18 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
 	else:
 	    print "ERROR: May only create a DEM file over anti-meridian using UTM coordinates"
 	sys.exit(1)
-	
-    # Figure out which DEM and get the tile list 
+
+    # Figure out which DEM and get the tile list
     (demname, tile_list) = get_best_dem(lat_min,lat_max,lon_min,lon_max)
-    
-    # Copy the files into a dem directory   
+
+    # Copy the files into a dem directory
     if not os.path.isdir("DEM"):
         os.mkdir("DEM")
     for fi in tile_list:
         get_tile_for(demname,fi)
 
     os.system("gdalbuildvrt temp.vrt DEM/*.tif")
-    
+
     lon = (lon_max+lon_min)/2
     zone = math.floor((lon+180)/6+1)
     if (lat_min+lat_max)/2 > 0:
@@ -279,32 +283,32 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     else:
         hemi = "S"
         proj = ('EPSG:327%02d' % int(zone))
-	
+
     tmpdem = "tempdem.tif"
     tmpdem2 = "tempdem2.tif"
     tmputm = "temputm.tif"
-    if os.path.isfile(tmpdem): 
+    if os.path.isfile(tmpdem):
         print "Removing old file tmpdem"
         os.remove(tmpdem)
-    if os.path.isfile(tmputm): 
+    if os.path.isfile(tmputm):
         print "Removing old file utmdem"
 	os.remove(tmputm)
 
     pixsize = 30.0
     gcssize = 0.00027777777778
-    
+
     if demname == "SRTMGL3":
         pixsize = 90.
 	gcssize = gcssize * 3
     if demname == "NED2":
         pixsize = 60.
 	gcssize = gcssize * 2
-        
+
     bounds = [lon_min,lat_min,lon_max,lat_max]
-    
-    print "Creating initial raster file"	
+
+    print "Creating initial raster file"
     gdal.Warp(tmpdem,"temp.vrt",xRes=gcssize,yRes=gcssize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
-    
+
     # If DEM is from NED collection, then it will have a NAD83 ellipse - need to convert to WGS84
     # Also, need to convert from pixel as area to pixel as point
     if "NED" in demname:
@@ -322,8 +326,8 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
         lat = lat + resy/2.0
         t1 = [lon, resx, rotx, lat, roty, resy]
         saa.write_gdal_file_float(tmpdem,t1,p1,data)
-    
-    gdal.Translate(tmpdem2,tmpdem,metadataOptions = ['AREA_OR_POINT=Point'])    
+
+    gdal.Translate(tmpdem2,tmpdem,metadataOptions = ['AREA_OR_POINT=Point'])
     shutil.move(tmpdem2,tmpdem)
 
     if utmflag:
@@ -339,8 +343,8 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     else:
         os.rename(tmpdem,outfile)
 
-    return(demname)		
-    
+    return(demname)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="get_dem.py",description="Get a DEM file in .tif format from the ASF DEM heap")
@@ -351,6 +355,7 @@ if __name__ == "__main__":
     parser.add_argument("outfile",help="output DEM name")
     parser.add_argument("-u","--utm",action='store_true',help="Create output in UTM projection")
     parser.add_argument("-p","--posting",type=float,help="Snap DEM to align with grid at given posting")
+    parser.add_argument("--aws", action='store_const', const=True, help="use aws config file")
     args = parser.parse_args()
 
     lat_min = float(args.lat_min)
@@ -359,10 +364,12 @@ if __name__ == "__main__":
     lon_max = float(args.lon_max)
     outfile = args.outfile
     utmflag = args.utm
-    
+    use_aws_config = args.aws if args.aws else False
+    print use_aws_config
+
     if args.posting is not None:
         get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting)
     else:
-        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag)  
-    
-    
+        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag)
+
+
