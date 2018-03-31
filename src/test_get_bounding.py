@@ -29,22 +29,40 @@ class TestGetBounding(unittest.TestCase):
             <longitude>-1.121557443533816e+02</longitude>
         """
 
-        self.test_annotation_path = "testing_files/test.SAFE/annotation"
+        self.test_annotation_path = "../testing_files/test.SAFE/annotation"
 
     def test_simple_box(self):
         bound = get_bounding(self.basicBox)
 
-        self.bound_equals(bound, [0., 1., 0., 1.])
+        correct_lats = [0., 1.]
+        correct_lons = [0., 1.]
+
+        self.bound_equals(
+            bound,
+            correct_lats + correct_lons
+        )
 
     def test_negatives(self):
         bound_with_negatives = get_bounding(self.negatives)
 
-        self.bound_equals(bound_with_negatives, [-1.0, -0.3, -1.0, -0.3])
+        correct_lats = [-1.0, -0.3]
+        correct_lons = [-1.0, -0.3]
+
+        self.bound_equals(
+            bound_with_negatives,
+            correct_lats + correct_lons
+        )
 
     def test_annotation_file_sample(self):
-        bound = get_bounding(self.sample_from_test_file)
-        print(bound)
+        sample_bound = get_bounding(self.sample_from_test_file)
 
+        correct_lats = [37.88855, 37.91710]
+        correct_lons = [-112.15574, -111.95979]
+
+        self.bound_equals(
+            sample_bound,
+            correct_lats + correct_lons
+        )
 
     def bound_equals(self, bound, check_values):
         lats, lons = bound['lat'], bound['lon']
