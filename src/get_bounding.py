@@ -7,10 +7,11 @@ def get_granule_bounding(granule_path):
     annotation_xmls = read_files(annotation_xml_paths)
 
     bounds = [
-        get_bounding(xml_contents) for xml_contents in annotation_xmls
+        get_bounding_values(xml_contents) for xml_contents in annotation_xmls
     ]
-    print(bounds)
-    return {}
+
+    return get_granule_extrema(bounds)
+
 
 def get_annotation_xmls_paths(granule_path):
     annotation_dir = os.path.join(granule_path, 'annotation')
@@ -32,14 +33,24 @@ def read_files(paths):
 
     return file_contents
 
+
 def get_bounding(annotation_xml):
+    lat_extrema, lon_extrema = get_bounding_values(annotation_xml)
+
+    return {
+        "lat": lat_extrema,
+        "lon": lon_extrema
+    }
+
+
+def get_bounding_values(annotation_xml):
     lats = numbers_between('latitude', annotation_xml)
     lons = numbers_between('longitude', annotation_xml)
 
-    return {
-        "lat": get_extrema_from(lats),
-        "lon": get_extrema_from(lons)
-    }
+    return (
+        get_extrema_from(lats),
+        get_extrema_from(lons)
+    )
 
 
 def numbers_between(tag, annotation_xml):
@@ -81,5 +92,5 @@ def convert_to_float(match):
 
     return modifier * float(match)
 
-
-
+def get_granule_extrema(bound_values):
+    return {}
