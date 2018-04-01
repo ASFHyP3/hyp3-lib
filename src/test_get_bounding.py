@@ -67,13 +67,14 @@ class TestGetBounding(unittest.TestCase):
         )
 
     def test_annotation_file(self):
-        correct_lats = [37.11964, 38.78037]
-        correct_lons = [-112.54442, -111.184078]
 
         with open(self.test_annotation_path, 'r') as f:
             annotation_xml = f.read()
 
         bound = get_bounding(annotation_xml)
+
+        correct_lats = [37.11964, 38.78037]
+        correct_lons = [-112.54442, -111.184078]
 
         self.bound_equals(
             bound,
@@ -86,6 +87,13 @@ class TestGetBounding(unittest.TestCase):
         self.assertIn('lat', granule_bound)
         self.assertIn('lon', granule_bound)
 
+        correct_lats = [37.11964, 39.07924]
+        correct_lons = [-114.36318, -111.184078]
+
+        self.bound_equals(
+            granule_bound,
+            correct_lats + correct_lons
+        )
 
     def bound_equals(self, bound, check_values):
         lats, lons = bound['lat'], bound['lon']
