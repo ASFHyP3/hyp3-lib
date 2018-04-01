@@ -1,7 +1,36 @@
 import re
+import os
 
 def get_granule_bounding(granule_path):
+    annotation_xml_paths = get_annotation_xmls_paths(granule_path)
+
+    annotation_xmls = read_files(annotation_xml_paths)
+
+    bounds = [
+        get_bounding(xml_contents) for xml_contents in annotation_xmls
+    ]
+    print(bounds)
     return {}
+
+def get_annotation_xmls_paths(granule_path):
+    annotation_dir = os.path.join(granule_path, 'annotation')
+
+    annotation_file_names = os.listdir(annotation_dir)
+
+    return [
+        os.path.join(annotation_dir, a) for a in annotation_file_names
+    ]
+
+
+def read_files(paths):
+    file_contents = []
+    for path in paths:
+        with open(path, 'r') as f:
+            contents = f.read()
+
+        file_contents.append(contents)
+
+    return file_contents
 
 def get_bounding(annotation_xml):
     lats = numbers_between('latitude', annotation_xml)
