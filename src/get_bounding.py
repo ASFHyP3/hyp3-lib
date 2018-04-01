@@ -1,5 +1,18 @@
 import re
 
+def get_granule_bounding(granule_path):
+    return {}
+
+def get_bounding(annotation_xml):
+    lats = numbers_between('latitude', annotation_xml)
+    lons = numbers_between('longitude', annotation_xml)
+
+    return {
+        "lat": get_extrema_from(lats),
+        "lon": get_extrema_from(lons)
+    }
+
+
 def numbers_between(tag, annotation_xml):
     numbers_in_tags = "<{tag}>(.*?)<\/{tag}>".format(
         tag=tag
@@ -11,6 +24,13 @@ def numbers_between(tag, annotation_xml):
     )
 
     return convert_matches_to_floats(matchs)
+
+
+def get_extrema_from(vals):
+    return {
+        "max": max(vals),
+        "min": min(vals)
+    }
 
 
 def convert_matches_to_floats(matchs):
@@ -33,17 +53,4 @@ def convert_to_float(match):
     return modifier * float(match)
 
 
-def get_bounding(annotation_xml):
-    lats = numbers_between('latitude', annotation_xml)
-    lons = numbers_between('longitude', annotation_xml)
 
-    return {
-        "lat": get_extrema_from(lats),
-        "lon": get_extrema_from(lons)
-    }
-
-def get_extrema_from(vals):
-    return {
-        "max": max(vals),
-        "min": min(vals)
-    }

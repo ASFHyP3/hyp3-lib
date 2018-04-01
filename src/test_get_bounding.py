@@ -1,5 +1,6 @@
 import unittest
-from get_bounding import get_bounding
+from get_bounding import get_bounding, get_granule_bounding
+
 
 
 class TestGetBounding(unittest.TestCase):
@@ -29,7 +30,9 @@ class TestGetBounding(unittest.TestCase):
             <longitude>-1.121557443533816e+02</longitude>
         """
 
-        self.test_annotation_path = "../testing_files/test.SAFE/annotation/test-swath-1.xml"
+        self.granule_folder_path = '../testing_files/test.SAFE'
+        self.test_annotation_path = self.granule_folder_path + "/annotation/test-swath-1.xml"
+
 
     def test_simple_box(self):
         bound = get_bounding(self.basicBox)
@@ -77,6 +80,14 @@ class TestGetBounding(unittest.TestCase):
             bound,
             correct_lats + correct_lons
         )
+
+    def test_granule_bounding(self):
+        granule_bound = get_granule_bounding(self.granule_folder_path)
+
+        self.assertIn('lat', granule_bound)
+        self.assertIn('lon', granule_bound)
+
+        print(granule_bound)
 
     def bound_equals(self, bound, check_values):
         lats, lons = bound['lat'], bound['lon']
