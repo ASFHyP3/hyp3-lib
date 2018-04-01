@@ -29,7 +29,7 @@ class TestGetBounding(unittest.TestCase):
             <longitude>-1.121557443533816e+02</longitude>
         """
 
-        self.test_annotation_path = "../testing_files/test.SAFE/annotation"
+        self.test_annotation_path = "../testing_files/test.SAFE/annotation/test-swath-1.xml"
 
     def test_simple_box(self):
         bound = get_bounding(self.basicBox)
@@ -61,6 +61,20 @@ class TestGetBounding(unittest.TestCase):
 
         self.bound_equals(
             sample_bound,
+            correct_lats + correct_lons
+        )
+
+    def test_annotation_file(self):
+        correct_lats = [37.11964, 38.78037]
+        correct_lons = [-112.54442, -111.184078]
+
+        with open(self.test_annotation_path, 'r') as f:
+            annotation_xml = f.read()
+
+        bound = get_bounding(annotation_xml)
+
+        self.bound_equals(
+            bound,
             correct_lats + correct_lons
         )
 
