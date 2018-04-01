@@ -67,7 +67,6 @@ class TestGetBounding(unittest.TestCase):
         )
 
     def test_annotation_file(self):
-
         with open(self.test_annotation_path, 'r') as f:
             annotation_xml = f.read()
 

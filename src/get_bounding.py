@@ -1,5 +1,14 @@
 import re
 import os
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="Get the lat/lon min/max values given a .SAFE directory"
+)
+parser.add_argument(
+    'granule_safe_path',
+    help='relative path to a *.SAFE directory containing the annotation xml files'
+)
 
 
 def get_granule_bounding(granule_path):
@@ -108,3 +117,24 @@ def get_granule_extrema(swath_bounds):
         granule_lons += lons
 
     return get_extrema(granule_lats, granule_lons)
+
+
+def nice_printout(granule_path, extrema):
+    print("from granule: {}\n".format(granule_path))
+
+    print("lat:")
+    print("  min: {}".format(extrema['lat']['min']))
+    print("  max: {}".format(extrema['lat']['max']))
+
+    print("lon:")
+    print("  min: {}".format(extrema['lon']['min']))
+    print("  max: {}".format(extrema['lon']['max']))
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+    granule_path = args.granule_safe_path
+
+    extrema = get_granule_bounding(granule_path)
+
+    nice_printout(granule_path, extrema)
