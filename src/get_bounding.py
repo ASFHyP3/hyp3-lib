@@ -8,7 +8,7 @@ def get_granule_bounding(granule_path):
     annotation_xmls = read_files(annotation_xml_paths)
 
     bounds = [
-        get_bounding_values(xml_contents) for xml_contents in annotation_xmls
+        get_values_from(xml_contents) for xml_contents in annotation_xmls
     ]
 
     return get_granule_extrema(bounds)
@@ -36,21 +36,25 @@ def read_files(paths):
 
 
 def get_bounding(annotation_xml):
-    lat_extrema, lon_extrema = get_bounding_values(annotation_xml)
+    lats, lons = get_values_from(annotation_xml)
 
+    return get_extrema(lats, lons)
+
+
+def get_extrema(lats, lons):
     return {
-        "lat": lat_extrema,
-        "lon": lon_extrema
+        "lat": get_extrema_from(lats),
+        "lon": get_extrema_from(lons)
     }
 
 
-def get_bounding_values(annotation_xml):
+def get_values_from(annotation_xml):
     lats = numbers_between('latitude', annotation_xml)
     lons = numbers_between('longitude', annotation_xml)
 
     return (
-        get_extrema_from(lats),
-        get_extrema_from(lons)
+        lats,
+        lons
     )
 
 
@@ -94,5 +98,13 @@ def convert_to_float(match):
     return modifier * float(match)
 
 
-def get_granule_extrema(bound_values):
-    return {}
+def get_granule_extrema(swath_bounds):
+    granule_lats, granule_lons = [], []
+
+    for bound in swath_bounds:
+        lats, lons = bound
+
+        granule_lats += lats
+        granule_lons += lons
+
+    return get_extrema(granule_lats, granule_lons)

@@ -86,7 +86,6 @@ class TestGetBounding(unittest.TestCase):
         self.assertIn('lat', granule_bound)
         self.assertIn('lon', granule_bound)
 
-        print(granule_bound)
 
     def bound_equals(self, bound, check_values):
         lats, lons = bound['lat'], bound['lon']
