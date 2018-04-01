@@ -1,6 +1,7 @@
 import re
 import os
 
+
 def get_granule_bounding(granule_path):
     annotation_xml_paths = get_annotation_xmls_paths(granule_path)
 
@@ -91,6 +92,7 @@ def convert_to_float(match):
         match = match.replace('-', '')
 
     return modifier * float(match)
+
 
 def get_granule_extrema(bound_values):
     return {}

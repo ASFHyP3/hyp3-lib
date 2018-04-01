@@ -2,7 +2,6 @@ import unittest
 from get_bounding import get_bounding, get_granule_bounding
 
 
-
 class TestGetBounding(unittest.TestCase):
     def setUp(self):
         self.basicBox = """
@@ -31,8 +30,8 @@ class TestGetBounding(unittest.TestCase):
         """
 
         self.granule_folder_path = '../testing_files/test.SAFE'
-        self.test_annotation_path = self.granule_folder_path + "/annotation/test-swath-1.xml"
-
+        self.test_annotation_path = self.granule_folder_path + \
+            "/annotation/test-swath-1.xml"
 
     def test_simple_box(self):
         bound = get_bounding(self.basicBox)
