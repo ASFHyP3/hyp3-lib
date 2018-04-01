@@ -12,20 +12,25 @@ def numbers_between(tag, annotation_xml):
 
     return convert_matches_to_floats(matchs)
 
+
 def convert_matches_to_floats(matchs):
-    values = []
+    return [
+        convert_to_float(match) for match in matchs
+    ]
 
-    for match in matchs:
-        modifier = 1
 
-        if '-' in match:
-            modifier = -1
-            match = match.replace('-', '')
+def convert_to_float(match):
+    """
+         float conversion expects 1.0e-01
+         xml is formatted like   -1.0e+01
+    """
+    modifier = 1
 
-        value = modifier * float(match)
-        values.append(value)
+    if '-' in match:
+        modifier = -1
+        match = match.replace('-', '')
 
-    return values
+    return modifier * float(match)
 
 
 def get_bounding(annotation_xml):
