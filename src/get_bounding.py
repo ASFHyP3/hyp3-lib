@@ -26,11 +26,16 @@ def get_granule_bounding(granule_path):
 def get_annotation_xmls_paths(granule_path):
     annotation_dir = os.path.join(granule_path, 'annotation')
 
-    annotation_file_names = os.listdir(annotation_dir)
-
-    return [
-        os.path.join(annotation_dir, a) for a in annotation_file_names
+    annotation_folder_paths = [
+        os.path.join(annotation_dir, f)
+        for f in os.listdir(annotation_dir) if is_xml_file(f)
     ]
+
+    return annotation_folder_paths
+
+
+def is_xml_file(f):
+    return re.match('.*\.xml', f)
 
 
 def read_files(paths):
