@@ -99,8 +99,8 @@ def get_tile_for(demname,fi):
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
 
-    if use_aws_config:
-        myfile += '.aws'
+    #if use_aws_config:
+    #    myfile += '.aws'
 
     with open(myfile) as f:
         content = f.readlines()
