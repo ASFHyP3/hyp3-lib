@@ -1,14 +1,6 @@
 #! /usr/bin/env bash
 
-mkdir dist-old
-mv dist/* dist-old/
-echo "Last version: "
-cat version.txt
-echo "Enter new version: "
-read version
-echo $version > version.txt
-git add version.txt
-git commit -m "Uploaded version $version to PyPi"
+read  -n 1 -p "Be sure to run a test upload before production upload (Enter)" mainmenuinput
 
 echo python setup.py sdist
 python2 setup.py sdist
