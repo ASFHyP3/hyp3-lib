@@ -17,6 +17,10 @@ class TestSentinelGranule(unittest.TestCase):
         self.ga_obj = gl.SentinelGranule(self.ga)
         self.gb_obj = gl.SentinelGranule(self.gb)
 
+    def test_is_valid(self):
+        self.assertTrue(gl.SentinelGranule.is_valid(self.ga))
+        self.assertFalse(gl.SentinelGranule.is_valid('bob'))
+
     def test_matches_granules(self):
         to_str_value = str(self.ga_obj)
 

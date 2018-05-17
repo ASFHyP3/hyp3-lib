@@ -52,6 +52,10 @@ class Granule(object):
 
 
 class SentinelGranule(Granule):
+    @staticmethod
+    def is_valid(possible_granule_string):
+        return re.match(sentinel_pattern, possible_granule_string)
+
     def __init__(self, granule_string):
         length = len(granule_string)
 
