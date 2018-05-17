@@ -69,6 +69,8 @@ class TestSentinelGranule(unittest.TestCase):
         self.assertEqual(start_time, self.ga_obj.start_time)
         self.assertEqual(stop_time, self.ga_obj.stop_time)
 
+    def test_download(self):
+        self.ga_obj.download('.')
 
 if __name__ == '__main__':
     unittest.main()
