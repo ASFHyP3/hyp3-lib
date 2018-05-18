@@ -229,7 +229,7 @@ def get_ISCE_dem(west,south,east,north,demName,demXMLName):
         hdrName = demName.replace(ext,".hdr")
         dem2isce.dem2isce(demName,hdrName,demXMLName)
 
-def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
+def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes=1):
 
     if post is not None:
         if not utmflag:
@@ -271,7 +271,7 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
         os.mkdir("DEM")
 
     # Download tiles in parallel
-    p = mp.Pool(processes=8)
+    p = mp.Pool(processes=processes)
     p.map(
         get_tile_for,
         [(demname, fi) for fi in tile_list]
@@ -351,6 +351,12 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     return(demname)
 
 
+def positive_int(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("{} is an invalid positive int value".format(value))
+    return ivalue
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="get_dem.py",description="Get a DEM file in .tif format from the ASF DEM heap")
     parser.add_argument("lon_min",help="minimum longitude",type=float)
@@ -361,6 +367,8 @@ if __name__ == "__main__":
     parser.add_argument("-u","--utm",action='store_true',help="Create output in UTM projection")
     parser.add_argument("-p","--posting",type=float,help="Snap DEM to align with grid at given posting")
     parser.add_argument("--aws", action='store_const', const=True, help="use aws config file")
+    parser.add_argument("-t", "--threads", type=positive_int, default=1,
+            help="Num of threads to use for downloading DEM tiles")
     args = parser.parse_args()
 
     lat_min = float(args.lat_min)
@@ -372,8 +380,8 @@ if __name__ == "__main__":
     use_aws_config = args.aws if args.aws else False
 
     if args.posting is not None:
-        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting)
+        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting, processes=args.threads)
     else:
-        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag)
+        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag, processes=args.threads)
 
 
