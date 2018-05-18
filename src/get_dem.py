@@ -138,9 +138,6 @@ def get_cc(tmputm,post,pixsize):
             (east3,north3) = parseString(item)
 	if "Lower Right" in item:
             (east4,north4) = parseString(item)
-#	if "AREA_OR_POINT=Area" in item:
-#	    shift = pixsize / 2
-#	    print "Applying pixel shift of %f" % shift
 
     e_min = min(east1,east2,east3,east4)
     e_max = max(east1,east2,east3,east4)
