@@ -37,6 +37,8 @@ import argparse
 import commands
 import dem2isce
 import saa_func_lib as saa
+import multiprocessing as mp
+
 
 def get_best_dem(lat_min,lat_max,lon_min,lon_max):
 
@@ -94,13 +96,10 @@ def get_best_dem(lat_min,lat_max,lon_min,lon_max):
     print best_tile_list
     return(best_name, best_tile_list)
 
-def get_tile_for(demname,fi):
-
+def get_tile_for(args):
+    demname, fi = args
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
-
-    #if use_aws_config:
-    #    myfile += '.aws'
 
     with open(myfile) as f:
         content = f.readlines()
@@ -270,8 +269,14 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     # Copy the files into a dem directory
     if not os.path.isdir("DEM"):
         os.mkdir("DEM")
-    for fi in tile_list:
-        get_tile_for(demname,fi)
+
+    # Download tiles in parallel
+    p = mp.Pool(processes=8)
+    p.map(
+        get_tile_for,
+        [(demname, fi) for fi in tile_list]
+    )
+
 
     os.system("gdalbuildvrt temp.vrt DEM/*.tif")
 
