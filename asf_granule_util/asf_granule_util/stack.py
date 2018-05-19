@@ -1,9 +1,3 @@
-# stack.py
-# Rohan Weeden
-# August 17, 2017
-
-# Class definitions for a stack of granules
-
 from .pairs import get_pairs, SentinelGranulePair
 
 

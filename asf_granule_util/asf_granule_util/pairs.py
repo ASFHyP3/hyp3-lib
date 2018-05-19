@@ -1,10 +1,3 @@
-# pair.py
-# Rohan Weeden
-# Created: August 17, 2017
-
-# Class definitions and helper functions for pairs of granules
-
-
 class GranulePair(object):
     def __init__(self, g1, g2):
         self.master = g1
@@ -28,8 +21,8 @@ class SentinelGranulePair(GranulePair):
         return "{}-{}".format(pair.master.unique_id, pair.slave.unique_id)
 
 
-# pairs up granule, takes a list of granules sorted by time
 def get_pairs(granule_list, gap=1, pair_type=GranulePair):
+    """pairs up granule, takes a list of granules sorted by time"""
     granule_list.sort(key=lambda g: g.start_date)
     pair_list = []
 

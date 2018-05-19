@@ -1,9 +1,3 @@
-# granules.py
-# Rohan Weeden
-# Created: August 17, 2017
-
-# Class definitions for individual granule classes
-
 from .exceptions import InvalidGranuleException
 import os
 import re
