@@ -45,17 +45,6 @@ class Granule(object):
     def __repr__(self):
         return self.__str__()
 
-    def download(self, output_path):
-        module_path = os.path.dirname(os.path.realpath(__file__))
-        get_asf_path = os.path.join(module_path, 'deps/get_asf.py')
-        print(get_asf_path)
-        print(os.getcwd())
-        os.system('python {} --dir {} {}'.format(
-            get_asf_path,
-            output_path,
-            self.to_str()
-        ))
-
 
 
 class SentinelGranule(Granule):
