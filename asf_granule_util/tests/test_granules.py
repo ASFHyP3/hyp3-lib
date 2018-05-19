@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(
 
 import datetime
 
-import granule_lib as gl
+import asf_granule_util as gu
 
 
 class TestSentinelGranule(unittest.TestCase):
@@ -14,12 +14,12 @@ class TestSentinelGranule(unittest.TestCase):
         self.ga = 'S1A_IW_SLC__1SSV_20150829T123751_20150829T123821_007478_00A50D_C506'
         self.gb = 'S1B_IW_SLC__1SDV_20170224T023050_20170224T023117_004436_007B7E_4835'
 
-        self.ga_obj = gl.SentinelGranule(self.ga)
-        self.gb_obj = gl.SentinelGranule(self.gb)
+        self.ga_obj = gu.SentinelGranule(self.ga)
+        self.gb_obj = gu.SentinelGranule(self.gb)
 
     def test_is_valid(self):
-        self.assertTrue(gl.SentinelGranule.is_valid(self.ga))
-        self.assertFalse(gl.SentinelGranule.is_valid('bob'))
+        self.assertTrue(gu.SentinelGranule.is_valid(self.ga))
+        self.assertFalse(gu.SentinelGranule.is_valid('bob'))
 
     def test_matches_granules(self):
         to_str_value = str(self.ga_obj)
@@ -37,8 +37,8 @@ class TestSentinelGranule(unittest.TestCase):
         self.invalid_granules_raise_with(bad_mission)
 
     def invalid_granules_raise_with(self, test_str):
-        with self.assertRaises(gl.InvalidGranuleException):
-            gl.SentinelGranule(test_str)
+        with self.assertRaises(gu.InvalidGranuleException):
+            gu.SentinelGranule(test_str)
 
     def test_datetime_objects(self):
         start_date = datetime.datetime(
