@@ -11,9 +11,11 @@ import asf_granule_util as gu
 
 class TestSentinelGranule(unittest.TestCase):
     def setUp(self):
-        test_granules_path = os.path.join(
-            os.path.dirname(__file__), 'data/granules.json'
+        self.data_path = os.path.join(
+            os.path.dirname(__file__), 'data'
         )
+
+        test_granules_path = os.path.join(self.data_path, 'granules.json')
         with open(test_granules_path, 'r') as f:
             self.ga, self.gb = json.load(f)
 
@@ -71,6 +73,21 @@ class TestSentinelGranule(unittest.TestCase):
 
         self.assertEqual(start_time, self.ga_obj.start_time)
         self.assertEqual(stop_time, self.ga_obj.stop_time)
+
+    def test_str_and_repr(self):
+        path = os.path.join(self.data_path, 'correct_prints.json')
+        with open(path, 'r') as f:
+            correct = json.load(f)['sentinel']
+
+        self.assertEqual(
+            correct['str'],
+            str(self.ga_obj)
+        )
+
+        self.assertEqual(
+            correct['repr'],
+            repr(self.ga_obj)
+        )
 
 
 if __name__ == '__main__':
