@@ -28,7 +28,7 @@ class Granule(object):
         return str(self.to_str())
 
     def __repr__(self):
-        return 'Granule({g})'.format(g=self.str())
+        return 'Granule({g})'.format(g=self)
 
 
 class SentinelGranule(Granule):
