@@ -1,18 +1,18 @@
 # asf_granule_util
 
-# Install
+## Install
 To install requierments use
 
     pip install -r requierments.txt
 
-# Tests
+## Tests
 To run tests
 
     python tests/main.py [quick]
-
+    
 The quick flag will no run download tests which are a little slow.
 
-# Pypi
+## Pypi
 
 To upload to pypi test
 
