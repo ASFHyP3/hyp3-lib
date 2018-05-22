@@ -1,19 +1,25 @@
 class GranulePair(object):
-    def __init__(self, g1, g2):
-        self.master = g1
-        self.slave = g2
+    def __init__(self, master, slave):
+        self.master = master
+        self.slave = slave
 
-    def to_obj(self):
-        return [self.master.to_obj(), self.slave.to_obj()]
+    def tuple(self):
+        return (self.master, self.slave)
 
     def __str__(self):
-        return "GranulePair(" + str(self.to_obj()) + ")"
+        return "({m}, {s})".format(m=self.master, s=self.slave)
 
     def __repr__(self):
-        return self.__str__()
+        return "GranulePair({m}, {s})".format(
+            m=self.master,
+            s=self.slave
+        )
 
 
 class SentinelGranulePair(GranulePair):
+    def time_delta(self):
+        return self.master.get_date() - self.slave.get_date()
+
     def get_dates(self):
         return self.master.start_date + "_" + self.slave.start_date
 
