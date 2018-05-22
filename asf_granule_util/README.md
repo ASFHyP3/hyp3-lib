@@ -10,7 +10,7 @@ To run tests
 
     python tests/main.py [quick]
     
-The quick flag will no run download tests which are a little slow.
+The quick flag will not run download tests which are a little slow.
 
 ## Pypi
 
