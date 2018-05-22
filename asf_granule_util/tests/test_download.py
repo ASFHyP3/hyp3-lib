@@ -35,32 +35,27 @@ class TestDownload(unittest.TestCase):
             gu.download(
                 granule=self.ga_obj,
                 credentials={
-                    'username': 'hello',
-                    'password': 'world'
+                    'username': 'invalid',
+                    'password': 'creds'
                 },
                 directory=self.directory
             )
 
     def test_wrong_creds_dict(self):
-        with self.assertRaises(KeyError):
-            gu.download(
-                granule=self.ga_obj,
-                credentials={
-                    'usrname': 'hello',
-                    'password': 'world'
-                },
-                directory=self.directory
-            )
+        bad_creds = [
+            {'usrname': 'hello', 'password': 'world'},
+            {'username': 'hello', 'passwor': 'world'}
+        ]
 
-        with self.assertRaises(KeyError):
-            gu.download(
-                granule=self.ga_obj,
-                credentials={
-                    'username': 'hello',
-                    'passwor': 'world'
-                },
-                directory=self.directory
-            )
+        for cred in bad_creds:
+            with self.assertRaises(KeyError):
+                gu.download(
+                    granule=self.ga_obj,
+                    credentials=cred,
+                    directory=self.directory
+                )
+
+        self.cleanup(self.ga_obj)
 
     def test_download_starts_with_bar(self):
         self.download_test(
@@ -72,7 +67,7 @@ class TestDownload(unittest.TestCase):
         self.download_test(
             self.gb_obj,
             has_bar=False
-        )
+            )
 
     def download_test(self, granule, has_bar):
         with self.assertRaises(to.TimeoutException):
@@ -81,8 +76,7 @@ class TestDownload(unittest.TestCase):
         dl_started = self.has_download_started(granule)
         self.assertTrue(dl_started)
 
-        if dl_started:
-            os.remove(self.get_full_download_path(granule))
+        self.cleanup(granule)
 
     def download_with_timeout(self, granule, has_bar):
         with to.timeout(5):
@@ -98,6 +92,12 @@ class TestDownload(unittest.TestCase):
         path = self.get_full_download_path(granule)
 
         return os.path.exists(path)
+
+    def cleanup(self, granule):
+        try:
+            os.remove(self.get_full_download_path(granule))
+        except Exception:
+            pass
 
     def get_full_download_path(self, granule):
         return os.path.join(self.directory, str(granule) + '.zip')
