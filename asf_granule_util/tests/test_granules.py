@@ -1,18 +1,21 @@
-import unittest
 import sys
 import os
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), '..')))
-
+import unittest
+import json
 import datetime
 
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..')))
 import asf_granule_util as gu
 
 
 class TestSentinelGranule(unittest.TestCase):
     def setUp(self):
-        self.ga = 'S1A_IW_SLC__1SSV_20150829T123751_20150829T123821_007478_00A50D_C506'
-        self.gb = 'S1B_IW_SLC__1SDV_20170224T023050_20170224T023117_004436_007B7E_4835'
+        test_granules_path = os.path.join(
+            os.path.dirname(__file__), 'data/granules.json'
+        )
+        with open(test_granules_path, 'r') as f:
+            self.ga, self.gb = json.load(f)
 
         self.ga_obj = gu.SentinelGranule(self.ga)
         self.gb_obj = gu.SentinelGranule(self.gb)
