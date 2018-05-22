@@ -3,6 +3,8 @@
 */deps
 asf_api_assistant
 
+*.zip
+
 */*.py[cod]
 *$py.class
 
