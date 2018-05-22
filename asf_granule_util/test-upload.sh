@@ -6,8 +6,6 @@ cat version.txt
 echo "Enter new version: "
 read version
 echo $version > version.txt
-git add version.txt
-git commit -m "Uploaded version $version to PyPi"
 
 echo python setup.py sdist
 python2 setup.py sdist
