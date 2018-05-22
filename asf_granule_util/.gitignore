@@ -4,6 +4,7 @@
 asf_api_assistant
 
 *.zip
+creds.txt
 
 */*.py[cod]
 *$py.class

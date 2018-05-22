@@ -11,8 +11,9 @@ import asf_granule_util as gu
 
 class TestDownload(unittest.TestCase):
     def setUp(self):
+        path = os.path.dirname(__file__)
         test_granules_path = os.path.join(
-            os.path.dirname(__file__), 'data/granules.json'
+            path, 'data/granules.json'
         )
 
         with open(test_granules_path, 'r') as f:
@@ -21,43 +22,60 @@ class TestDownload(unittest.TestCase):
         self.ga_obj = gu.SentinelGranule(self.ga)
         self.gb_obj = gu.SentinelGranule(self.gb)
 
-        username, password = get_creds()
-
         self.directory = '.'
 
+        username, password = get_creds(os.path.join(path, '..', 'creds.txt'))
         self.creds = {
             'username': username,
             'password': password
         }
 
-    def tearDown(self):
-        os.remove(os.path.join(self.directory, self.ga + '.zip'))
-
     def test_download_starts_with_bar(self):
-        with self.assertRaises(to.TimeoutException):
-            self.download_with_timeout(has_bar=True)
+        self.download_test(
+            self.ga,
+            has_bar=True
+        )
 
     def test_download_starts_without_bar(self):
-        with self.assertRaises(to.TimeoutException):
-            self.download_with_timeout(has_bar=False)
+        self.download_test(
+            self.gb_obj,
+            has_bar=False
+        )
 
-    def download_with_timeout(self, has_bar):
+    def download_test(self, granule, has_bar):
+        with self.assertRaises(to.TimeoutException):
+            self.download_with_timeout(granule, has_bar=has_bar)
+
+        dl_started = self.has_download_started(granule)
+        self.assertTrue(dl_started)
+
+        if dl_started:
+            os.remove(self.get_full_download_path(granule))
+
+    def download_with_timeout(self, granule, has_bar):
         with to.timeout(5):
             gu.download(
-                granule=self.ga_obj,
+                granule=granule,
                 credentials=self.creds,
                 directory=self.directory,
-                progess_bar=has_bar
+                progess_bar=has_bar,
+                unzip=False
             )
 
+    def has_download_started(self, granule):
+        path = self.get_full_download_path(granule)
 
-def get_creds():
-    with open('/home/william/Documents/test-earthdata.sh', 'r') as f:
-        auth = f.read() \
-            .strip()    \
-            .split('\n')
+        return os.path.exists(path)
 
-    return tuple(v.split('=').pop() for v in auth)
+    def get_full_download_path(self, granule):
+        return os.path.join(self.directory, str(granule) + '.zip')
+
+
+def get_creds(path):
+    with open(path, 'r') as f:
+        out = f.read().strip().split()
+
+    return out
 
 
 if __name__ == "__main__":
