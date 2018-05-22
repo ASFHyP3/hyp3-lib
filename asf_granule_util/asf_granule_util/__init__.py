@@ -8,8 +8,11 @@ from .granules import SentinelGranule
 from .pairs import GranulePair, SentinelGranulePair
 from .stack import GranuleStack, SentinelGranuleStack
 from .exceptions import InvalidGranuleException
+from .download import download
 
 
-__all__ = ["SentinelGranule", "GranulePair",
-           "SentinelGranulePair", "GranuleStack", "SentinelGranuleStack",
-           "InvalidGranuleException"]
+__all__ = [
+    "SentinelGranule", "GranulePair",
+    "SentinelGranulePair", "GranuleStack", "SentinelGranuleStack",
+    "download", "InvalidGranuleException"
+]
