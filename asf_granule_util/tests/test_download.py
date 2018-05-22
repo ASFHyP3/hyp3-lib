@@ -30,6 +30,38 @@ class TestDownload(unittest.TestCase):
             'password': password
         }
 
+    def test_invalid_credentials_raise(self):
+        with self.assertRaises(gu.InvalidCredentialsException):
+            gu.download(
+                granule=self.ga_obj,
+                credentials={
+                    'username': 'hello',
+                    'password': 'world'
+                },
+                directory=self.directory
+            )
+
+    def test_wrong_creds_dict(self):
+        with self.assertRaises(KeyError):
+            gu.download(
+                granule=self.ga_obj,
+                credentials={
+                    'usrname': 'hello',
+                    'password': 'world'
+                },
+                directory=self.directory
+            )
+
+        with self.assertRaises(KeyError):
+            gu.download(
+                granule=self.ga_obj,
+                credentials={
+                    'username': 'hello',
+                    'passwor': 'world'
+                },
+                directory=self.directory
+            )
+
     def test_download_starts_with_bar(self):
         self.download_test(
             self.ga,

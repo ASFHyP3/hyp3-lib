@@ -37,6 +37,9 @@ def download(
     granule_path = get_granule_path(directory, granule_str)
     do_download(download, granule_path, total_size)
 
+    if not was_authorized(granule_path):
+        raise InvalidCredentialsException('username or password incorrect')
+
     if unzip:
         do_unzip(granule_path)
 
@@ -104,7 +107,11 @@ def get_download_url(granule_str):
     return zip_urls.pop()
 
 
-def do_unzip(self, path):
+def was_authorized(granule_path):
+    return zf.is_zipfile(granule_path)
+
+
+def do_unzip(path):
     output_path = os.path.dirname(path)
 
     with zipfile(path) as zf:
@@ -116,3 +123,7 @@ def zipfile(path):
     zip_ref = zf.ZipFile(path, 'r')
     yield zip_ref
     zip_ref.close()
+
+
+class InvalidCredentialsException(Exception):
+    pass
