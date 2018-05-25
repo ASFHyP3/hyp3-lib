@@ -37,6 +37,8 @@ import argparse
 import commands
 import dem2isce
 import saa_func_lib as saa
+import multiprocessing as mp
+
 
 def get_best_dem(lat_min,lat_max,lon_min,lon_max):
 
@@ -94,13 +96,10 @@ def get_best_dem(lat_min,lat_max,lon_min,lon_max):
     print best_tile_list
     return(best_name, best_tile_list)
 
-def get_tile_for(demname,fi):
-
+def get_tile_for(args):
+    demname, fi = args
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
-
-    #if use_aws_config:
-    #    myfile += '.aws'
 
     with open(myfile) as f:
         content = f.readlines()
@@ -139,9 +138,6 @@ def get_cc(tmputm,post,pixsize):
             (east3,north3) = parseString(item)
 	if "Lower Right" in item:
             (east4,north4) = parseString(item)
-#	if "AREA_OR_POINT=Area" in item:
-#	    shift = pixsize / 2
-#	    print "Applying pixel shift of %f" % shift
 
     e_min = min(east1,east2,east3,east4)
     e_max = max(east1,east2,east3,east4)
@@ -230,7 +226,7 @@ def get_ISCE_dem(west,south,east,north,demName,demXMLName):
         hdrName = demName.replace(ext,".hdr")
         dem2isce.dem2isce(demName,hdrName,demXMLName)
 
-def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
+def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes=1):
 
     if post is not None:
         if not utmflag:
@@ -270,8 +266,14 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     # Copy the files into a dem directory
     if not os.path.isdir("DEM"):
         os.mkdir("DEM")
-    for fi in tile_list:
-        get_tile_for(demname,fi)
+
+    # Download tiles in parallel
+    p = mp.Pool(processes=processes)
+    p.map(
+        get_tile_for,
+        [(demname, fi) for fi in tile_list]
+    )
+
 
     os.system("gdalbuildvrt temp.vrt DEM/*.tif")
 
@@ -346,6 +348,12 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None):
     return(demname)
 
 
+def positive_int(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("{} is an invalid positive int value".format(value))
+    return ivalue
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="get_dem.py",description="Get a DEM file in .tif format from the ASF DEM heap")
     parser.add_argument("lon_min",help="minimum longitude",type=float)
@@ -356,6 +364,8 @@ if __name__ == "__main__":
     parser.add_argument("-u","--utm",action='store_true',help="Create output in UTM projection")
     parser.add_argument("-p","--posting",type=float,help="Snap DEM to align with grid at given posting")
     parser.add_argument("--aws", action='store_const', const=True, help="use aws config file")
+    parser.add_argument("-t", "--threads", type=positive_int, default=1,
+            help="Num of threads to use for downloading DEM tiles")
     args = parser.parse_args()
 
     lat_min = float(args.lat_min)
@@ -367,8 +377,8 @@ if __name__ == "__main__":
     use_aws_config = args.aws if args.aws else False
 
     if args.posting is not None:
-        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting)
+        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting, processes=args.threads)
     else:
-        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag)
+        get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag, processes=args.threads)
 
 
