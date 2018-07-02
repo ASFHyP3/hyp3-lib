@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import os
 from osgeo import gdal
 import saa_func_lib as saa
 import numpy as np
@@ -19,29 +20,53 @@ def getOrigins(files):
 
     return ul,lr,trans[1],trans[5]
 
-def cutGeotiffsByLine(files):
+def copyOrigins(files,all_coords,all_pixsize):
+    
+    ul = np.zeros((2,len(files)))
+    lr = np.zeros((2,len(files)))
 
-    ul,lr,xres,yres = getOrigins(files)
-
-    diff_ul = np.zeros((2,len(files)),dtype=np.uint16)
-    diff_lr = np.zeros((2,len(files)),dtype=np.uint16)
-     
-    diff_ul[0] = (max(ul[0])-ul[0])/xres    
-    diff_ul[1] = (min(ul[1])-ul[1])/yres
+    for i in range(len(files)):
+        coords = all_coords[i]
+        ul[0,i] = coords[0]
+        lr[0,i] = coords[2]
+        ul[1,i] = coords[1]
+        lr[1,i] = coords[3]
  
-    print "Difference lists:"
-    print diff_ul
+        if i == 0:
+            xres = all_pixsize[i]
+            yres = all_pixsize[i]
 
+    return ul,lr,xres,yres
+
+def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
+
+    if all_coords is None:
+        ul,lr,xres,yres = getOrigins(files)
+    else:
+        ul,lr,xres,yres = copyOrigins(files,all_coords,all_pixsize)
+
+    diff_ul = np.zeros((2,len(files)))
+    diff_lr = np.zeros((2,len(files)))
+   
+    diff_ul[0] = (max(ul[0])-ul[0])/xres    
+    diff_ul[1] = (min(ul[1])-ul[1])/(-1*yres)
+ 
+    print "Difference list:"
+    print diff_ul
+ 
     lrx = min(lr[0])
     lry = max(lr[1])
     lenx = (lrx-max(ul[0])) / xres
-    leny = (lry-min(ul[1])) / yres
+    leny = (lry-min(ul[1])) / (-1*yres)
 
     print "Size of output images {} x {}".format(lenx,leny)
 
     outfiles = []   
     for i in range(len(files)):
         outfile = files[i].replace(".tif","_cut.tif")
+	if all_coords is not None:
+	    outfile = os.path.basename(outfile)
+	print "Processing file {} to create file {}".format(files[i],outfile)
         gdal.Translate(outfile,files[i],srcWin=[diff_ul[0,i],diff_ul[1,i],lenx,leny])
         outfiles.append(outfile)
 
