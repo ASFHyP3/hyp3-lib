@@ -69,7 +69,7 @@ def cutFiles(arg):
 
     if len(arg) == 1:
         print "Nothing to do!!!  Exiting..."
-        exit(0)
+        return(0)
 
     file1 = arg[0]
    
@@ -115,13 +115,22 @@ def cutFiles(arg):
     for x in range (len(arg)-1):
         tmp = getPixSize(arg[x+1])
 	pixSize = max(pixSize,tmp)
-     
+    
+    # Check to make sure there was some overlap
+    print("Clipping coordinates: {}".format(coords))
+    diff1 = (coords[2] - coords[0]) / pixSize
+    diff2 = (coords[3] - coords[1]) / pixSize * -1.0
+    print "Found overlap size of {}x{}".format(int(diff1),int(diff2))
+    if diff1 < 1 or diff2 < 1:
+         print "ERROR:  There was no overlap between scenes"
+         exit(1) 
     # Finally, clip all scenes to the overlap region at the largest pixel size
     lst = list(coords)
     tmp = lst[3]
     lst[3] = lst[1]
     lst[1] = tmp
     coords = tuple(lst)
+    print("Pixsize : x = {} y = {}".format(pixSize,-1*pixSize))
     for x in range (len(arg)):
         file1 = arg[x]
         file1_new = file1.replace('.tif','_clip.tif')

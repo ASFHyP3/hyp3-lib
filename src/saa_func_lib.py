@@ -62,6 +62,10 @@ def open_gdal_file(filename):
 def gdal_num_bands(filehandle):
         return filehandle.RasterCount
 
+def read_gdal_metadata(filehandle):
+    md = filehandle.GetMetadata()
+    return md
+
 def read_gdal_file(filehandle,band=1,gcps=False):
     geotransform = filehandle.GetGeoTransform()
     geoproj = filehandle.GetProjection()
