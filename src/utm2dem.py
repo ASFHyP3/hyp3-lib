@@ -89,8 +89,12 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
     execute("create_dem_par {} < {}".format(demPar,demParIn),logfile=log)
 
     # Replace 0 with -1; Replace anything <= -32767 with -1; byteswap
-    data[data==0] = -1
-    data[data<=-32767] = -1
+#    data[data==0] = -1
+#    data[data<=-32767] = -1
+
+    # Replace 0 with 1; Replace anything <= -32767 with 0; byteswap
+    data[data==0] = 1
+    data[data<=-32767] = 0
     data = data.byteswap()
 
     # Convert to ENVI (binary) format
