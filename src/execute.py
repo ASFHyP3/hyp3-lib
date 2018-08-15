@@ -77,6 +77,10 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
                 next_line = True
             elif 'Error per GCP' in line: # MapReady message that is NOT an error
                 pass
+            elif 'Setting maximum error to be' in line: # RTC message that is NOT an error
+                pass
+            elif 'Root mean squared error' in line: # RTC message that is NOT an error
+                pass
             elif 'ERROR' in line.upper():
                 raise Exception(tool + ': ' + line)
         # No error line found, die with last line
