@@ -35,18 +35,12 @@
 from lxml import etree
 import get_dem
 import os
-import math
 import argparse
 from getSubSwath import get_bounding_box_file
 from execute import execute
 from osgeo import gdal
 import shutil
-
-def get_zone(lon_min,lon_max):
-    center_lon = (lon_min+lon_max)/2;
-    zf = (center_lon+180)/6+1
-    zone = math.floor(zf)
-    return zone
+from get_zone import get_zone
 
 def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None):
     lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)
