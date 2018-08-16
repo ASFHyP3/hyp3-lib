@@ -2,11 +2,12 @@
 
 import os
 import sys
+import math
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
-
+from get_zone import get_zone
 
 # Determine the boundary polygon of a GeoTIFF file
 def geotiff2polygon(geotiff):
@@ -204,13 +205,9 @@ def geometry_geo2proj(lat_max,lat_min,lon_max,lon_min):
     coordTrans = osr.CoordinateTransformation(inSpatialRef,outSpatialRef)
 
     x1, y1, h = coordTrans.TransformPoint(lon_max, lat_min)
-    logging.debug("Output coordinate: {} {} {}".format(x1,y1,h))
     x2, y2, h = coordTrans.TransformPoint(lon_min, lat_min)
-    logging.debug("Output coordinate: {} {} {}".format(x2,y2,h))
     x3, y3, h = coordTrans.TransformPoint(lon_max, lat_max)
-    logging.debug("Output coordinate: {} {} {}".format(x3,y3,h))
     x4, y4, h = coordTrans.TransformPoint(lon_min, lat_max)
-    logging.debug("Output coordinate: {} {} {}".format(x4,y4,h))
 
     y_min = min(y1,y2,y3,y4)
     y_max = max(y1,y2,y3,y4)
