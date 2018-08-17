@@ -9,7 +9,6 @@ def createAmp(fi,nodata=None):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
     ampdata = np.sqrt(data)
     outfile = fi.replace('.tif','_amp.tif')
-    print outfile
     saa.write_gdal_file_float(outfile,trans,proj,ampdata,nodata=nodata)
     return outfile
 
