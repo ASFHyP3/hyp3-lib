@@ -77,8 +77,8 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   diff = 3.0*xp - cp
   diff[diff < 0] = 0
   bp = np.sqrt(diff)*mask
-  mask = None
-  diff = None
+
+  mask = (xp > 0).astype(int)
 
   blue_mask = (xp < g).astype(int)
 
@@ -103,6 +103,8 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
     red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)
   else:
     red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)*255
+  red[red==0] = 1
+  red = red * mask
   outBand.WriteArray(red)
   red = None
   print('Calculate green channel and save in GeoTIFF')
@@ -111,6 +113,8 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
     green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)
   else:
     green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)*255
+  green[green==0]=1
+  green = green * mask
   outBand.WriteArray(green)
   green = None
   print('Calculate blue channel and save in GeoTIFF')
@@ -119,6 +123,8 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
     blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)
   else:
     blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)*255
+  blue[blue==0] = 1
+  blue = blue * mask
   outBand.WriteArray(blue)
   blue = None
   xp = None
