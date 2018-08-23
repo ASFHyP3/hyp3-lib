@@ -42,7 +42,7 @@ from osgeo import gdal
 import shutil
 from get_zone import get_zone
 
-def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None):
+def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None):
     lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)
     if opentopoFlag:
         cmd = "wget -O%s \"http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff\"" % (outfile,lon_min,lat_min,lon_max,lat_max)
@@ -56,7 +56,11 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None):
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
 	    shutil.move("tmpdem.tif","%s" % outfile)
     else:
-        demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag)
+        if post is not None:
+             if not utmFlag:
+	        print "ERROR: May use posting with UTM projection only"
+	        sys.exit(1)
+        demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag,post)
 
     return(outfile,demtype)
     
