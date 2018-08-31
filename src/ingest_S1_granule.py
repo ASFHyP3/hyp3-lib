@@ -2,6 +2,7 @@
 
 from execute import execute
 import logging
+import shutil
 from par_s1_slc_single import par_s1_slc_single
 from SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
 from getBursts import getBursts
