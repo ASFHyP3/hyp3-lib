@@ -6,10 +6,11 @@ import shutil
 from par_s1_slc_single import par_s1_slc_single
 from SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
 from getBursts import getBursts
-
+import os
 
 def ingest_S1_granule(inFile,pol,look_fact,outFile):
 
+    pol = pol.lower()
     inputType = inFile[7:11]
     grd = "{}.grd".format(pol)
     
