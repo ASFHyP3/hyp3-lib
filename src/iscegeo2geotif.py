@@ -75,7 +75,7 @@ def makeKMZ(infile,outfile):
         myzip.write(lrgfile)
     shutil.move(pngfile,outpng)
 
-def convert_files(s1aFlag,proj=None):
+def convert_files(s1aFlag,proj=None,res=30):
 
     makeKMZ("filt_topophase.unw.geo","colorized_unw")
     makeKMZ("filt_topophase.flat.geo","color")
@@ -120,7 +120,7 @@ def convert_files(s1aFlag,proj=None):
         gdal.Translate("phase.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
     else:
         gdal.Translate("tmp.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
-        gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=30.0,yRes=30.0,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
+        gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
 
     # Create browse aux.xml files
@@ -139,7 +139,7 @@ def convert_files(s1aFlag,proj=None):
         gdal.Translate("amp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
     else:
         gdal.Translate("tmp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
-        gdal.Warp("amp.tif","tmp.tif",dstSRS=proj,xRes=30.0,yRes=30.0,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
+        gdal.Warp("amp.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
     
     # Create the coherence image
@@ -148,7 +148,7 @@ def convert_files(s1aFlag,proj=None):
         gdal.Translate("coherence.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])
     else:
         gdal.Translate("tmp.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])
-        gdal.Warp("coherence.tif","tmp.tif",dstSRS=proj,xRes=30.0,yRes=30.0,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
+        gdal.Warp("coherence.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
 
 def makeEnviHdr(fileName,width,length,save1,save2):
