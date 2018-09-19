@@ -17,6 +17,8 @@ def makeAsfBrowse(geotiff, baseName):
         resample_geotiff(geotiff,x1,"KML",kmzName)
         if x1 < 1024:      
             resample_geotiff(geotiff,x1,"PNG",pngName)
+        else:
+            resample_geotiff(geotiff,1024,"PNG",pngName)
         resample_geotiff(geotiff,x1,"PNG",lrgName)
     else:
         resample_geotiff(geotiff,2048,"KML",kmzName)
