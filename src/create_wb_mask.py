@@ -7,6 +7,7 @@ import argparse
 from osgeo import gdal
 from osgeo import ogr
 import scipy.misc
+import saa_func_lib as saa
 
 def create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile=None,mask=1):
     
@@ -17,8 +18,15 @@ def create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile=None,mask=1):
     src_ds = ogr.Open(shpfile)
     src_lyr=src_ds.GetLayer()
 
-    ncols = int((xmax-xmin)/res+0.5)
-    nrows = int((ymax-ymin)/res+0.5)
+    logging.info("Using xmin, xmax {} {}, ymin, ymax {} {}".format(xmin,xmax,ymin,ymax))
+
+    if (xmax >= 177 and xmin <= -177):
+        logging.info("Using anti-meridian special code")
+        ncols = int((360-(xmax-xmin))/res+0.5)
+        nrows = int((ymax-ymin)/res+0.5)
+    else:
+        ncols = int((xmax-xmin)/res+0.5)
+        nrows = int((ymax-ymin)/res+0.5)
     logging.info("Creating water body mask of size {} x {} (lxs) using {}".format(nrows,ncols,shpfile))
     maskvalue = mask 
 
