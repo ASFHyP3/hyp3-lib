@@ -75,51 +75,20 @@ def makeKMZ(infile,outfile):
         myzip.write(lrgfile)
     shutil.move(pngfile,outpng)
 
+
 def convert_files(s1aFlag,proj=None,res=30):
 
     makeKMZ("filt_topophase.unw.geo","colorized_unw")
     makeKMZ("filt_topophase.flat.geo","color")
+
+    gdal.Translate("phase.tif","filt_topophase.unw.geo",bandList=[1])
+    gdal.Translate("amp.tif","filt_topophase.unw.geo",bandList=[2])
+    gdal.Translate("coherence.tif","phsig.cor.geo",bandList=[2])
     
-    # Create two geotiffs from the two banded image
-    root = etree.parse("filt_topophase.unw.geo.xml")
-    rt = root.getroot()
-    for child in rt:
-        if child.attrib['name'] == 'width':
-            width_str = child[0].text
-            width = int(width_str)
-        if child.attrib['name'] == 'length':
-            length_str = child[0].text
-	    length = int(length_str)
-
-    fullAmp = np.zeros((length, width), dtype = np.float32)
-    fullPhase = np.zeros((length, width), dtype = np.float32)
-    with open('filt_topophase.unw.geo', 'rb') as fp:
-        for i in range(length):
-            fullAmp[i] = np.fromfile(fp, dtype = np.float32, count = width)
-            fullPhase[i] = np.fromfile(fp, dtype = np.float32, count = width)
-
-    # Account for weirdness of isce2gis.py program
-    if s1aFlag:
-        os.chdir("..")
-        execute("isce2gis.py envi -i merged/filt_topophase.unw.geo")
-        os.chdir("merged")
-    else:
-        execute("isce2gis.py envi -i filt_topophase.unw.geo")
-
-    file = open("filt_topophase.unw.geo.hdr","r")
-    for line in file:
-        if re.search("coordinate",line):
-	    save1 = line
-        if re.search("map.info",line):
-	    save2 = line
-    file.close
-    
-    fullPhase.tofile("filt_topophase.unw.phase.bin")
-    makeEnviHdr("filt_topophase.unw.phase.bin.hdr",width,length,save1,save2)
     if proj is None:
-        gdal.Translate("phase.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("phase.tif","filt_topophase.unw.geo",creationOptions = ['COMPRESS=PACKBITS'])
     else:
-        gdal.Translate("tmp.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("tmp.tif","filt_topophase.unw.geo",creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
 
@@ -133,39 +102,20 @@ def convert_files(s1aFlag,proj=None,res=30):
     shutil.move("phase_large.png.aux.xml","colorized_unw_large.png.aux.xml")
     shutil.copy("colorized_unw_large.png.aux.xml","color_large.png.aux.xml")
 
-    fullAmp.tofile("filt_topophase.unw.amp.bin")
-    makeEnviHdr("filt_topophase.unw.amp.bin.hdr",width,length,save1,save2)
     if proj is None:
-        gdal.Translate("amp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("amp.tif","filt_topophase.unw.geo",creationOptions = ['COMPRESS=PACKBITS'])
     else:
-        gdal.Translate("tmp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("tmp.tif","filt_topophase.unw.geo",creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("amp.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
     
     # Create the coherence image
-    makeEnviHdr("phsig.cor.geo.hdr",width,length,save1,save2)
     if proj is None:
         gdal.Translate("coherence.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])
     else:
         gdal.Translate("tmp.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("coherence.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
-
-def makeEnviHdr(fileName,width,length,save1,save2):
-    f = open(fileName,'w')
-    f.write("ENVI")
-    f.write("description = {Data product generated using ISCE}\n")
-    f.write("samples = %i\n" % width)
-    f.write("lines   = %i\n" %length)
-    f.write("bands   = 1\n")
-    f.write("header offset = 0\n")
-    f.write("file type = ENVI Standard\n")
-    f.write("data type = 4\n")
-    f.write("interleave = bip\n")
-    f.write("byte order = 0\n")
-    f.write("%s\n" % save1)
-    f.write("%s\n" % save2)
-    f.close()
 
 def main():
   convert_files(True)
