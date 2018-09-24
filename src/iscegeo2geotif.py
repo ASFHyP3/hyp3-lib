@@ -82,9 +82,9 @@ def convert_files(s1aFlag,proj=None,res=30):
     makeKMZ("filt_topophase.flat.geo","color")
 
     if proj is None:
-        gdal.Translate("phase.tif","filt_topophase.unw.geo",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("phase.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
     else:
-        gdal.Translate("tmp.tif","filt_topophase.unw.geo",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("tmp.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
 
@@ -99,9 +99,9 @@ def convert_files(s1aFlag,proj=None,res=30):
     shutil.copy("colorized_unw_large.png.aux.xml","color_large.png.aux.xml")
 
     if proj is None:
-        gdal.Translate("amp.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("amp.tif","filt_topophase.unw.geo",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
     else:
-        gdal.Translate("tmp.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("tmp.tif","filt_topophase.unw.geo",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("amp.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
     
