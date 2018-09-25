@@ -24,11 +24,11 @@ def byteSigmaScale(infile,outfile):
     # For some reason, I'm still getting zeros in my byte images eventhough I'm using 1,255 scaling!
     # The following in an attempt to fix that!
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(infile))
-    mask = (data>0).astype(int)
+    mask = (data>0).astype(bool)
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(outfile))
-    mask2 = (data>0).astype(int)
+    mask2 = (data>0).astype(bool)
     mask3 = mask ^ mask2
-    data = data + mask3
+    data[mask3==True] = 1
     saa.write_gdal_file_float(outfile,trans,proj,data,nodata=0) 
 
 if __name__ == "__main__":
