@@ -113,10 +113,32 @@ def read_gdal_file_geo(filehandle,band=1):
         return filehandle.RasterXSize,filehandle.RasterYSize,geotransform,geoproj
 
 
+def getCorners(fi):
+    (x1,y1,t1,p1) = read_gdal_file_geo(open_gdal_file(fi))
+    ullon1 = t1[0]
+    ullat1 = t1[3]
+    lrlon1 = t1[0] + x1*t1[1]
+    lrlat1 = t1[3] + y1*t1[5]
+    return (ullon1,lrlon1,lrlat1,ullat1)
+
+def getPixSize(fi):
+    (x1,y1,t1,p1) = read_gdal_file_geo(open_gdal_file(fi))
+    return (t1[1])
+
+def reproject_gcs_to_utm(infile,outfile,pixSize):
+    lon_min,lon_max,lat_min,lat_max = getCorners(master) 
+    zone = get_zone(lon_min,lon_max)
+    if (lat_max+lat_min) > 0:
+        # Northern hemisphere
+        proj = ('EPSG:326%02d' % int(zone))
+    else:
+        # Southern hemisphere
+        proj = ('EPSG:327%02d' % int(zone))
+    coords = [lon_min,lat_max,lon_max,lat_min]
+    gdal.Translate(outfile,infile,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
 
 
-# Subroutine for generating corners
-
+# Subroutine for generating All corners
 def get_corners(originx,originy,xsize,ysize,xres,yres):
         ulx = originx
         uly = originy

@@ -42,6 +42,7 @@ def get_bounding_box_file(safeFile):
         if name in myfile:      
             myxml = "%s/annotation/%s" % (safeFile,myfile)
     (lat1,lat2,lon1,lon2) = get_bounding_box(myxml)
+
     name = "003.xml"
     for myfile in os.listdir(mydir):
         if name in myfile:      
@@ -53,11 +54,17 @@ def get_bounding_box_file(safeFile):
     lon_max = max(lon1,lon2,lon3,lon4)
     lon_min = min(lon1,lon2,lon3,lon4)
 
-    lat_max = lat_max + 0.15;
-    lat_min = lat_min - 0.15;
-    lon_max = lon_max + 0.15;
-    lon_min = lon_min - 0.15;
-    
+    if (lon_min <= -177 and lon_max>177):
+        lat_max = lat_max - 0.15;
+        lat_min = lat_min + 0.15;
+        lon_max = lon_max - 0.15;
+        lon_min = lon_min + 0.15;
+    else:
+        lat_max = lat_max + 0.15;
+        lat_min = lat_min - 0.15;
+        lon_max = lon_max + 0.15;
+        lon_min = lon_min - 0.15;
+
     return lat_max,lat_min,lon_max,lon_min
 
 
@@ -66,13 +73,28 @@ def get_bounding_box(myxml):
     lon_min = 180
     lat_max = -90
     lat_min = 90
+    lon = []
     root = etree.parse(myxml)
     for coord in root.iter('latitude'):
          lat_max = max(float(coord.text),lat_max)
          lat_min = min(float(coord.text),lat_min)
     for coord in root.iter('longitude'):
-         lon_max = max(float(coord.text),lon_max)
-         lon_min = min(float(coord.text),lon_min)
+         lon.append(float(coord.text))
+
+    lon_max = max(lon)
+    lon_min = min(lon)
+
+    # Fix case that crosses the date line
+    if lon_min <= -178 and lon_max >= 178:
+        lon_left = 180
+        lon_right = -180
+        for l in lon:
+            if (l > 0):
+                lon_left = min(l,lon_left)
+            else:
+                lon_right = max(l,lon_right)
+        lon_max = lon_left
+        lon_min = lon_right
     return lat_max,lat_min,lon_max,lon_min
 
 ###############################################################################
@@ -95,10 +117,6 @@ def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
             (lat_max3,lat_min3,lon_max3,lon_min3) = get_bounding_box(myfile)
     os.chdir("../../")
 
-#    print lat_max1,lat_min1,lon_max1,lon_min1
-#    print lat_max2,lat_min2,lon_max2,lon_min2
-#    print lat_max3,lat_min3,lon_max3,lon_min3
-
     wkt1 = "POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))" % (lat_min,lon_min,lat_max,lon_min,lat_max,lon_max,lat_min,lon_max,lat_min,lon_min)
     wkt2 = "POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))" % (lat_min1,lon_min1,lat_max1,lon_min1,lat_max1,lon_max1,lat_min1,lon_max1,lat_min1,lon_min1)
     wkt3 = "POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))" % (lat_min2,lon_min2,lat_max2,lon_min2,lat_max2,lon_max2,lat_min2,lon_max2,lat_min2,lon_min2)
@@ -110,19 +128,13 @@ def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
     poly3 = ogr.CreateGeometryFromWkt(wkt4)
 
     intersect1 = poly0.Intersection(poly1)
-#    print intersect1.ExportToWkt()
     area1 = intersect1.GetArea()
-#    print "area1 is %s" % area1
 
     intersect2 = poly0.Intersection(poly2)
-#    print intersect2.ExportToWkt()
     area2 = intersect2.GetArea()
-#    print "area2 is %s" % area2
 
     intersect3 = poly0.Intersection(poly3)
-#    print intersect3.ExportToWkt()
     area3 = intersect3.GetArea()
-#    print "area3 is %s" % area3
 
     ss = 0
     if (area1 > area2):
@@ -241,19 +253,13 @@ def SelectAllSubswaths(safeFile,lon_min,lat_min,lon_max,lat_max):
 
     # Calculate intersections
     intersect1 = poly0.Intersection(poly1)
-#    print intersect1.ExportToWkt()
     area1 = intersect1.GetArea()
-#    print "area1 is %s" % area1
 
     intersect2 = poly0.Intersection(poly2)
-#    print intersect2.ExportToWkt()
     area2 = intersect2.GetArea()
-#    print "area2 is %s" % area2
 
     intersect3 = poly0.Intersection(poly3)
-#    print intersect3.ExportToWkt()
     area3 = intersect3.GetArea()
-#    print "area3 is %s" % area3
 
     ss = []
     polygon = []
