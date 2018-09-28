@@ -57,7 +57,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
       tmpExt = ('_resamp{0}.tif'.format(os.getpid()))
       resampleFile = outFile.replace(orgExt, tmpExt)
       gdal.Translate(resampleFile, raster, resampleAlg=GRIORA_Bilinear,
-        xRes=pixelWidth, yRes=pixelHeight)
+        xRes=pixelWidth, yRes=pixelHeight, noData="0")
       raster = gdal.Open(resampleFile)
 
   # Resample image using cubic interpolation
@@ -73,7 +73,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
         width=width, rgbExpand='RGB')
   elif outFormat.upper() == 'PNG':
     if bandCount == 1:
-      gdal.Translate(outFile, raster, format='PNG', resampleAlg=GRIORA_Cubic,
+      gdal.Translate(outFile, raster, format='PNG', resampleAlg=GRIORA_Bilinear,
         width=width, noData='0')
     elif bandCount == 3:
       gdal.Translate(outFile, raster, format='PNG', resampleAlg=GRIORA_Bilinear,
