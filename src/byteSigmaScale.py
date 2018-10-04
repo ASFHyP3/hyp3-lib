@@ -7,6 +7,7 @@ from osgeo import gdal
 
 def get2sigmacutoffs(fi):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
+    data = data.astype(float)
     top = np.percentile(data,99)
     data[data>top]=top
     data[data==0]=np.nan
@@ -29,7 +30,7 @@ def byteSigmaScale(infile,outfile):
     mask2 = (data>0).astype(bool)
     mask3 = mask ^ mask2
     data[mask3==True] = 1
-    saa.write_gdal_file_float(outfile,trans,proj,data,nodata=0) 
+    saa.write_gdal_file_byte(outfile,trans,proj,data,nodata=0) 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert a floating point tiff into a byte tiff using 2-sigma scaling.")

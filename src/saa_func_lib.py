@@ -215,7 +215,7 @@ def write_gdal_file_float(filename,geotransform,geoproj,data,nodata=None):
         dst_ds.SetProjection(geoproj)
         return 1
 
-def write_gdal_file_byte(filename,geotransform,geoproj,data):
+def write_gdal_file_byte(filename,geotransform,geoproj,data,nodata=None):
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -224,6 +224,8 @@ def write_gdal_file_byte(filename,geotransform,geoproj,data):
         geotransform = [item for item in geotransform]
         dst_ds.SetGeoTransform(geotransform)
         dst_ds.GetRasterBand(1).WriteArray(data)
+	if nodata is not None:
+            dst_ds.GetRasterBand(1).SetNoDataValue(nodata)
         dst_ds.SetProjection(geoproj)
 
         return 1
