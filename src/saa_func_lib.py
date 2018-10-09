@@ -134,9 +134,8 @@ def reproject_gcs_to_utm(infile,outfile,pixSize):
     else:
         # Southern hemisphere
         proj = ('EPSG:327%02d' % int(zone))
-    coords = [lon_min,lat_max,lon_max,lat_min]
-    gdal.Translate(outfile,infile,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
 
+    gdal.Warp(outfile,infile,dstSRS=proj,xRes=pixSize,yRes=pixSize,creationOptions=['COMPRESS=LZW'])
 
 # Subroutine for generating All corners
 def get_corners(originx,originy,xsize,ysize,xres,yres):
