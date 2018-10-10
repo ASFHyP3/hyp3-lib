@@ -47,7 +47,7 @@ import os
 import sys
 import math
 import xml.dom.minidom
-
+from get_zone import get_zone
 
 #####################
 #
@@ -126,7 +126,7 @@ def getPixSize(fi):
     return (t1[1])
 
 def reproject_gcs_to_utm(infile,outfile,pixSize):
-    lon_min,lon_max,lat_min,lat_max = getCorners(master) 
+    lon_min,lon_max,lat_min,lat_max = getCorners(infile) 
     zone = get_zone(lon_min,lon_max)
     if (lat_max+lat_min) > 0:
         # Northern hemisphere
@@ -134,9 +134,8 @@ def reproject_gcs_to_utm(infile,outfile,pixSize):
     else:
         # Southern hemisphere
         proj = ('EPSG:327%02d' % int(zone))
-    coords = [lon_min,lat_max,lon_max,lat_min]
-    gdal.Translate(outfile,infile,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
 
+    gdal.Warp(outfile,infile,dstSRS=proj,xRes=pixSize,yRes=pixSize,creationOptions=['COMPRESS=LZW'])
 
 # Subroutine for generating All corners
 def get_corners(originx,originy,xsize,ysize,xres,yres):
