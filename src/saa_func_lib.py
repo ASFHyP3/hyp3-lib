@@ -47,7 +47,6 @@ import os
 import sys
 import math
 import xml.dom.minidom
-from get_zone import get_zone
 
 #####################
 #
@@ -125,16 +124,28 @@ def getPixSize(fi):
     (x1,y1,t1,p1) = read_gdal_file_geo(open_gdal_file(fi))
     return (t1[1])
 
-def reproject_gcs_to_utm(infile,outfile,pixSize):
-    lon_min,lon_max,lat_min,lat_max = getCorners(infile) 
+# Get the UTM zone
+def get_zone(lon_min,lon_max):
+    center_lon = (lon_min+lon_max)/2;
+    zf = (center_lon+180)/6+1
+    zone = math.floor(zf)
+    return zone
+
+def get_utm_proj(lon_min,lon_max,lat_min,lat_max):
     zone = get_zone(lon_min,lon_max)
-    if (lat_max+lat_min) > 0:
-        # Northern hemisphere
+    if (lat_min+lat_max)/2 > 0:
         proj = ('EPSG:326%02d' % int(zone))
     else:
-        # Southern hemisphere
         proj = ('EPSG:327%02d' % int(zone))
+    print "Found proj {}".format(proj)
+    return proj
 
+# Reproject a GCS file into UTM coordinates
+def reproject_gcs_to_utm(infile,outfile,pixSize):
+    lon_min,lon_max,lat_min,lat_max = getCorners(infile) 
+    proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
+    print "Using pixel size {}".format(pixSize)
+    print "Translating {} to make {}".format(infile,outfile)
     gdal.Warp(outfile,infile,dstSRS=proj,xRes=pixSize,yRes=pixSize,creationOptions=['COMPRESS=LZW'])
 
 # Subroutine for generating All corners
