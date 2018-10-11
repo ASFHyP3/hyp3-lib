@@ -7,7 +7,7 @@ from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
-from get_zone import get_zone
+from saa_func_lib import get_zone
 
 # Determine the boundary polygon of a GeoTIFF file
 def geotiff2polygon(geotiff):
@@ -192,6 +192,7 @@ def geometry_proj2geo(inMultipolygon, inSpatialRef):
 
 # Convert corner points from geographic to UTM projection
 def geometry_geo2proj(lat_max,lat_min,lon_max,lon_min):
+
     zone = get_zone(lon_min,lon_max)
     if (lat_min+lat_max)/2 > 0:
         proj = ('326%02d' % int(zone))
