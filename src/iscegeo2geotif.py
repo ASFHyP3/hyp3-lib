@@ -35,7 +35,7 @@ from lxml import etree
 import numpy as np
 from osgeo import gdal
 from execute import execute
-
+import argparse
 #
 # The kmlfile created by mdx.py contains the wrong png file name.
 # This won't work.  So, we change the text to be the new name.
@@ -49,6 +49,7 @@ def fixKmlName(inKML,inName):
     tree.write(of,pretty_print=True)
 
 def makeKMZ(infile,outfile):
+
     kmlfile = infile + ".kml"
     kmzfile = outfile + ".kmz"
     pngfile = infile + ".png"
@@ -75,104 +76,74 @@ def makeKMZ(infile,outfile):
         myzip.write(lrgfile)
     shutil.move(pngfile,outpng)
 
+
+# Create a browse image
+def create_browse(oldname,pngname,auxname,gcsname,proj,height):
+
+        # Use the gcsfile's aux.xml information
+        gdal.Translate(pngname,gcsname,format="PNG",height=height)
+        shutil.move(auxname,"gcs.aux.xml")
+
+        # Use the GMT5SAR provided PNG file
+        gdal.Translate(pngname,oldname,format="PNG",height=height)
+        shutil.move("gcs.aux.xml",auxname)
+
+        # Repoject the PNG file into UTM coordinates
+        gdal.Warp("tmp.vrt",pngname,format="vrt",dstSRS=proj,resampleAlg="cubic",dstNodata=0)
+        gdal.Translate(pngname,"tmp.vrt",format="PNG")
+        os.remove("tmp.vrt")
+
 def convert_files(s1aFlag,proj=None,res=30):
 
-    makeKMZ("filt_topophase.unw.geo","colorized_unw")
-    makeKMZ("filt_topophase.flat.geo","color")
-    
-    # Create two geotiffs from the two banded image
-    root = etree.parse("filt_topophase.unw.geo.xml")
-    rt = root.getroot()
-    for child in rt:
-        if child.attrib['name'] == 'width':
-            width_str = child[0].text
-            width = int(width_str)
-        if child.attrib['name'] == 'length':
-            length_str = child[0].text
-	    length = int(length_str)
+    makeKMZ("filt_topophase.unw.geo","unw")
+    shutil.move("unw.kmz","colorized_unw.kmz")
+    makeKMZ("filt_topophase.flat.geo","col")
+    shutil.move("col.kmz","color.kmz")
 
-    fullAmp = np.zeros((length, width), dtype = np.float32)
-    fullPhase = np.zeros((length, width), dtype = np.float32)
-    with open('filt_topophase.unw.geo', 'rb') as fp:
-        for i in range(length):
-            fullAmp[i] = np.fromfile(fp, dtype = np.float32, count = width)
-            fullPhase[i] = np.fromfile(fp, dtype = np.float32, count = width)
+    gcsname = "tmp_gcs.tif"
 
-    # Account for weirdness of isce2gis.py program
-    if s1aFlag:
-        os.chdir("..")
-        execute("isce2gis.py envi -i merged/filt_topophase.unw.geo")
-        os.chdir("merged")
-    else:
-        execute("isce2gis.py envi -i filt_topophase.unw.geo")
-
-    file = open("filt_topophase.unw.geo.hdr","r")
-    for line in file:
-        if re.search("coordinate",line):
-	    save1 = line
-        if re.search("map.info",line):
-	    save2 = line
-    file.close
-    
-    fullPhase.tofile("filt_topophase.unw.phase.bin")
-    makeEnviHdr("filt_topophase.unw.phase.bin.hdr",width,length,save1,save2)
+    # Create the phase image
     if proj is None:
-        gdal.Translate("phase.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("phase.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
+        shutil.copy("phase.tif",gcsname)        
     else:
-        gdal.Translate("tmp.tif","filt_topophase.unw.phase.bin",creationOptions = ['COMPRESS=PACKBITS'])
-        gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
-        os.remove("tmp.tif")
+        print "Creating tmp.tif"
+        gdal.Translate("tmp.tif","filt_topophase.unw.geo.vrt",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
+        print "phase.tif"
+        gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions=['COMPRESS=LZW'])
+        print "mv tmp.tif {}".format(gcsname)
+        shutil.copy("tmp.tif",gcsname)        
+#        os.remove("tmp.tif")
 
-    # Create browse aux.xml files
-    gdal.Translate("phase.png","phase.tif",format="PNG",height=1024)
-    shutil.move("phase.png.aux.xml","colorized_unw.png.aux.xml")
-    shutil.copy("colorized_unw.png.aux.xml","color.png.aux.xml")
-    
-    # Create large browse aux.xml files
-    gdal.Translate("phase_large.png","phase.tif",format="PNG",height=2048)
-    shutil.move("phase_large.png.aux.xml","colorized_unw_large.png.aux.xml")
-    shutil.copy("colorized_unw_large.png.aux.xml","color_large.png.aux.xml")
+        print "Creating browse image colorized_unw.png"
+        create_browse("unw.png","colorized_unw.png","colorized_unw.png.aux.xml",gcsname,proj,1024)
+        create_browse("unw.png","colorized_unw_large.png","colorized_unw_large.png.aux.xml",gcsname,proj,2048)
+        
+        print "Creating browse image color.png"
+        create_browse("col.png","color.png","color.png.aux.xml",gcsname,proj,1024)
+        print "Creating browse image color_large.png"
+        create_browse("col.png","color_large.png","color_large.png.aux.xml",gcsname,proj,2048)
 
-    fullAmp.tofile("filt_topophase.unw.amp.bin")
-    makeEnviHdr("filt_topophase.unw.amp.bin.hdr",width,length,save1,save2)
+
+    # Create the amplitude image
     if proj is None:
-        gdal.Translate("amp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("amp.tif","filt_topophase.unw.geo",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
     else:
-        gdal.Translate("tmp.tif","filt_topophase.unw.amp.bin",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("tmp.tif","filt_topophase.unw.geo.vrt",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("amp.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
     
     # Create the coherence image
-    makeEnviHdr("phsig.cor.geo.hdr",width,length,save1,save2)
     if proj is None:
         gdal.Translate("coherence.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])
     else:
-        gdal.Translate("tmp.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])
+        gdal.Translate("tmp.tif","phsig.cor.geo.vrt",creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("coherence.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
 
-def makeEnviHdr(fileName,width,length,save1,save2):
-    f = open(fileName,'w')
-    f.write("ENVI")
-    f.write("description = {Data product generated using ISCE}\n")
-    f.write("samples = %i\n" % width)
-    f.write("lines   = %i\n" %length)
-    f.write("bands   = 1\n")
-    f.write("header offset = 0\n")
-    f.write("file type = ENVI Standard\n")
-    f.write("data type = 4\n")
-    f.write("interleave = bip\n")
-    f.write("byte order = 0\n")
-    f.write("%s\n" % save1)
-    f.write("%s\n" % save2)
-    f.close()
-
-def main():
-  convert_files(True)
-
 if __name__ == "__main__":
-  main()
-
-    
-    
-
+    parser = argparse.ArgumentParser(description="Convert ISCE outputs into geotiff, browse, and kmz files.")
+    parser.add_argument("-p","--proj",help="Projection code to convert to")
+    parser.add_argument("-r","--res",type=float,help="Resolution for projection")
+    args = parser.parse_args()
+    convert_files(True,proj=args.proj,res=args.res)

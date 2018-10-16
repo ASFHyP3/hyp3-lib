@@ -40,7 +40,7 @@ from getSubSwath import get_bounding_box_file
 from execute import execute
 from osgeo import gdal
 import shutil
-from get_zone import get_zone
+from saa_func_lib import get_utm_proj
 
 def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None):
     lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)
@@ -48,11 +48,7 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None):
         cmd = "wget -O%s \"http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff\"" % (outfile,lon_min,lat_min,lon_max,lat_max)
         execute(cmd)
         if utmFlag:
-	    zone = get_zone(lon_min,lon_max) 
-	    if (lat_min+lat_max)/2 > 0:
-                proj = ('EPSG:326%02d' % int(zone))
-            else:
-                proj = ('EPSG:327%02d' % int(zone))
+            proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
 	    shutil.move("tmpdem.tif","%s" % outfile)
     else:

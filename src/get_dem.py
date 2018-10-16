@@ -155,17 +155,17 @@ def get_cc(tmputm,post,pixsize):
 
 def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
     print "Handling using anti-meridian special code"
-    if (lat_min>50 and lat_max<53):
+    if (lat_min>49 and lat_max<54):
         print "DEM will be SRTMUS1"
-	anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","");
-    elif (lat_min>-51 and lat_max<-7):
+	anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",lat_min,lat_max,lon_min,lon_max,outfile);
+    elif (lat_min>-52 and lat_max<-6):
         print "DEM will be SRTMGL3"
-	anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south");
+	anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",lat_min,lat_max,lon_min,lon_max,outfile);
     else:
         print "ERROR: Unable to find a DEM"
 	sys.exit(1)
 
-def anti_meridian_kludge(dem_file,dem_name,south):
+def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max,outfile):
 
     # Get the appropriate file
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
@@ -215,7 +215,7 @@ def anti_meridian_kludge(dem_file,dem_name,south):
 	n_max = n_max - 10000000.0
 
     bounds = [e_min,n_min,e_max,n_max]
-    print "Creating output file %s" % outfile
+    print "Creating output file {} with bounds {}".format(outfile,bounds)
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
 # GET DEM file and convert into ISCE format
@@ -256,10 +256,11 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes
     if lon_min <= -178 and lon_max >= 178:
         if utmflag:
             handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile)
+	    return(0)
 	else:
 	    print "ERROR: May only create a DEM file over anti-meridian using UTM coordinates"
-	sys.exit(1)
-
+	    sys.exit(1)
+	
     # Figure out which DEM and get the tile list
     (demname, tile_list) = get_best_dem(lat_min,lat_max,lon_min,lon_max)
 
