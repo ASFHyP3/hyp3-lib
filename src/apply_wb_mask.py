@@ -20,23 +20,26 @@ def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
         cfgdir = line.strip()
 
     if gcs:
+
         shpfile = "{}/GSHHG_shp/f/GSHHS_f_L1.shp".format(cfgdir)
         mask1 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask1.png")
-        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L2.shp".format(cfgdir)
-        mask2 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask2.png")
-        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L3.shp".format(cfgdir)
-        mask3 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask3.png")
-        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L4.shp".format(cfgdir)
-        mask4 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask4.png")
 
-        mask2 = np.logical_not(mask2)
-        mask3 = np.logical_not(mask3)
-        mask4 = np.logical_not(mask4)
+#        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L2.shp".format(cfgdir)
+#        mask2 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask2.png")
+#        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L3.shp".format(cfgdir)
+#        mask3 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask3.png")
+#        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L4.shp".format(cfgdir)
+#        mask4 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask4.png")
+#
+#        mask2 = np.logical_not(mask2)
+#        mask3 = np.logical_not(mask3)
+#        mask4 = np.logical_not(mask4)
+#
+#        final_mask = np.logical_and(mask1,mask2)
+#        final_mask = np.logical_and(final_mask,mask3)
+#        final_mask = np.logical_and(final_mask,mask4)
 
-        final_mask = np.logical_and(mask1,mask2)
-        final_mask = np.logical_and(final_mask,mask3)
-        final_mask = np.logical_and(final_mask,mask4)
-
+        final_mask = mask1
         scipy.misc.imsave("final_mask.png",final_mask)
 
     else:
