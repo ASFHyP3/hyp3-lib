@@ -49,7 +49,7 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
     diff_lr = np.zeros((2,len(files)))
    
     diff_ul[0] = (max(ul[0])-ul[0])/xres    
-    diff_ul[1] = (min(ul[1])-ul[1])/(-1*yres)
+    diff_ul[1] = -1*(min(ul[1])-ul[1])/(-1*yres)
  
     print "Difference list:"
     print diff_ul
@@ -57,8 +57,10 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
     lrx = min(lr[0])
     lry = max(lr[1])
     lenx = (lrx-max(ul[0])) / xres
-    leny = (lry-min(ul[1])) / (-1*yres)
-
+    leny = -1*(lry-min(ul[1])) / (-1*yres)
+    if leny < 0:
+        leny = abs(leny)
+        diff_ul = diff_ul * -1
     print "Size of output images {} x {}".format(lenx,leny)
 
     outfiles = []   
