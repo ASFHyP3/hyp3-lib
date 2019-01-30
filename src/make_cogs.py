@@ -2,20 +2,37 @@
 
 import shutil
 import os, sys
+import glob
+import logging
 from osgeo import gdal
 import argparse
 from argparse import RawTextHelpFormatter
 
-def make_cog(inFile,outFile):
+def cogify_dir(dir="PRODUCT",debug=False):
+    back = os.getcwd()
+    os.chdir(dir)
+    tmpfile = "tmp_cog_{}.tif".format(os.getpid())
+    for myfile in glob.glob("*.tif"):
+        logging.info("Converting file {} into COG".format(myfile))
+        make_cog(myfile,tmpfile)
+        shutil.move(tmpfile,myfile)
+    os.chdir(back)
 
+def make_cog(inFile,outFile,debug=False):
+    print "Creating COG file {} from input file {}".format(outFile,inFile)
     tmpFile = 'cog_{}.tif'.format(os.getpid())
     shutil.copy(inFile,tmpFile)
     os.system('gdaladdo -r average {} 2 4 8 16'.format(tmpFile))
 
+    if debug:
+        shutil.copy(tmpFile,"make_cog1.tif")
+
     co = ["TILED=YES","COMPRESS=DEFLATE","COPY_SRC_OVERVIEWS=YES"]
     gdal.Translate(outFile,tmpFile,creationOptions=co,noData="0")
 
-#    os.system('gdal_translate {} {}  -a_nodata 0 -co TILED=YES -co COMPRESS=DEFLATE -co COPY_SRC_OVERVIEWS=YES'.format(tmpFile,outFile))
+    if debug:
+        shutil.copy(outFile,"make_cog2.tif")
+
     os.remove(tmpFile)
 
 if __name__ == '__main__':
@@ -24,6 +41,12 @@ if __name__ == '__main__':
     description='Creates a Cloud Optimized Geotiff from the input geotiff(s)',
     formatter_class=RawTextHelpFormatter)
   parser.add_argument('geotiff',nargs='+',help='name of GeoTIFF file (input)')
+
+  logFile = "make_cogs_{}.log".format(os.getpid())
+  logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
+                      datefmt='%m/%d/%Y %I:%M:%S %p',level=logging.DEBUG)
+  logging.getLogger().addHandler(logging.StreamHandler())
+  logging.info("Starting run")
 
   if len(sys.argv) == 1:
     parser.print_help()
