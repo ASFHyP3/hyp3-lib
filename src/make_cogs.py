@@ -8,21 +8,25 @@ from osgeo import gdal
 import argparse
 from argparse import RawTextHelpFormatter
 
-def cogify_dir(dir="PRODUCT",debug=False):
+def cogify_dir(dir="PRODUCT",debug=False,res=30):
     back = os.getcwd()
     os.chdir(dir)
     tmpfile = "tmp_cog_{}.tif".format(os.getpid())
     for myfile in glob.glob("*.tif"):
         logging.info("Converting file {} into COG".format(myfile))
-        make_cog(myfile,tmpfile)
+        make_cog(myfile,tmpfile,res=res)
         shutil.move(tmpfile,myfile)
     os.chdir(back)
 
-def make_cog(inFile,outFile,debug=False):
+def make_cog(inFile,outFile,debug=False,res=30):
     print "Creating COG file {} from input file {}".format(outFile,inFile)
     tmpFile = 'cog_{}.tif'.format(os.getpid())
     shutil.copy(inFile,tmpFile)
-    os.system('gdaladdo -r average {} 2 4 8 16'.format(tmpFile))
+
+    if res == 10:
+        os.system('gdaladdo -r average {} 2 4 8 16 32'.format(tmpFile))
+    else:
+        os.system('gdaladdo -r average {} 2 4 8 16'.format(tmpFile))
 
     if debug:
         shutil.copy(tmpFile,"make_cog1.tif")
