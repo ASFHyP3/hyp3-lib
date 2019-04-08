@@ -34,6 +34,7 @@ import math
 import glob
 from osgeo import gdal
 import argparse
+import boto3
 import commands
 import dem2isce
 import saa_func_lib as saa
@@ -108,8 +109,10 @@ def get_tile_for(args):
 	        (mydir,myfile) = os.path.split(item)
 	        mydir = mydir.split()[1]
 	        if "s3" in mydir:
-		    myfile = os.path.join(mydir,demname,fi)+".tif"
-	            os.system("aws s3 cp %s DEM/%s.tif" % (myfile,fi))
+		    myfile = os.path.join(demname,fi)+".tif"
+                    s3 = boto3.resource('s3')
+                    mybucket = mydir.split("/")[-1]
+                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
 	        else:
                     myfile = os.path.join(mydir,"geotiff",fi) + ".tif"
                     output = "DEM/%s" % fi + ".tif"
@@ -177,8 +180,10 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
 	        (mydir,myfile) = os.path.split(item)
 	        mydir = mydir.split()[1]
 	        if "s3" in mydir:
-		    myfile = os.path.join(mydir,dem_name,dem_file)
-	            os.system("aws s3 cp %s ." % myfile)
+		    myfile = os.path.join(dem_name,dem_file)
+                    s3 = boto3.resource('s3')
+                    mybucket = mydir.split("/")[-1]
+                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
 	        else:
                     myfile = os.path.join(mydir,dem_file)
 	            print myfile
