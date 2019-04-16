@@ -53,48 +53,48 @@ def get_best_dem(lat_min,lat_max,lon_min,lon_max):
     best_tile_list = []
 
     for DEM in ['ned13','srtmgl1','srtmau1','ned1','ned2','srtmgl3']:
-    	dataset = driver.Open(os.path.join(shpdir,DEM+'_coverage.shp'), 0)
-    	poly = ogr.CreateGeometryFromWkt(scene_wkt)
-    	total_area = poly.GetArea()
+        dataset = driver.Open(os.path.join(shpdir,DEM+'_coverage.shp'), 0)
+        poly = ogr.CreateGeometryFromWkt(scene_wkt)
+        total_area = poly.GetArea()
 
-    	coverage = 0
-    	tiles = ""
-    	tile_list = []
-    	layer = dataset.GetLayer()
-    	for i in xrange(layer.GetFeatureCount()):
-    	    feature = layer.GetFeature(i)
-	    wkt = feature.GetGeometryRef().ExportToWkt()
-	    tile_poly = ogr.CreateGeometryFromWkt(wkt)
-	    intersect = tile_poly.Intersection(poly)
-	    a = intersect.GetArea()
-	    if a > 0:
-            	tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
-	    	# print DEM,a,tile
-	    	coverage += a
-            	tiles += "," + tile
-  	        tile_list.append(tile)
+        coverage = 0
+        tiles = ""
+        tile_list = []
+        layer = dataset.GetLayer()
+        for i in xrange(layer.GetFeatureCount()):
+            feature = layer.GetFeature(i)
+            wkt = feature.GetGeometryRef().ExportToWkt()
+            tile_poly = ogr.CreateGeometryFromWkt(wkt)
+            intersect = tile_poly.Intersection(poly)
+            a = intersect.GetArea()
+            if a > 0:
+                tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
+                # print DEM,a,tile
+                coverage += a
+                tiles += "," + tile
+                tile_list.append(tile)
 
-    	print "Total",DEM,coverage,total_area,coverage/total_area
-    	pct = coverage/total_area
-    	if pct >= .99:
+        print("Total",DEM,coverage,total_area,coverage/total_area)
+        pct = coverage/total_area
+        if pct >= .99:
             # print "setting dem to %s" % (DEM.upper() + tiles)
-    	    best_dem = DEM.upper() + tiles
-    	    best_pct = pct
-    	    best_name = DEM.upper()
-    	    best_tile_list = tile_list
-    	    break
-        if best_pct == 0 or pct > best_pct+0.05:
-	    # print "Setting %s to best dem; pct = %f" % (DEM.upper(),pct)
-    	    best_dem = DEM.upper() + tiles
-    	    best_pct = pct
+            best_dem = DEM.upper() + tiles
+            best_pct = pct
             best_name = DEM.upper()
-	    best_tile_list = tile_list
+            best_tile_list = tile_list
+            break
+        if best_pct == 0 or pct > best_pct+0.05:
+            # print "Setting %s to best dem; pct = %f" % (DEM.upper(),pct)
+            best_dem = DEM.upper() + tiles
+            best_pct = pct
+            best_name = DEM.upper()
+            best_tile_list = tile_list
 
     if best_pct < .20:
-        print "ERROR: Unable to find a DEM file for that area"
-	sys.exit(1)
-    print best_name
-    print best_tile_list
+        print("ERROR: Unable to find a DEM file for that area")
+        sys.exit(1)
+    print(best_name)
+    print(best_tile_list)
     return(best_name, best_tile_list)
 
 def get_tile_for(args):
@@ -105,18 +105,18 @@ def get_tile_for(args):
     with open(myfile) as f:
         content = f.readlines()
         for item in content:
-	    if demname in item.split()[0] and len(demname) == len(item.split()[0]):
-	        (mydir,myfile) = os.path.split(item)
-	        mydir = mydir.split()[1]
-	        if "s3" in mydir:
-		    myfile = os.path.join(demname,fi)+".tif"
+            if demname in item.split()[0] and len(demname) == len(item.split()[0]):
+                (mydir,myfile) = os.path.split(item)
+                mydir = mydir.split()[1]
+                if "s3" in mydir:
+                    myfile = os.path.join(demname,fi)+".tif"
                     s3 = boto3.resource('s3')
                     mybucket = mydir.split("/")[-1]
                     s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
-	        else:
+                else:
                     myfile = os.path.join(mydir,"geotiff",fi) + ".tif"
                     output = "DEM/%s" % fi + ".tif"
-  	            shutil.copy(myfile, output)
+                    shutil.copy(myfile, output)
 
 
 def parseString(string):
@@ -135,11 +135,11 @@ def get_cc(tmputm,post,pixsize):
     for item in lst:
         if "Upper Left" in item:
             (east1,north1) = parseString(item)
-	if "Lower Left" in item:
+        if "Lower Left" in item:
             (east2,north2) = parseString(item)
         if "Upper Right" in item:
             (east3,north3) = parseString(item)
-	if "Lower Right" in item:
+        if "Lower Right" in item:
             (east4,north4) = parseString(item)
 
     e_min = min(east1,east2,east3,east4)
@@ -152,21 +152,21 @@ def get_cc(tmputm,post,pixsize):
     n_max = math.ceil(n_max/post)*post+shift
     n_min = math.floor(n_min/post)*post-shift
 
-    print "New coordinates: %f %f %f %f" % (e_max,e_min,n_max,n_min)
+    print("New coordinates: %f %f %f %f" % (e_max,e_min,n_max,n_min))
     return(e_min,e_max,n_min,n_max)
 
 
 def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
-    print "Handling using anti-meridian special code"
+    print("Handling using anti-meridian special code")
     if (lat_min>49 and lat_max<54):
-        print "DEM will be SRTMUS1"
-	anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",lat_min,lat_max,lon_min,lon_max,outfile);
+        print("DEM will be SRTMUS1")
+        anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",lat_min,lat_max,lon_min,lon_max,outfile);
     elif (lat_min>-52 and lat_max<-6):
-        print "DEM will be SRTMGL3"
-	anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",lat_min,lat_max,lon_min,lon_max,outfile);
+        print("DEM will be SRTMGL3")
+        anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",lat_min,lat_max,lon_min,lon_max,outfile);
     else:
-        print "ERROR: Unable to find a DEM"
-	sys.exit(1)
+        print("ERROR: Unable to find a DEM")
+        sys.exit(1)
 
 def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max,outfile):
 
@@ -175,23 +175,23 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
     with open(myfile) as f:
         content = f.readlines()
-	for item in content:
-	    if dem_name in item:
-	        (mydir,myfile) = os.path.split(item)
-	        mydir = mydir.split()[1]
-	        if "s3" in mydir:
-		    myfile = os.path.join(dem_name,dem_file)
+        for item in content:
+            if dem_name in item:
+                (mydir,myfile) = os.path.split(item)
+                mydir = mydir.split()[1]
+                if "s3" in mydir:
+                    myfile = os.path.join(dem_name,dem_file)
                     s3 = boto3.resource('s3')
                     mybucket = mydir.split("/")[-1]
                     s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
-	        else:
+                else:
                     myfile = os.path.join(mydir,dem_file)
-	            print myfile
-  	            shutil.copy(myfile,".")
+                    print(myfile)
+                    shutil.copy(myfile,".")
 
     if not os.path.isfile(dem_file):
-        print "ERROR: unable to copy DEM file"
-	sys.exit(1)
+        print("ERROR: unable to copy DEM file")
+        sys.exit(1)
 
     # Now project lat/lon extents into UTM
     f = open("coords.txt","w")
@@ -217,10 +217,10 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
 
     if len(south) > 0:
         n_min = n_min - 10000000.0
-	n_max = n_max - 10000000.0
+        n_max = n_max - 10000000.0
 
     bounds = [e_min,n_min,e_max,n_max]
-    print "Creating output file {} with bounds {}".format(outfile,bounds)
+    print("Creating output file {} with bounds {}".format(outfile,bounds))
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
 # GET DEM file and convert into ISCE format
@@ -235,37 +235,37 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes
 
     if post is not None:
         if not utmflag:
-	    print "ERROR: May use posting with UTM projection only"
-	    sys.exit(1)
+            print("ERROR: May use posting with UTM projection only")
+            sys.exit(1)
         posting = post
-        print "Snapping to grid at posting of %s meters" % posting
+        print("Snapping to grid at posting of %s meters" % posting)
 
     if lon_min < -180 or lon_max > 180:
-        print "lon_min = %f; lon_max = %f" % (lon_min,lon_max)
-        print "ERROR: Please using longitude in range (-180,180)"
-	sys.exit(1)
+        print("lon_min = %f; lon_max = %f" % (lon_min,lon_max))
+        print("ERROR: Please using longitude in range (-180,180)")
+        sys.exit(1)
 
     if lat_min < -90 or lat_max > 90:
-        print "ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max)
-	sys.exit(1)
+        print("ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max))
+        sys.exit(1)
 
     if lon_min > lon_max:
-        print "WARNING: minimum longitude > maximum longitude - swapping"
+        print("WARNING: minimum longitude > maximum longitude - swapping")
         (lon_min, lon_max) = (lon_max, lon_min)
 
     if lat_min > lat_max:
-        print "WARNING: minimum latitude > maximum latitude - swapping"
+        print("WARNING: minimum latitude > maximum latitude - swapping")
         (lat_min, lat_max) = (lat_max, lat_min)
 
     # Handle cases near anti-meridian
     if lon_min <= -178 and lon_max >= 178:
         if utmflag:
             handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile)
-	    return(0)
-	else:
-	    print "ERROR: May only create a DEM file over anti-meridian using UTM coordinates"
-	    sys.exit(1)
-	
+            return(0)
+        else:
+            print("ERROR: May only create a DEM file over anti-meridian using UTM coordinates")
+            sys.exit(1)
+
     # Figure out which DEM and get the tile list
     (demname, tile_list) = get_best_dem(lat_min,lat_max,lon_min,lon_max)
 
@@ -296,33 +296,33 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes
     tmpdem2 = "tempdem2.tif"
     tmputm = "temputm.tif"
     if os.path.isfile(tmpdem):
-        print "Removing old file tmpdem"
+        print("Removing old file tmpdem")
         os.remove(tmpdem)
     if os.path.isfile(tmputm):
-        print "Removing old file utmdem"
-	os.remove(tmputm)
+        print("Removing old file utmdem")
+        os.remove(tmputm)
 
     pixsize = 30.0
     gcssize = 0.00027777777778
 
     if demname == "SRTMGL3":
         pixsize = 90.
-	gcssize = gcssize * 3
+        gcssize = gcssize * 3
     if demname == "NED2":
         pixsize = 60.
-	gcssize = gcssize * 2
+        gcssize = gcssize * 2
 
     bounds = [lon_min,lat_min,lon_max,lat_max]
 
-    print "Creating initial raster file"
+    print("Creating initial raster file")
     gdal.Warp(tmpdem,"temp.vrt",xRes=gcssize,yRes=gcssize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
     # If DEM is from NED collection, then it will have a NAD83 ellipse - need to convert to WGS84
     # Also, need to convert from pixel as area to pixel as point
     if "NED" in demname:
-        print "Converting to WGS84"
+        print("Converting to WGS84")
         gdal.Warp("temp_dem_wgs84.tif",tmpdem, dstSRS="EPSG:4326")
-        print "Converting to pixel as point"
+        print("Converting to pixel as point")
         x1,y1,t1,p1,data = saa.read_gdal_file(saa.open_gdal_file("temp_dem_wgs84.tif"))
         lon = t1[0]
         resx = t1[1]
@@ -339,14 +339,14 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes
     shutil.move(tmpdem2,tmpdem)
 
     if utmflag:
-        print "Translating raster file to UTM coordinates"
+        print("Translating raster file to UTM coordinates")
         gdal.Warp(tmputm,tmpdem,dstSRS=proj,xRes=pixsize,yRes=pixsize,resampleAlg="cubic",dstNodata=-32767)
-	if post is not None:
-	    print "Snapping file to grid at %s meters" % posting
-	    (e_min,e_max,n_min,n_max) = get_cc(tmputm,posting,pixsize)
-	    bounds = [e_min,n_min,e_max,n_max]
-	    gdal.Warp(outfile,tmputm,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
-	else:
+        if post is not None:
+            print("Snapping file to grid at %s meters" % posting)
+            (e_min,e_max,n_min,n_max) = get_cc(tmputm,posting,pixsize)
+            bounds = [e_min,n_min,e_max,n_max]
+            gdal.Warp(outfile,tmputm,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        else:
             os.rename(tmputm,outfile)
     else:
         os.rename(tmpdem,outfile)
