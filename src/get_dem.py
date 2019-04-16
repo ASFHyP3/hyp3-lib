@@ -61,7 +61,7 @@ def get_best_dem(lat_min,lat_max,lon_min,lon_max):
         tiles = ""
         tile_list = []
         layer = dataset.GetLayer()
-        for i in xrange(layer.GetFeatureCount()):
+        for i in range(layer.GetFeatureCount()):
             feature = layer.GetFeature(i)
             wkt = feature.GetGeometryRef().ExportToWkt()
             tile_poly = ogr.CreateGeometryFromWkt(wkt)
