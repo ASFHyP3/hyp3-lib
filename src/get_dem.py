@@ -31,7 +31,6 @@ import os
 import sys
 import shutil
 import math
-import glob
 from osgeo import gdal
 import argparse
 import boto3
