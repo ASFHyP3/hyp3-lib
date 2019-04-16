@@ -35,7 +35,7 @@ import glob
 from osgeo import gdal
 import argparse
 import boto3
-import commands
+import subprocess
 import dem2isce
 import saa_func_lib as saa
 import multiprocessing as mp
@@ -130,7 +130,7 @@ def parseString(string):
 def get_cc(tmputm,post,pixsize):
 
     shift = 0
-    string = commands.getstatusoutput('gdalinfo %s' % tmputm)
+    string = subprocess.getstatusoutput('gdalinfo %s' % tmputm)
     lst = string[1].split("\n")
     for item in lst:
         if "Upper Left" in item:
@@ -201,7 +201,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
     f.write("%f %f\n" % (lon_max,lat_max))
     f.close()
 
-    string = commands.getstatusoutput("cat coords.txt | cs2cs +proj=longlat +datum=WGS84 +to +proj=utm +zone=1 %s +datum=WGS84" % south)
+    string = subprocess.getstatusoutput("cat coords.txt | cs2cs +proj=longlat +datum=WGS84 +to +proj=utm +zone=1 %s +datum=WGS84" % south)
     lst = string[1].split("\n")
     x = []
     y = []
