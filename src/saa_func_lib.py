@@ -234,7 +234,7 @@ def write_gdal_file_byte(filename,geotransform,geoproj,data,nodata=None):
         geotransform = [item for item in geotransform]
         dst_ds.SetGeoTransform(geotransform)
         dst_ds.GetRasterBand(1).WriteArray(data)
-	if nodata is not None:
+        if nodata is not None:
             dst_ds.GetRasterBand(1).SetNoDataValue(nodata)
         dst_ds.SetProjection(geoproj)
 
