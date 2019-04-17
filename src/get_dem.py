@@ -111,7 +111,7 @@ def get_tile_for(args):
                 if "s3" in mydir:
                     myfile = os.path.join(demname,fi)+".tif"
                     s3 = boto3.resource('s3')
-                    resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
                     mybucket = mydir.split("/")[-1]
                     s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
                 else:
@@ -183,7 +183,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
                 if "s3" in mydir:
                     myfile = os.path.join(dem_name,dem_file)
                     s3 = boto3.resource('s3')
-                    resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
                     mybucket = mydir.split("/")[-1]
                     s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
                 else:
