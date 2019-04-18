@@ -2,6 +2,7 @@
 
 import os
 import sys
+import csv
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
@@ -134,6 +135,70 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
   outShape.Destroy()
 
 
+# Save data with fields to shapefile
+def data_geometry2shape(data, fields, values, spatialRef, geoTrans, shapeFile):
+
+  # Buffer data
+  (rows, cols) = data.shape
+  pixelSize = geoTrans[1]
+  originX = geoTrans[0] - 10*pixelSize
+  originY = geoTrans[3] + 10*pixelSize
+  geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
+  mask = np.zeros((rows+20, cols+20), dtype=np.float32)
+  mask[10:rows+10,10:cols+10] = data
+  data = mask
+
+  # Save in memory
+  (rows, cols) = data.shape
+  data = data.astype(np.byte)
+  gdalDriver = gdal.GetDriverByName('Mem')
+  outRaster = gdalDriver.Create('out', cols, rows, 1, gdal.GDT_Byte)
+  outRaster.SetGeoTransform(geoTrans)
+  outRaster.SetProjection(spatialRef.ExportToWkt())
+  outBand = outRaster.GetRasterBand(1)
+  outBand.WriteArray(data)
+
+  # Write data to shapefile
+  driver = ogr.GetDriverByName('ESRI Shapefile')
+  if os.path.exists(shapeFile):
+    driver.DeleteDataSource(shapeFile)
+  outShape = driver.CreateDataSource(shapeFile)
+  outLayer = outShape.CreateLayer('boundary', srs=spatialRef)
+  gdal.Polygonize(outBand, None, outLayer, -1, [], callback=None)
+  for field in fields:
+    fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
+    if field['type'] == ogr.OFTString:
+      fieldDefinition.SetWidth(field['width'])
+    outLayer.CreateField(fieldDefinition)
+  featureDefinition = outLayer.GetLayerDefn()
+  outLayer.DeleteFeature(1)
+  outFeature = outLayer.GetNextFeature()
+  for value in values:
+    for field in fields:
+      name = field['name']
+      outFeature.SetField(name, value[name])
+  outLayer.SetFeature(outFeature)
+  outShape.Destroy()
+
+
+# Save raster information (fields, values) to CSV file
+def raster2csv(fields, values, csvFile):
+
+  header = []
+  for field in fields:
+    header.append(field['name'])
+  line = []
+  for value in values:
+    for field in fields:
+      name = field['name']
+      line.append(value[name])
+
+  with open(csvFile, 'wb') as outF:
+    writer = csv.writer(outF, delimiter=';')
+    writer.writerow(header)
+    writer.writerow(line)
+
+
 # Combine all geometries in a list
 def union_geometries(geometries):
 
@@ -190,20 +255,57 @@ def geometry_proj2geo(inMultipolygon, inSpatialRef):
   return (outMultipolygon, outSpatialRef)
 
 
-# Extract boundary of GeoTIFF file into geometry with geographic coordinates
-def geotiff2boundary(inGeotiff):
+def reproject_corners(corners, posting, inEPSG, outEPSG):
 
-  # Generating a mask for the GeoTIFF
-  inRaster = gdal.Open(inGeotiff)
-  geoTrans = inRaster.GetGeoTransform()
-  proj = osr.SpatialReference()
-  proj.ImportFromWkt(inRaster.GetProjectionRef())
-  inBand = inRaster.GetRasterBand(1)
-  data = inBand.ReadAsArray()
-  [cols, rows] = data.shape
-  data[data>0] = 1
-  data = ndimage.binary_closing(data, iterations=10,
-    structure=np.ones((3,3))).astype(data.dtype)
+  # Reproject coordinates
+  inProj = osr.SpatialReference()
+  inProj.ImportFromEPSG(inEPSG)
+  outProj = osr.SpatialReference()
+  outProj.ImportFromEPSG(outEPSG)
+  transform = osr.CoordinateTransformation(inProj, outProj)
+  corners.Transform(transform)
+
+  # Get extent and round to even coordinates
+  (minX, maxX, minY, maxY) = corners.GetEnvelope()
+  #posting = inGT[1]
+  minX = np.ceil(minX/posting)*posting
+  minY = np.ceil(minY/posting)*posting
+  maxX = np.ceil(maxX/posting)*posting
+  maxY = np.ceil(maxY/posting)*posting
+
+  # Add points to multiPoint
+  corners = ogr.Geometry(ogr.wkbMultiPoint)
+  ul = ogr.Geometry(ogr.wkbPoint)
+  ul.AddPoint(minX, maxY)
+  corners.AddGeometry(ul)
+  ll = ogr.Geometry(ogr.wkbPoint)
+  ll.AddPoint(minX, minY)
+  corners.AddGeometry(ll)
+  ur = ogr.Geometry(ogr.wkbPoint)
+  ur.AddPoint(maxX, maxY)
+  corners.AddGeometry(ur)
+  lr = ogr.Geometry(ogr.wkbPoint)
+  lr.AddPoint(maxX, minY)
+  corners.AddGeometry(lr)
+
+  return corners
+
+
+def geotiff2boundary(inGeotiff, maskFile):
+
+  (data, cols, rows, geoTrans, proj) = geotiff2boundary_mask(inGeotiff)
+
+  # Save in mask file (if defined)
+  if maskFile != None:
+    gdalDriver = gdal.GetDriverByName('GTiff')
+    outRaster = gdalDriver.Create(maskFile, rows, cols, 1, gdal.GDT_Byte)
+    outRaster.SetGeoTransform(geoTrans)
+    outRaster.SetProjection(proj.ExportToWkt())
+    outBand = outRaster.GetRasterBand(1)
+    outBand.WriteArray(data)
+    outRaster = None
+
+  # Save in memory
   gdalDriver = gdal.GetDriverByName('Mem')
   outRaster = gdalDriver.Create('out', rows, cols, 1, gdal.GDT_Byte)
   outRaster.SetGeoTransform(geoTrans)
@@ -234,9 +336,11 @@ def geotiff2boundary(inGeotiff):
   outLayer = None
 
   # Convert geometry from projected to geographic coordinates
-  (multipolygon, outSpatialRef) = geometry_proj2geo(multipolygon, inSpatialRef)
+  #(multipolygon, outSpatialRef) = geometry_proj2geo(multipolygon, inSpatialRef)
 
-  return (multipolygon, outSpatialRef)
+  #return (multipolygon, outSpatialRef)
+
+  return (multipolygon, inSpatialRef)
 
 
 # Get polygon for a tile
@@ -361,7 +465,7 @@ def list2shape(csvFile, shapeFile):
       print('Reading %s ...' % file)
       # Generate GeoTIFF boundary geometry
       data = None
-      (geometry, spatialRef) = geotiff2boundary(file)
+      (geometry, spatialRef) = geotiff2boundary(file, None)
 
       # Simplify the geometry - only works with GDAL 1.8.0
       #geometry = geometry.Simplify(float(tolerance))
