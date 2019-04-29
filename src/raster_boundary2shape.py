@@ -7,7 +7,7 @@ import sys
 from asf_time_series import *
 
 
-def raster_boundary2shape(inFile, outShapeFile):
+def raster_boundary2shape(inFile, threshold, outShapeFile):
 
   # Extract raster image metadata
   print('Extracting raster information ...')
@@ -18,7 +18,7 @@ def raster_boundary2shape(inFile, outShapeFile):
   # Generate GeoTIFF boundary geometry
   print('Extracting boundary geometry ...')
   (data, colFirst, rowFirst, geoTrans, proj) = \
-    geotiff2boundary_mask(inFile, epsg)
+    geotiff2boundary_mask(inFile, epsg, threshold)
   (rows, cols) = data.shape
   values[0]['originX'] = geoTrans[0]
   values[0]['originY'] = geoTrans[3]
@@ -37,6 +37,8 @@ if __name__ == '__main__':
     formatter_class=RawTextHelpFormatter)
   parser.add_argument('input', metavar='<geotiff file>',
     help='name of the GeoTIFF file')
+  parser.add_argument('-threshold', metavar='<code>', action='store',
+    default=None, help='threshold value what is considered blackfill')
   parser.add_argument('shape', metavar='<shape file>',
     help='name of the shapefile')
   if len(sys.argv) == 1:
@@ -48,4 +50,4 @@ if __name__ == '__main__':
     print('GeoTIFF file (%s) does not exist!' % args.input)
     sys.exit(1)
 
-  raster_boundary2shape(args.input, args.shape)
+  raster_boundary2shape(args.input, args.threshold, args.shape)

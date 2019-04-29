@@ -168,7 +168,7 @@ def reproject2grid(inRaster, tsEPSG):
   return outRaster
 
 
-def geotiff2boundary_mask(inGeotiff, tsEPSG):
+def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold):
 
   inRaster = gdal.Open(inGeotiff)
   proj = osr.SpatialReference()
@@ -187,6 +187,10 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG):
   inBand = inRaster.GetRasterBand(1)
   noDataValue = inBand.GetNoDataValue()
   data = inBand.ReadAsArray()
+  data[np.isnan(data)==True] = noDataValue
+  if threshold != None:
+    print('Applying threshold ({0}) ...'.format(threshold))
+    data[data<np.float(threshold)] = noDataValue
   if noDataValue == np.nan:
     data[np.isnan(data)==False] = 1
   else:
