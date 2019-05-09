@@ -11,20 +11,17 @@ import matplotlib.pyplot as plt
 def time_series2csv(ncFile, x, y, typeXY, outBase):
 
   ### Extract time series slice
-  (granule, time, value, sdAdd, sdMult) = \
+  (granule, time, index, value, sd) = \
     time_series_slice(ncFile, x, y, typeXY)
   count = len(granule)
 
   ### Write list to CSV file
   outFile = outBase + '_decomp.csv'
   with open(outFile, 'wb') as csv:
-    csv.write('granule,time,value,seasonalAdd,trendAdd,residualAdd,' \
-      'seasonalMult,trendMult,residualMult\n')
+    csv.write('granule,time,value,seasonalAdd,trendAdd,residualAdd\n')
     for ii in range(count):
-      out = ('{0},{1},{2},{3},{4},{5},{6},{7},{8}\n'.format(granule[ii],
-        time[ii], value[ii], sdAdd.seasonal[ii], sdAdd.trend[ii],
-        sdAdd.resid[ii], sdMult.seasonal[ii], sdMult.trend[ii],
-        sdMult.resid[ii]))
+      out = ('{0},{1},{2},{3},{4},{5}\n'.format(granule[ii],
+        time[ii], value[ii], sd.seasonal[ii], sd.trend[ii], sd.resid[ii]))
       csv.write(out.replace('nan',''))
 
   ### Plot additivie decomposition
@@ -44,6 +41,7 @@ def time_series2csv(ncFile, x, y, typeXY, outBase):
   plt.savefig(outFile, dpi=300)
   fig = None
 
+  '''
   ### Plot multiplicative decomposition
   outFile = outBase + '_multiplicative.png'
   fig, axes = plt.subplots(4, 1, sharex=True, sharey=False)
@@ -60,6 +58,7 @@ def time_series2csv(ncFile, x, y, typeXY, outBase):
   axes[3].set_ylabel('residual')
   plt.savefig(outFile, dpi=300)
   fig = None
+  '''
 
 
 if __name__ == '__main__':

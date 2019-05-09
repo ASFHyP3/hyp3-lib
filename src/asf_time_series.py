@@ -108,6 +108,53 @@ def initializeNetcdf(ncFile, meta):
   dataset.close()
 
 
+def nc2meta(ncFile):
+
+  dataset = nc.Dataset(ncFile, 'r')
+
+  meta = {}
+
+  ### Global attributes
+  meta['conventions'] = dataset.Conventions
+  meta['institution'] = dataset.institution
+  meta['title'] = dataset.title
+  meta['source'] = dataset.source
+  meta['comment'] = dataset.comment
+  meta['reference'] = dataset.reference
+
+  ### Coordinates
+  xGrid = dataset.variables['xgrid']
+  (meta['cols'],) = xGrid.shape
+  meta['pixelSize'] = xGrid[1] - xGrid[0]
+  meta['minX'] = np.min(xGrid)
+  meta['maxX'] = np.max(xGrid) + meta['pixelSize']
+  yGrid = dataset.variables['ygrid']
+  (meta['rows'],) = yGrid.shape
+  meta['minY'] = np.min(yGrid) - meta['pixelSize']
+  meta['maxY'] = np.max(yGrid)
+
+  ### Time reference
+  time = dataset.variables['time']
+  (meta['timeCount'],) = time.shape
+  meta['refTime'] = time.units[14:]
+
+  ### Map projection: EPSG
+  proj = dataset.variables['Transverse_Mercator']
+  projSpatialRef = osr.SpatialReference()
+  projSpatialRef.ImportFromWkt(proj.crs_wkt)
+  meta['epsg'] = int(projSpatialRef.GetAttrValue('AUTHORITY', 1))
+
+  ### Image metadata
+  image = dataset.variables['image']
+  meta['imgLongName'] = image.long_name
+  meta['imgUnits'] = image.units
+  meta['imgNoData'] = image.fill_value
+
+  dataset.close()
+
+  return meta
+
+
 def addImage2netcdf(image, ncFile, granule, imgTime):
 
   dataset = nc.Dataset(ncFile, 'a')
@@ -221,6 +268,56 @@ def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):
   data *= mask
 
   return data
+
+
+def filter_change(image, kernelSize, iterations):
+
+  (cols, rows) = image.shape
+  positiveChange = np.zeros((rows,cols), dtype=np.uint8)
+  negativeChange = np.zeros((rows,cols), dtype=np.uint8)
+  noChange = np.zeros((rows,cols), dtype=np.uint8)
+  for ii in range(int(cols)):
+    for kk in range(int(rows)):
+      if image[ii,kk] == 1:
+        negativeChange[ii,kk] = 1
+      elif image[ii,kk] == 2:
+        noChange = 1
+      elif image[ii,kk] == 3:
+        positiveChange[ii,kk] = 1
+  image = None
+  positiveChange = ndimage.binary_opening(positiveChange,
+    iterations=iterations, structure=np.ones(kernelSize)).astype(np.uint8)
+  negativeChange = ndimage.binary_opening(negativeChange,
+    iterations=iterations, structure=np.ones(kernelSize)).astype(np.uint8)
+  change = np.full((rows,cols), 2, dtype=np.uint8)
+  for ii in range(int(cols)):
+    for kk in range(int(rows)):
+      if negativeChange[ii,kk] == 1:
+        change[ii,kk] = 1
+      elif positiveChange[ii,kk] == 1:
+        change[ii,kk] = 3
+  change *= noChange
+
+  return change
+
+
+def geotiff2data(inGeotiff):
+
+  inRaster = gdal.Open(inGeotiff)
+  proj = osr.SpatialReference()
+  proj.ImportFromWkt(inRaster.GetProjectionRef())
+  if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
+    epsg = int(proj.GetAttrValue('AUTHORITY', 1))
+  geoTrans = inRaster.GetGeoTransform()
+  inBand = inRaster.GetRasterBand(1)
+  noData = inBand.GetNoDataValue()
+  data = inBand.ReadAsArray()
+  if data.dtype == np.uint8:
+    dtype = 'BYTE'
+  elif data.dtype == np.float32:
+    dtype = 'FLOAT'
+
+  return (data, geoTrans, proj, epsg, dtype, noData)
 
 
 def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
@@ -409,27 +506,22 @@ def time_series_slice(ncFile, x, y, typeXY):
     missingTime.append((missingDate - timeRef.date()).total_seconds())
   missingValues = f(missingTime)
   allValues = []
+  refType = []
   for ii in range(len(refDates)):
     if refDates[ii] in missingDates:
       index = missingDates.index(refDates[ii])
       allValues.append(missingValues[index])
+      refType.append('interpolated')
     else:
       index = datestamp.index(refDates[ii])
       allValues.append(value[index])
+      refType.append('acquired')
   allValues = np.asarray(allValues)
-  print('original: {0}'.format(allValues))
 
   ## Smoothing the time line with localized regression (LOESS)
   lowess = sm.nonparametric.lowess
   smooth = lowess(allValues, np.arange(len(allValues)), frac=0.08, it=0)[:,1]
-  print('filtered: {0}'.format(smooth))
-  diff = allValues - smooth
-  print('diff: {0}'.format(diff))
 
-  ## freq = 15
-  sdAdd = seasonal_decompose(x=smooth, model='additive', freq=4)#,
-  #  extrapolate_trend='freq')
-  sdMult = seasonal_decompose(x=smooth, model='multiplicative', freq=4)#,
-  #  extrapolate_trend='freq')
+  sd = seasonal_decompose(x=smooth, model='additive', freq=4)
 
-  return (granule, refDates, smooth, sdAdd, sdMult)
+  return (granule, refDates, refType, smooth, sd)
