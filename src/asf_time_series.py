@@ -172,25 +172,6 @@ def addImage2netcdf(image, ncFile, granule, imgTime):
   dataset.close()
 
 
-def cut_blackfill(data, geoTrans):
-
-  originX = geoTrans[0]
-  originY = geoTrans[3]
-  pixelSize = geoTrans[1]
-  colProfile = list(data.max(axis=1))
-  rows = colProfile.count(1)
-  rowFirst = colProfile.index(1)
-  rowProfile = list(data.max(axis=0))
-  cols = rowProfile.count(1)
-  colFirst = rowProfile.index(1)
-  originX += colFirst*pixelSize
-  originY -= rowFirst*pixelSize
-  data = data[rowFirst:rows+rowFirst,colFirst:cols+colFirst]
-  geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
-
-  return (data, colFirst, rowFirst, geoTrans)
-
-
 def reproject2grid(inRaster, tsEPSG):
 
   # Read basic metadata
@@ -213,42 +194,6 @@ def reproject2grid(inRaster, tsEPSG):
   inRaster = None
 
   return outRaster
-
-
-def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold):
-
-  inRaster = gdal.Open(inGeotiff)
-  proj = osr.SpatialReference()
-  proj.ImportFromWkt(inRaster.GetProjectionRef())
-  if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
-    epsg = int(proj.GetAttrValue('AUTHORITY', 1))
-
-  if tsEPSG != 0 and epsg != tsEPSG:
-    print('Reprojecting ...')
-    inRaster = reproject2grid(inRaster, tsEPSG)
-    proj.ImportFromWkt(inRaster.GetProjectionRef())
-    if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
-      epsg = int(proj.GetAttrValue('AUTHORITY', 1))
-
-  geoTrans = inRaster.GetGeoTransform()
-  inBand = inRaster.GetRasterBand(1)
-  noDataValue = inBand.GetNoDataValue()
-  data = inBand.ReadAsArray()
-  data[np.isnan(data)==True] = noDataValue
-  if threshold != None:
-    print('Applying threshold ({0}) ...'.format(threshold))
-    data[data<np.float(threshold)] = noDataValue
-  if noDataValue == np.nan:
-    data[np.isnan(data)==False] = 1
-  else:
-    data[data>noDataValue] = 1
-  data = ndimage.binary_closing(data, iterations=10,
-    structure=np.ones((3,3))).astype(data.dtype)
-  inRaster = None
-
-  (data, colFirst, rowFirst, geoTrans) = cut_blackfill(data, geoTrans)
-
-  return (data, colFirst, rowFirst, geoTrans, proj)
 
 
 def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):

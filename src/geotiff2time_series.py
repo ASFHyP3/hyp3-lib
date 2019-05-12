@@ -11,6 +11,7 @@ import netCDF4 as nc
 import yaml
 
 tolerance = 0.05
+noiseFloor = 0.001
 
 
 def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
@@ -186,7 +187,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
       inFile = os.path.basename(files[ii])
       print('Creating boundary mask ({0}) ...'.format(inFile))
       (mask, colFirst, rowFirst, gt, proj) = \
-        geotiff2boundary_mask(files[ii], tsEPSG)
+        geotiff2boundary_mask(files[ii], tsEPSG, None)
       (maskRows, maskCols) = mask.shape
       maskOriginX = gt[0]
       maskOriginY = gt[3]
@@ -294,6 +295,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
         inRaster = reproject2grid(inRaster, tsEPSG)
       dataGT = inRaster.GetGeoTransform()
       data = inRaster.GetRasterBand(1).ReadAsArray()
+      data[data<noiseFloor] = noiseFloor
       data = apply_mask(data, dataGT, mask, maskGT)
       if netcdfFile != None:
         addImage2netcdf(data, ncFile, granule[kk], timestamp[kk])
