@@ -172,49 +172,6 @@ def addImage2netcdf(image, ncFile, granule, imgTime):
   dataset.close()
 
 
-def reproject2grid(inRaster, tsEPSG):
-
-  # Read basic metadata
-  cols = inRaster.RasterXSize
-  rows = inRaster.RasterYSize
-  geoTrans = inRaster.GetGeoTransform()
-  proj = osr.SpatialReference()
-  proj.ImportFromEPSG(tsEPSG)
-
-  # Define warping options
-  rasterFormat = 'VRT'
-  xRes = geoTrans[1]
-  yRes = xRes
-  resampleAlg = gdal.GRA_Bilinear
-  options = ['COMPRESS=DEFLATE']
-
-  outRaster = gdal.Warp('', inRaster, format=rasterFormat, dstSRS=proj,
-    targetAlignedPixels=True, xRes=xRes, yRes=yRes, resampleAlg=resampleAlg,
-    options=options)
-  inRaster = None
-
-  return outRaster
-
-
-def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):
-
-  (dataRows, dataCols) = data.shape
-  dataOriginX = dataGeoTrans[0]
-  dataOriginY = dataGeoTrans[3]
-  dataPixelSize = dataGeoTrans[1]
-  (maskRows, maskCols) = mask.shape
-  maskOriginX = maskGeoTrans[0]
-  maskOriginY = maskGeoTrans[3]
-  maskPixelSize = maskGeoTrans[1]
-  offsetX = int(np.rint((maskOriginX - dataOriginX)/maskPixelSize))
-  offsetY = int(np.rint((dataOriginY - maskOriginY)/maskPixelSize))
-  data = data[offsetY:maskRows+offsetY,offsetX:maskCols+offsetX]
-  mask[mask==0] = np.nan
-  data *= mask
-
-  return data
-
-
 def filter_change(image, kernelSize, iterations):
 
   (cols, rows) = image.shape
@@ -244,56 +201,6 @@ def filter_change(image, kernelSize, iterations):
   change *= noChange
 
   return change
-
-
-def geotiff2data(inGeotiff):
-
-  inRaster = gdal.Open(inGeotiff)
-  proj = osr.SpatialReference()
-  proj.ImportFromWkt(inRaster.GetProjectionRef())
-  if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
-    epsg = int(proj.GetAttrValue('AUTHORITY', 1))
-  geoTrans = inRaster.GetGeoTransform()
-  inBand = inRaster.GetRasterBand(1)
-  noData = inBand.GetNoDataValue()
-  data = inBand.ReadAsArray()
-  if data.dtype == np.uint8:
-    dtype = 'BYTE'
-  elif data.dtype == np.float32:
-    dtype = 'FLOAT'
-
-  return (data, geoTrans, proj, epsg, dtype, noData)
-
-
-def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
-
-  (rows, cols) = data.shape
-  gdalDriver = gdal.GetDriverByName('GTiff')
-  if dtype == 'BYTE':
-    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
-      ['COMPRESS=DEFLATE'])
-  elif dtype == 'FLOAT':
-    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Float32,
-      ['COMPRESS=DEFLATE'])
-  outRaster.SetGeoTransform(geoTrans)
-  outRaster.SetProjection(proj.ExportToWkt())
-  outBand = outRaster.GetRasterBand(1)
-  outBand.SetNoDataValue(noData)
-  outBand.WriteArray(data)
-  outRaster = None
-
-
-def raster_meta(rasterFile):
-
-  raster = gdal.Open(rasterFile)
-  spatialRef = osr.SpatialReference()
-  spatialRef.ImportFromWkt(raster.GetProjectionRef())
-  gt = raster.GetGeoTransform()
-  shape = [ raster.RasterYSize, raster.RasterXSize ]
-  pixel = raster.GetMetadataItem('AREA_OR_POINT')
-  raster = None
-
-  return (spatialRef, gt, shape, pixel)
 
 
 def vector_meta(vectorFile):
@@ -382,6 +289,64 @@ def raster_metadata(input):
   values.append(value)
 
   return (fields, values, outSpatialRef)
+
+
+def netcdf2boundary_mask(ncFile, geographic):
+
+  ### Extract metadata
+  meta = nc2meta(ncFile)
+  cols = meta['cols']
+  rows = meta['rows']
+  ntimes = meta['timeCount']
+  proj = osr.SpatialReference()
+  proj.ImportFromEPSG(meta['epsg'])
+  geoTrans = \
+    (meta['minX'], meta['pixelSize'], 0, meta['maxY'], 0, -meta['pixelSize'])
+
+  ### Reading time series
+  dataset = nc.Dataset(ncFile, 'r')
+  image = dataset.variables['image'][:]
+  dataset.close()
+
+  ### Save in memory
+  data = image[0,:,:]/image[0,:,:]
+  image = None
+  gdalDriver = gdal.GetDriverByName('Mem')
+  outRaster = gdalDriver.Create('out', rows, cols, 1, gdal.GDT_Byte)
+  outRaster.SetGeoTransform(geoTrans)
+  outRaster.SetProjection(proj.ExportToWkt())
+  outBand = outRaster.GetRasterBand(1)
+  outBand.WriteArray(data)
+  inBand = None
+  inRaster = None
+  data = None
+
+  ### Polygonize the raster image
+  inBand = outRaster.GetRasterBand(1)
+  ogrDriver = ogr.GetDriverByName('Memory')
+  outVector = ogrDriver.CreateDataSource('out')
+  outLayer = outVector.CreateLayer('boundary', srs=proj)
+  fieldDefinition = ogr.FieldDefn('ID', ogr.OFTInteger)
+  outLayer.CreateField(fieldDefinition)
+  gdal.Polygonize(inBand, inBand, outLayer, 0, [], None)
+  outRaster = None
+
+  ### Extract geometry from layer
+  inSpatialRef = outLayer.GetSpatialRef()
+  multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
+  for outFeature in outLayer:
+    geometry = outFeature.GetGeometryRef()
+    multipolygon.AddGeometry(geometry)
+    outFeature = None
+  outLayer = None
+
+  ### Convert geometry from projected to geographic coordinates (if requested)
+  if geographic == True:
+    (multipolygon, outSpatialRef) = \
+      geometry_proj2geo(multipolygon, inSpatialRef)
+    return (multipolygon, outSpatialRef)
+  else:
+    return (multipolygon, inSpatialRef)
 
 
 def time_series_slice(ncFile, x, y, typeXY):
