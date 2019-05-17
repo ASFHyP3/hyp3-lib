@@ -7,6 +7,7 @@ import sys
 import xlsxwriter
 from osgeo import gdal, ogr, osr
 from asf_time_series import *
+from asf_geometry import *
 import netCDF4 as nc
 import yaml
 
@@ -72,6 +73,10 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
       lr.AddPoint(maxX, minY)
       corners.AddGeometry(lr)
       corners = reproject_corners(corners, posting, epsg[ii], tsEPSG)
+      for point in corners:
+        (x, y, z) = point.GetPoint(0)
+        gt = (x, posting, 0.0, y, 0.0, -posting)
+        break;
     originX.append(gt[0])
     originY.append(gt[3])
     pixelSize.append(gt[1])

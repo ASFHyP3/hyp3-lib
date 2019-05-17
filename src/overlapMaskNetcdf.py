@@ -38,7 +38,7 @@ def overlapMaskNetcdf(inFile, maskShape, invert, outFile):
   initializeNetcdf(outFile, meta)
 
   ### Generate mask of overlap between image and mask file
-  print('Generating overlap mask of image and mask shapefile ({0})...'.\
+  print('Generating overlap mask of image and mask shapefile ({0}) ...'.\
     format(maskShape))
   (mask, maskGeoTrans) = overlapMask(meta, maskShape, invert, outFile)
   ## Set NaNs in mask to zero - assuming we don't have background to worry
