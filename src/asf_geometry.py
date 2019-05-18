@@ -231,7 +231,14 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
 
 
 # Save data with fields to shapefile
-def data_geometry2shape(data, fields, values, spatialRef, geoTrans, shapeFile):
+def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
+  classes, threshold, background, shapeFile):
+
+  # Check input
+  if threshold != None:
+    threshold = float(threshold)
+  if background != None:
+    background = int(background)
 
   # Buffer data
   (rows, cols) = data.shape
@@ -245,9 +252,10 @@ def data_geometry2shape(data, fields, values, spatialRef, geoTrans, shapeFile):
 
   # Save in memory
   (rows, cols) = data.shape
+  maxArea = rows*cols*pixelSize*pixelSize
   data = data.astype(np.byte)
   gdalDriver = gdal.GetDriverByName('Mem')
-  outRaster = gdalDriver.Create('out', cols, rows, 1, gdal.GDT_Byte)
+  outRaster = gdalDriver.Create('value', cols, rows, 1, gdal.GDT_Byte)
   outRaster.SetGeoTransform(geoTrans)
   outRaster.SetProjection(spatialRef.ExportToWkt())
   outBand = outRaster.GetRasterBand(1)
@@ -258,22 +266,53 @@ def data_geometry2shape(data, fields, values, spatialRef, geoTrans, shapeFile):
   if os.path.exists(shapeFile):
     driver.DeleteDataSource(shapeFile)
   outShape = driver.CreateDataSource(shapeFile)
-  outLayer = outShape.CreateLayer('boundary', srs=spatialRef)
-  gdal.Polygonize(outBand, None, outLayer, -1, [], callback=None)
+  outLayer = outShape.CreateLayer('polygon', srs=spatialRef)
+  outField = ogr.FieldDefn('value', ogr.OFTInteger)
+  outLayer.CreateField(outField)
+  gdal.Polygonize(outBand, None, outLayer, 0, [], callback=None)
   for field in fields:
     fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
     if field['type'] == ogr.OFTString:
       fieldDefinition.SetWidth(field['width'])
     outLayer.CreateField(fieldDefinition)
+  fieldDefinition = ogr.FieldDefn('area', ogr.OFTReal)
+  fieldDefinition.SetWidth(16)
+  fieldDefinition.SetPrecision(3)
+  outLayer.CreateField(fieldDefinition)
+  if classes != None:
+    fieldDefinition = ogr.FieldDefn('size', ogr.OFTString)
+    fieldDefinition.SetWidth(25)
+    outLayer.CreateField(fieldDefinition)
   featureDefinition = outLayer.GetLayerDefn()
-  outLayer.DeleteFeature(1)
-  outFeature = outLayer.GetNextFeature()
-  for value in values:
-    for field in fields:
-      name = field['name']
-      outFeature.SetField(name, value[name])
-  outLayer.SetFeature(outFeature)
+  for outFeature in outLayer:
+    for value in values:
+      for field in fields:
+        name = field['name']
+        outFeature.SetField(name, value[name])
+    cValue = outFeature.GetField('value')
+    fill = False
+    if cValue == 0:
+      fill = True
+    if background != None and cValue == background:
+      fill = True
+    geometry = outFeature.GetGeometryRef()
+    area = float(geometry.GetArea())
+    outFeature.SetField('area', area)
+    if classes != None:
+      for ii in range(len(classes)):
+        if area > classes[ii]['minimum'] and area < classes[ii]['maximum']:
+          outFeature.SetField('size',classes[ii]['class'])
+    if fill == False and area > threshold:
+      outLayer.SetFeature(outFeature)
+    else:
+      outLayer.DeleteFeature(outFeature.GetFID())
   outShape.Destroy()
+
+
+def data_geometry2shape(data, fields, values, spatialRef, geoTrans, shapeFile):
+
+  return data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
+    None, 0, None, shapeFile)
 
 
 def geotiff2data(inGeotiff):
