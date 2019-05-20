@@ -25,19 +25,20 @@ def raster2shape(inFile, classFile, threshold, background, outShapeFile):
 
   # Read classes from file
   classes = []
-  with open(classFile) as csvFile:
-    csvReader = csv.DictReader(csvFile)
-    for row in csvReader:
-      line = {}
-      line['class'] = row['class']
-      line['minimum'] = float(row['min'])
-      if row['max'] == 'inf':
-        line['maximum'] = np.inf
-      else:
-        line['maximum'] = float(row['max'])
-      classes.append(line)
+  if classFile != None:
+    with open(classFile) as csvFile:
+      csvReader = csv.DictReader(csvFile)
+      for row in csvReader:
+        line = {}
+        line['class'] = row['class']
+        line['minimum'] = float(row['min'])
+        if row['max'] == 'inf':
+          line['maximum'] = np.inf
+        else:
+          line['maximum'] = float(row['max'])
+        classes.append(line)
 
-  # Write broundary to shapefile
+  # Write boundary to shapefile
   print('Writing classification to shapefile ...')
   data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans, classes,
     threshold, background, outShapeFile)
