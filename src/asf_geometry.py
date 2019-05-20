@@ -282,7 +282,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
   fieldDefinition = ogr.FieldDefn('centroid', ogr.OFTString)
   fieldDefinition.SetWidth(50)
   outLayer.CreateField(fieldDefinition)
-  if classes != None:
+  if classes:
     fieldDefinition = ogr.FieldDefn('size', ogr.OFTString)
     fieldDefinition.SetWidth(25)
     outLayer.CreateField(fieldDefinition)
@@ -301,7 +301,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
     geometry = outFeature.GetGeometryRef()
     area = float(geometry.GetArea())
     outFeature.SetField('area', area)
-    if classes != None:
+    if classes:
       for ii in range(len(classes)):
         if area > classes[ii]['minimum'] and area < classes[ii]['maximum']:
           outFeature.SetField('size',classes[ii]['class'])
