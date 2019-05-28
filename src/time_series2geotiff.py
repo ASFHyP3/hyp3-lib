@@ -19,7 +19,6 @@ def time_series2geotiff(ncFile, listFile, outDir):
   granules = dataset.variables['granule'][:]
   dataset.close()
   granules = list(nc.chartostring(granules, encoding='utf-8'))
-  print(granules)
 
   ### Read time series metadata and
   meta = nc2meta(ncFile)

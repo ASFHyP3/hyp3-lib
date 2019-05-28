@@ -4,10 +4,11 @@ import argparse
 from argparse import RawTextHelpFormatter
 import os
 import sys
+import time as ti
 from asf_time_series import *
 
 
-def time_speckle_filter(inFile, length, step, discrete, outFile):
+def time_speckle_filter(inFile, length, step, discrete, regression, outFile):
 
   ### Extract metadata
   meta = nc2meta(inFile)
@@ -25,6 +26,9 @@ def time_speckle_filter(inFile, length, step, discrete, outFile):
   if discrete == True:
     offset = ntimes - stop
     start = ntimes - timeCount*step + offset
+  elif regression == True:
+    start = 0
+    stop = ntimes
 
   ### Reading time series
   dataset = nc.Dataset(inFile, 'r')
@@ -37,13 +41,30 @@ def time_speckle_filter(inFile, length, step, discrete, outFile):
   meta['timeCount'] = timeCount
   initializeNetcdf(outFile, meta)
 
-  ### Applying median filter
-  filtered = np.full((meta['timeCount'], meta['rows'], meta['cols']), np.nan)
-  indices = np.arange(start, stop, step)
-  for ii in indices:
-    index = int((ii - indices[0])/step)
-    filtered[index,:,:] = np.median(image[ii-start:ii-start+length,:,:],
-      axis=0)
+  ### Applying time speckle reduction fiter
+  if regression == True:
+    ## Smoothing the time line with localized regression (LOESS)
+    filtered = np.full((ntimes, yGrid, xGrid), np.nan)
+    '''
+    for x in range(xGrid):
+      first = ti.time()
+      for y in range(yGrid):
+        lowess = sm.nonparametric.lowess
+        # frac value subject to some experimentation
+        filtered[:,y,x] = \
+          lowess(image[:,y,x], np.arange(ntimes), frac=0.08, it=0)[:,1]
+      last = ti.time()
+      print('loop %4d: %.3lf' % (x, last-first))
+    '''
+    filtered = lowess(image, np.arange(ntimes)
+  else:
+    ## Running median filter
+    filtered = np.full((meta['timeCount'], yGrid, xGrid), np.nan)
+    indices = np.arange(start, stop, step)
+    for ii in indices:
+      index = int((ii - indices[0])/step)
+      filtered[index,:,:] = np.median(image[ii-start:ii-start+length,:,:],
+        axis=0)
 
   ### Write filtered time series to file
   dataset = nc.Dataset(outFile, 'a')
@@ -67,6 +88,8 @@ if __name__ == '__main__':
     help='length of time speckle filter in time (default 3)', default=3)
   parser.add_argument('-discrete', action='store_true',
     help='use the time filter discretely (no overlaps)')
+  parser.add_argument('-regression', action='store_true', default=False,
+    help='use the localized regression filter')
   parser.add_argument('outFile', metavar='<output file>',
     help='name of the detrended netCDF time series file')
   if len(sys.argv) == 1:
@@ -81,5 +104,5 @@ if __name__ == '__main__':
   step = 1
   if args.discrete == True:
     step = int(args.length)
-  time_speckle_filter(args.inFile, int(args.length), step, args.discrete, 
-    args.outFile)
+  time_speckle_filter(args.inFile, int(args.length), step, args.discrete,
+    args.regression, args.outFile)
