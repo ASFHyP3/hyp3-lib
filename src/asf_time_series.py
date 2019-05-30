@@ -210,11 +210,10 @@ def vector_meta(vectorFile):
   layerDefinition = layer.GetLayerDefn()
   fieldCount = layerDefinition.GetFieldCount()
   fields = []
-  field = {}
   for ii in range(fieldCount):
+    field = {}
     field['name'] = layerDefinition.GetFieldDefn(ii).GetName()
-    fieldType = layerDefinition.GetFieldDefn(ii).GetType()
-    field['type'] = layerDefinition.GetFieldDefn(ii).GetFieldTypeName(fieldType)
+    field['type'] = layerDefinition.GetFieldDefn(ii).GetType()
     field['width'] = layerDefinition.GetFieldDefn(ii).GetWidth()
     field['precision'] = layerDefinition.GetFieldDefn(ii).GetPrecision()
     fields.append(field)
@@ -222,9 +221,18 @@ def vector_meta(vectorFile):
   extent = layer.GetExtent()
   features = []
   featureCount = layer.GetFeatureCount()
-  for feature in layer:
-    geometry = feature.GetGeometryRef()
-    features.append(geometry.GetGeometryName())
+  for kk in range(featureCount):
+    value = {}
+    feature = layer.GetFeature(kk)
+    for ii in range(fieldCount):
+      if fields[ii]['type'] == ogr.OFTInteger:
+        value[fields[ii]['name']] = int(feature.GetField(ii))
+      elif fields[ii]['type'] == ogr.OFTReal:
+        value[fields[ii]['name']] = float(feature.GetField(ii))
+      else:
+        value[fields[ii]['name']] = feature.GetField(ii)
+    value['geometry'] = feature.GetGeometryRef()
+    features.append(value)
 
   return (fields, proj, extent, features)
 
