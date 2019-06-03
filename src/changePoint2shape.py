@@ -9,7 +9,7 @@ from asf_time_series import *
 
 
 def changePoint2shape(confidenceLevel, changeTime, timeFile, threshold,
-  size, shapeFile):
+  size, maskBase, shapeFile):
 
   ### Read confidence level result and change time
   (confidence, geoTrans, proj, epsg, dtype, noData) = \
@@ -28,15 +28,17 @@ def changePoint2shape(confidenceLevel, changeTime, timeFile, threshold,
   kernelSize = (5,5)
   mask = ndimage.binary_opening(mask,
     structure=np.ones(kernelSize)).astype(np.uint8)
-  data2geotiff(mask, geoTrans, proj, 'BYTE', 0, 'mask.tif')
+  maskFile = maskBase + '.tif'
+  data2geotiff(mask, geoTrans, proj, 'BYTE', 0, maskFile)
   fields = []
   values = []
-  data_geometry2shape(mask, fields, values, proj, geoTrans, 'mask.shp')
+  maskFile = maskBase + '.shp'
+  data_geometry2shape(mask, fields, values, proj, geoTrans, maskFile)
   mask = mask.astype(np.float32)
   mask[mask==0] = np.nan
 
   ### Extract area sizes and geometry
-  (fields, proj, extent, features) = vector_meta('mask.shp')
+  (fields, proj, extent, features) = vector_meta(maskFile)
   areaSize = []
   for ii in range(len(features)):
     areaSize.append(float(features[ii]['area']))
@@ -118,6 +120,8 @@ if __name__ == '__main__':
     help='confidence level threshold to define change')
   parser.add_argument('areaSize', metavar='<areaSize>',
     help='minimum area size that constitues change')
+  parser.add_argument('mask', metavar='<mask file>',
+    help='basename of the mask output file')
   parser.add_argument('outFile', metavar='<shapefile>',
     help='name of the change point analysis shapefile')
   if len(sys.argv) == 1:
@@ -135,4 +139,4 @@ if __name__ == '__main__':
     sys.exit(1)
 
   changePoint2shape(args.confidenceLevel, args.changeTime, args.timeFile,
-    float(args.threshold), float(args.areaSize), args.outFile)
+    float(args.threshold), float(args.areaSize), args.mask, args.outFile)
