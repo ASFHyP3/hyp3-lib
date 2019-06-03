@@ -205,6 +205,9 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
     fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
     if field['type'] == ogr.OFTString:
       fieldDefinition.SetWidth(field['width'])
+    elif field['type'] == ogr.OFTReal:
+      fieldDefinition.SetWidth(24)
+      fieldDefinition.SetPrecision(8)
     outLayer.CreateField(fieldDefinition)
   featureDefinition = outLayer.GetLayerDefn()
   if merge == True:
@@ -335,6 +338,8 @@ def geotiff2data(inGeotiff):
     dtype = 'BYTE'
   elif data.dtype == np.float32:
     dtype = 'FLOAT'
+  elif data.dtype == np.float64:
+    dtype = 'DOUBLE'
 
   return (data, geoTrans, proj, epsg, dtype, noData)
 

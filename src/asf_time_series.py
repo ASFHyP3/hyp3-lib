@@ -231,7 +231,7 @@ def vector_meta(vectorFile):
         value[fields[ii]['name']] = float(feature.GetField(ii))
       else:
         value[fields[ii]['name']] = feature.GetField(ii)
-    value['geometry'] = feature.GetGeometryRef()
+    value['geometry'] = feature.GetGeometryRef().ExportToWkt()
     features.append(value)
 
   return (fields, proj, extent, features)
