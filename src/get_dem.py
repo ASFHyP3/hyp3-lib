@@ -383,7 +383,6 @@ if __name__ == "__main__":
     parser.add_argument("-u","--utm",action='store_true',help="Create output in UTM projection")
     parser.add_argument("-p","--posting",type=float,help="Snap DEM to align with grid at given posting")
     parser.add_argument("-d","--dem",help="Type of DEM to use")
-#    parser.add_argument("--aws", action='store_const', const=True, help="use aws config file")
     parser.add_argument("-t", "--threads", type=positive_int, default=1,
             help="Num of threads to use for downloading DEM tiles")
     args = parser.parse_args()
@@ -400,7 +399,6 @@ if __name__ == "__main__":
     lon_max = float(args.lon_max)
     outfile = args.outfile
     utmflag = args.utm
-    use_aws_config = args.aws if args.aws else False
 
     if args.posting is not None:
         get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=args.posting, processes=args.threads)
