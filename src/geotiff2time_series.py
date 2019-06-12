@@ -16,7 +16,7 @@ noiseFloor = 0.001
 
 
 def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
-  ncFile, yamlFile, outDir):
+  tiled, ncFile, yamlFile, outDir):
 
   ### Work through GeoTIFF file list and generate a time series mask
   files = [line.rstrip('\n') for line in open(listFile)]
@@ -259,35 +259,79 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
   timeIndex = np.argsort(timestamp)
 
   if netcdfFile != None:
-    ### Genereate nedCDF time series file
-    print('Generate netCDF time series file ...')
+
+    ### Generate nedCDF time series file
+    print('Generate netCDF time series file(s) ...')
+
+    if tiled == True:
+      (rows, cols) = mask.shape
+      tileX = int(float(cols)/1024)
+      tileY = int(float(rows)/1024)
+      width = int(float(cols)/tileX)
+      height = int(float(rows)/tileY)
+      restX = cols - tileX*width
+      restY = rows - tileY*height
 
     ## Read auxiliary information from YAML file into a dictionary
-    meta = {}
     stream = open(yamlFile)
     yamlData = yaml.load(stream)
-    meta['institution'] = yamlData['global']['institution']
-    meta['title'] = yamlData['global']['title']
-    meta['source'] = yamlData['global']['source']
-    meta['comment'] = yamlData['global']['comment']
-    meta['reference'] = yamlData['global']['reference']
-    meta['imgLongName'] = yamlData['data']['longName']
-    meta['imgUnits'] = yamlData['data']['units']
-    meta['imgNoData'] = float(yamlData['data']['noData'])
-    meta['epsg'] = tsEPSG
-    meta['minX'] = maskGT[0]
-    meta['maxX'] = maskGT[0] + maskGT[1]*mask.shape[1]
-    meta['minY'] = maskGT[3] + maskGT[5]*mask.shape[0]
-    meta['maxY'] = maskGT[3]
-    meta['cols'] = mask.shape[1]
-    meta['rows'] = mask.shape[0]
-    meta['pixelSize'] = np.median(pixelSize)
-    meta['refTime'] = min(timestamp)
+    stream.close()
 
     ## Initialize netCDF file
-    initializeNetcdf(ncFile, meta)
+    if tiled == True:
+      for kk in range(tileY):
+        for ii in range(tileX):
+
+          tileStr = (' (tile {0} {1})'.format(ii+1,kk+1))
+          originX = maskGT[0] + (ii+1)*width
+          originY = maskGT[3] - (kk+1)*height
+
+          meta = {}
+          meta['institution'] = yamlData['global']['institution']
+          meta['title'] = yamlData['global']['title'] + tileStr
+          meta['source'] = yamlData['global']['source']
+          meta['comment'] = yamlData['global']['comment']
+          meta['reference'] = yamlData['global']['reference']
+          meta['imgLongName'] = yamlData['data']['longName']
+          meta['imgUnits'] = yamlData['data']['units']
+          meta['imgNoData'] = float(yamlData['data']['noData'])
+          meta['epsg'] = tsEPSG
+          meta['minX'] = originX
+          meta['maxY'] = originY
+          meta['maxX'] = originX + posting*width
+          meta['cols'] = width
+          meta['minY'] = originY - posting*height
+          meta['rows'] = height
+          meta['pixelSize'] = np.median(pixelSize)
+          meta['refTime'] = min(timestamp)
+
+          tileFile = ('%s_tile_%02d_%02d.nc' % (os.path.splitext(ncFile)[0],
+            ii+1, kk+1))
+          initializeNetcdf(tileFile, meta)
+
+    else:
+
+      meta = {}
+      meta['institution'] = yamlData['global']['institution']
+      meta['title'] = yamlData['global']['title']
+      meta['source'] = yamlData['global']['source']
+      meta['comment'] = yamlData['global']['comment']
+      meta['reference'] = yamlData['global']['reference']
+      meta['imgLongName'] = yamlData['data']['longName']
+      meta['imgUnits'] = yamlData['data']['units']
+      meta['imgNoData'] = float(yamlData['data']['noData'])
+      meta['epsg'] = tsEPSG
+      meta['minX'] = maskGT[0]
+      meta['maxX'] = maskGT[0] + maskGT[1]*mask.shape[1]
+      meta['minY'] = maskGT[3] + maskGT[5]*mask.shape[0]
+      meta['maxY'] = maskGT[3]
+      meta['cols'] = mask.shape[1]
+      meta['rows'] = mask.shape[0]
+
+      initializeNetcdf(ncFile, meta)
 
   if netcdfFile != None or outDir != None:
+
     ### Apply mask to images
     files = [line.rstrip('\n') for line in open(listFile)]
     for ii in range(numGranules):
@@ -303,7 +347,20 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
       data[data<noiseFloor] = noiseFloor
       data = apply_mask(data, dataGT, mask, maskGT)
       if netcdfFile != None:
-        addImage2netcdf(data, ncFile, granule[kk], timestamp[kk])
+        if tiled == True:
+          for mm in range(tileY):
+            for ll in range(tileX):
+              tileFile = ('%s_tile_%02d_%02d.nc' % (os.path.splitext(ncFile)[0],
+                ll+1, mm+1))
+              beginX = ll*width
+              beginY = mm*height
+              endX = beginX + width
+              endY = beginY + height
+              #print('Adding layer to {0} ...'.format(tileFile))
+              addImage2netcdf(data[beginY:endY,beginX:endX], tileFile,
+                granule[kk], timestamp[kk])
+        else:
+          addImage2netcdf(data, ncFile, granule[kk], timestamp[kk])
       elif outDir != None:
         if aoiFile != None:
           outFile = os.path.join(os.path.abspath(outDir),
@@ -335,6 +392,8 @@ if __name__ == '__main__':
     help='bounding box: minLon, maxLon, minLat, maxLat')
   aoi.add_argument('-aoi', metavar='<shapefile>', action='store',
     default=None, help='area of interest shapefile')
+  aoi.add_argument('-tile', action='store_true', default=None,
+    help='tile the time series (netCDF stack files only)')
   stack = parser.add_mutually_exclusive_group(required=True)
   stack.add_argument('-stack', action='store', nargs=2, default=None,
     metavar=('<netCDF file>','<YAML metadata file>'), help='name of the ' \
@@ -356,4 +415,4 @@ if __name__ == '__main__':
     (netcdfFile, yamlFile) = args.stack
 
   geotiff2time_series(args.input, int(args.epsg), args.mask, args.excel,
-    args.latlon, args.aoi, netcdfFile, yamlFile, args.geotiff)
+    args.latlon, args.aoi, args.tile, netcdfFile, yamlFile, args.geotiff)
