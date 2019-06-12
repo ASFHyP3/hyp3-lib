@@ -114,7 +114,7 @@ if __name__ == '__main__':
     help='name of the change point analysis result: confidence level')
   parser.add_argument('changeTime', metavar='<change time file>',
     help='name of the change point analysis result: change time')
-  parser.add_argument('timeFile', metavar='<time file',
+  parser.add_argument('timeFile', metavar='<time file>',
     help='name of the file containing the time stamps')
   parser.add_argument('threshold', metavar='<threshold>',
     help='confidence level threshold to define change')
