@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 def time_series_trend(inFile, outFile):
 
   ### Reading time series
+  print('Removing trend from {0} ...'.format(inFile))
   meta = nc2meta(inFile)
   dataset = nc.Dataset(inFile, 'r')
   xGrid = meta['cols']
@@ -32,15 +33,21 @@ def time_series_trend(inFile, outFile):
     first = ti.time()
     for y in range(yGrid):
 
-      ## Smoothing the time line with localized regression (LOESS)
-      lowess = sm.nonparametric.lowess
-      smooth = lowess(image[:,y,x], np.arange(ntimes), frac=0.08, it=0)[:,1]
+      mean = np.mean(image[:,y,x])
+      if np.isfinite(mean) == True and mean > 0:
 
-      ## Remove trend from time series slice
-      sd = seasonal_decompose(x=smooth, model='additive', freq=4)
-      residuals = sd.resid
-      residuals[np.isnan(residuals)] = 0.0
-      image[:,y,x] = residuals
+        ## Smoothing the time line with localized regression (LOESS)
+        lowess = sm.nonparametric.lowess
+        smooth = lowess(image[:,y,x], np.arange(ntimes), frac=0.08, it=0)[:,1]
+
+        ## Remove trend from time series slice
+        sd = seasonal_decompose(x=smooth, model='additive', freq=4)
+        residuals = sd.resid
+        residuals[np.isnan(residuals)] = 0.0
+        image[:,y,x] = residuals
+
+      else:
+        image[:,y,x] = mean
 
     last = ti.time()
     print('loop %4d: %.3lf' % (x, last-first))
