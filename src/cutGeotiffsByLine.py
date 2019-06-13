@@ -60,7 +60,7 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
     leny = -1*(lry-min(ul[1])) / (-1*yres)
     if leny < 0:
         leny = abs(leny)
-        diff_ul = diff_ul * -1
+        diff_ul[1] = diff_ul[1] * -1
     print "Size of output images {} x {}".format(lenx,leny)
 
     outfiles = []   
@@ -69,7 +69,7 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
 	if all_coords is not None:
 	    outfile = os.path.basename(outfile)
 	print "Processing file {} to create file {}".format(files[i],outfile)
-        gdal.Translate(outfile,files[i],srcWin=[diff_ul[0,i],diff_ul[1,i],lenx,leny])
+        gdal.Translate(outfile,files[i],srcWin=[diff_ul[0,i],diff_ul[1,i],lenx,leny],noData=0)
         outfiles.append(outfile)
 
     return(outfiles)
