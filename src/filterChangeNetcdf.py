@@ -53,9 +53,9 @@ if __name__ == '__main__':
   parser.add_argument('inFile', metavar='<input file>',
     help='name of the unfiltered input file')
   parser.add_argument('-size', metavar='<kernel size>',
-    help='size of filter kernel in pixels', default=5)
+    help='size of filter kernel in pixels (default: 5)', default=5)
   parser.add_argument('-iter', metavar='<iterations>',
-    help='number of iterations for filtering', default=1)
+    help='number of iterations for filtering (default: 1)', default=1)
   parser.add_argument('outFile', metavar='<output file>',
     help='name of the filtered output file')
   if len(sys.argv) == 1:
