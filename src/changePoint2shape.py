@@ -95,8 +95,8 @@ def changePoint2shape(confidenceLevel, changeTime, timeFile, threshold,
       offX = int((minX - originX)/pixelSize)
       offY = int((maxY - originY)/pixelSize)
       subsetConfidence = confidenceMask[offY:rows+offY,offX:cols+offX]
-      value['confMean'] = np.nanmean(subsetConfidence)
-      value['confStd'] = np.nanstd(subsetConfidence)
+      value['confMean'] = np.nanmean(subsetConfidence).astype(np.float64)
+      value['confStd'] = np.nanstd(subsetConfidence).astype(np.float64)
       subsetChange = changeMask[offY:rows+offY,offX:cols+offX]
       value['change'] = timestamp[int(np.nanmedian(subsetChange))]
       values.append(value)
