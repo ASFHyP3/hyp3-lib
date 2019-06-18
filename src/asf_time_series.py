@@ -121,6 +121,7 @@ def nc2meta(ncFile):
   meta['source'] = dataset.source
   meta['comment'] = dataset.comment
   meta['reference'] = dataset.reference
+  meta['history'] = dataset.history
 
   ### Coordinates
   xGrid = dataset.variables['xgrid']
