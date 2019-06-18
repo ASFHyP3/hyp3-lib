@@ -104,7 +104,8 @@ def point2aoiShape(lat, lon, rows, cols, pixelSize, outFile):
   values.append(value)
 
   ### Save AOI to shapefile
-  print('Saving areas of interest to shapefile ({0}) ...'.format(outFile))
+  print('Saving areas of interest to shapefile ({0}) ...' \
+    .format(os.path.basename(outFile)))
   geometry2shape(fields, values, proj, False, outFile)
 
 
