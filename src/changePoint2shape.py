@@ -9,7 +9,7 @@ from asf_time_series import *
 
 
 def changePoint2shape(confidenceLevel, changeTime, timeFile, threshold,
-  size, maskBase, shapeFile):
+  maskBase, shapeFile):
 
   ### Read confidence level result and change time
   (confidence, geoTrans, proj, epsg, dtype, noData) = \
@@ -48,6 +48,14 @@ def changePoint2shape(confidenceLevel, changeTime, timeFile, threshold,
   ### Setup attributes
   fields = []
   field = {}
+  field['name'] = 'confMin'
+  field['type'] = ogr.OFTReal
+  fields.append(field)
+  field = {}
+  field['name'] = 'confMax'
+  field['type'] = ogr.OFTReal
+  fields.append(field)
+  field = {}
   field['name'] = 'confMean'
   field['type'] = ogr.OFTReal
   fields.append(field)
@@ -77,29 +85,30 @@ def changePoint2shape(confidenceLevel, changeTime, timeFile, threshold,
   ### Loop through polygons
   values = []
   for ii in range(areaCount):
-    if areaSize[index[ii]] >= size:
-      value = {}
-      feature = features[index[ii]]
-      value['area'] = feature['area']
-      centroid = ogr.CreateGeometryFromWkt(feature['centroid'])
-      centroidX = np.rint(centroid.GetX()/pixelSize)*pixelSize
-      centroidY = np.rint(centroid.GetY()/pixelSize)*pixelSize
-      centroid = ogr.Geometry(ogr.wkbPoint)
-      centroid.AddPoint_2D(centroidX, centroidY)
-      value['centroid'] = centroid.ExportToWkt()
-      geometry = ogr.CreateGeometryFromWkt(feature['geometry'])
-      value['geometry'] = geometry
-      (minX, maxX, minY, maxY) = geometry.GetEnvelope()
-      rows = int((maxY - minY)/pixelSize)
-      cols = int((maxX - minX)/pixelSize)
-      offX = int((minX - originX)/pixelSize)
-      offY = int((maxY - originY)/pixelSize)
-      subsetConfidence = confidenceMask[offY:rows+offY,offX:cols+offX]
-      value['confMean'] = np.nanmean(subsetConfidence).astype(np.float64)
-      value['confStd'] = np.nanstd(subsetConfidence).astype(np.float64)
-      subsetChange = changeMask[offY:rows+offY,offX:cols+offX]
-      value['change'] = timestamp[int(np.nanmedian(subsetChange))]
-      values.append(value)
+    value = {}
+    feature = features[index[ii]]
+    value['area'] = feature['area']
+    centroid = ogr.CreateGeometryFromWkt(feature['centroid'])
+    centroidX = np.rint(centroid.GetX()/pixelSize)*pixelSize
+    centroidY = np.rint(centroid.GetY()/pixelSize)*pixelSize
+    centroid = ogr.Geometry(ogr.wkbPoint)
+    centroid.AddPoint_2D(centroidX, centroidY)
+    value['centroid'] = centroid.ExportToWkt()
+    geometry = ogr.CreateGeometryFromWkt(feature['geometry'])
+    value['geometry'] = geometry
+    (minX, maxX, minY, maxY) = geometry.GetEnvelope()
+    rows = int((maxY - minY)/pixelSize)
+    cols = int((maxX - minX)/pixelSize)
+    offX = int((minX - originX)/pixelSize)
+    offY = int((originY - maxY)/pixelSize)
+    subsetConfidence = confidenceMask[offY:rows+offY,offX:cols+offX]
+    value['confMin'] = np.nanmin(subsetConfidence).astype(np.float64)
+    value['confMax'] = np.nanmax(subsetConfidence).astype(np.float64)
+    value['confMean'] = np.nanmean(subsetConfidence).astype(np.float64)
+    value['confStd'] = np.nanstd(subsetConfidence).astype(np.float64)
+    subsetChange = changeMask[offY:rows+offY,offX:cols+offX]
+    value['change'] = timestamp[int(np.nanmedian(subsetChange))]
+    values.append(value)
 
   ### Save results to shapefile
   geometry2shape(fields, values, proj, False, shapeFile)
@@ -118,8 +127,6 @@ if __name__ == '__main__':
     help='name of the file containing the time stamps')
   parser.add_argument('threshold', metavar='<threshold>',
     help='confidence level threshold to define change')
-  parser.add_argument('areaSize', metavar='<areaSize>',
-    help='minimum area size that constitues change')
   parser.add_argument('mask', metavar='<mask file>',
     help='basename of the mask output file')
   parser.add_argument('outFile', metavar='<shapefile>',
@@ -139,4 +146,4 @@ if __name__ == '__main__':
     sys.exit(1)
 
   changePoint2shape(args.confidenceLevel, args.changeTime, args.timeFile,
-    float(args.threshold), float(args.areaSize), args.mask, args.outFile)
+    float(args.threshold), args.mask, args.outFile)
