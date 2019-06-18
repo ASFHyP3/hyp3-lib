@@ -11,12 +11,9 @@ from asf_geometry import *
 import netCDF4 as nc
 import yaml
 
-tolerance = 0.05
-noiseFloor = 0.001
-
 
 def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
-  tiled, ncFile, yamlFile, outDir):
+  tiled, netcdfFile, yamlFile, noiseFloor, outDir):
 
   ### Work through GeoTIFF file list and generate a time series mask
   files = [line.rstrip('\n') for line in open(listFile)]
@@ -305,8 +302,8 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
           meta['pixelSize'] = np.median(pixelSize)
           meta['refTime'] = min(timestamp)
 
-          tileFile = ('%s_tile_%02d_%02d.nc' % (os.path.splitext(ncFile)[0],
-            ii+1, kk+1))
+          tileFile = ('%s_tile_%02d_%02d.nc' % 
+            (os.path.splitext(netcdfFile)[0], ii+1, kk+1))
           initializeNetcdf(tileFile, meta)
 
     else:
@@ -327,8 +324,10 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
       meta['maxY'] = maskGT[3]
       meta['cols'] = mask.shape[1]
       meta['rows'] = mask.shape[0]
+      meta['pixelSize'] = np.median(pixelSize)
+      meta['refTime'] = min(timestamp)
 
-      initializeNetcdf(ncFile, meta)
+      initializeNetcdf(netcdfFile, meta)
 
   if netcdfFile != None or outDir != None:
 
@@ -350,8 +349,8 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
         if tiled == True:
           for mm in range(tileY):
             for ll in range(tileX):
-              tileFile = ('%s_tile_%02d_%02d.nc' % (os.path.splitext(ncFile)[0],
-                ll+1, mm+1))
+              tileFile = ('%s_tile_%02d_%02d.nc' % 
+                (os.path.splitext(netcdfFile)[0], ll+1, mm+1))
               beginX = ll*width
               beginY = mm*height
               endX = beginX + width
@@ -360,7 +359,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
               addImage2netcdf(data[beginY:endY,beginX:endX], tileFile,
                 granule[kk], timestamp[kk])
         else:
-          addImage2netcdf(data, ncFile, granule[kk], timestamp[kk])
+          addImage2netcdf(data, netcdfFile, granule[kk], timestamp[kk])
       elif outDir != None:
         if aoiFile != None:
           outFile = os.path.join(os.path.abspath(outDir),
@@ -409,10 +408,12 @@ if __name__ == '__main__':
     print('GeoTIFF list file (%s) does not exist!' % args.input)
     sys.exit(1)
 
+  noiseFloor = 0.001
   netcdfFile = None
   yamlFile = None
   if args.stack != None:
     (netcdfFile, yamlFile) = args.stack
 
   geotiff2time_series(args.input, int(args.epsg), args.mask, args.excel,
-    args.latlon, args.aoi, args.tile, netcdfFile, yamlFile, args.geotiff)
+    args.latlon, args.aoi, args.tile, netcdfFile, yamlFile, noiseFloor,
+    args.geotiff)
