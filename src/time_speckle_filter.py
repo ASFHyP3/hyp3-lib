@@ -45,7 +45,6 @@ def time_speckle_filter(inFile, length, step, discrete, regression, outFile):
   if regression == True:
     ## Smoothing the time line with localized regression (LOESS)
     filtered = np.full((ntimes, yGrid, xGrid), np.nan)
-    '''
     for x in range(xGrid):
       first = ti.time()
       for y in range(yGrid):
@@ -55,8 +54,7 @@ def time_speckle_filter(inFile, length, step, discrete, regression, outFile):
           lowess(image[:,y,x], np.arange(ntimes), frac=0.08, it=0)[:,1]
       last = ti.time()
       print('loop %4d: %.3lf' % (x, last-first))
-    '''
-    filtered = lowess(image, np.arange(ntimes)
+    filtered = lowess(image, np.arange(ntimes))
   else:
     ## Running median filter
     filtered = np.full((meta['timeCount'], yGrid, xGrid), np.nan)
