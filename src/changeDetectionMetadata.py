@@ -81,7 +81,7 @@ def changeDetectionMetadata(configFile, procFile, metaFile):
   et.SubElement(timeSeries, 'stop_time').text = timestamps[timeCount-1]
   for ii in range(timeCount):
     et.SubElement(timeSeries, 'image', id='{0}'.format(ii+1)).text = \
-      os.path.basename(fileNames[ii])
+      os.path.splitext(os.path.basename(fileNames[ii]))[0]
   metadata = et.SubElement(meta, 'metadata')
   et.SubElement(metadata, 'title').text = ncMeta['title']
   confidenceLevel = et.SubElement(metadata, 'confidence_level_image')
