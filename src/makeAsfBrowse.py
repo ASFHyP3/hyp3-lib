@@ -5,14 +5,25 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 from resample_geotiff import resample_geotiff
+import saa_func_lib as saa
 
 def makeAsfBrowse(geotiff, baseName):
     kmzName = baseName + ".kmz"
     pngName = baseName + ".png"
     lrgName = baseName + "_large.png"
-    resample_geotiff(geotiff,1024,"KML",kmzName)
-    resample_geotiff(geotiff,1024,"PNG",pngName)
-    resample_geotiff(geotiff,2048,"PNG",lrgName)
+    x1,y1,trans1,proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
+    if (x1 < 2048):
+        print "Warning: width exceeds image dimension - using actual value"
+        resample_geotiff(geotiff,x1,"KML",kmzName)
+        if x1 < 1024:      
+            resample_geotiff(geotiff,x1,"PNG",pngName)
+        else:
+            resample_geotiff(geotiff,1024,"PNG",pngName)
+        resample_geotiff(geotiff,x1,"PNG",lrgName)
+    else:
+        resample_geotiff(geotiff,2048,"KML",kmzName)
+        resample_geotiff(geotiff,1024,"PNG",pngName)
+        resample_geotiff(geotiff,2048,"PNG",lrgName)
 
 if __name__ == '__main__':
 

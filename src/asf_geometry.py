@@ -3,11 +3,12 @@
 import os
 import sys
 import csv
+import math
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
-
+from saa_func_lib import get_zone
 
 # Determine the boundary polygon of a GeoTIFF file
 def geotiff2polygon_ext(geotiff):
@@ -435,6 +436,36 @@ def geometry_proj2geo(inMultipolygon, inSpatialRef):
 
   return (outMultipolygon, outSpatialRef)
 
+# Convert corner points from geographic to UTM projection
+def geometry_geo2proj(lat_max,lat_min,lon_max,lon_min):
+
+    zone = get_zone(lon_min,lon_max)
+    if (lat_min+lat_max)/2 > 0:
+        proj = ('326%02d' % int(zone))
+    else:
+        proj = ('327%02d' % int(zone))
+
+    inSpatialRef = osr.SpatialReference()
+    inSpatialRef.ImportFromEPSG(4326)
+    outSpatialRef = osr.SpatialReference()
+    outSpatialRef.ImportFromEPSG(int(proj))
+    coordTrans = osr.CoordinateTransformation(inSpatialRef,outSpatialRef)
+
+    x1, y1, h = coordTrans.TransformPoint(lon_max, lat_min)
+    x2, y2, h = coordTrans.TransformPoint(lon_min, lat_min)
+    x3, y3, h = coordTrans.TransformPoint(lon_max, lat_max)
+    x4, y4, h = coordTrans.TransformPoint(lon_min, lat_max)
+
+    y_min = min(y1,y2,y3,y4)
+    y_max = max(y1,y2,y3,y4)
+    x_min = min(x1,x2,x3,x4)
+    x_max = max(x1,x2,x3,x4)
+
+    false_easting = outSpatialRef.GetProjParm(osr.SRS_PP_FALSE_EASTING)
+    false_northing = outSpatialRef.GetProjParm(osr.SRS_PP_FALSE_NORTHING)
+
+    return zone, false_northing, y_min, y_max, x_min, x_max
+
 
 def reproject_corners(corners, posting, inEPSG, outEPSG):
 
@@ -820,3 +851,30 @@ def aoi2tiles(aoiGeometry):
         tiles.append(tile)
 
   return (tiles, multipolygon)
+
+def get_latlon_extent(filename):
+  src = gdal.Open(filename)
+  ulx, xres, xskew, uly, yskew, yres  = src.GetGeoTransform()
+  lrx = ulx + (src.RasterXSize * xres)
+  lry = uly + (src.RasterYSize * yres)
+
+  source = osr.SpatialReference()
+  source.ImportFromWkt(src.GetProjection())
+
+  target = osr.SpatialReference()
+  target.ImportFromEPSG(4326)
+
+  transform = osr.CoordinateTransformation(source, target)
+
+  lon1, lat1, h = transform.TransformPoint(ulx, uly)
+  lon2, lat2, h = transform.TransformPoint(lrx, uly)
+  lon3, lat3, h = transform.TransformPoint(ulx, lry)
+  lon4, lat4, h = transform.TransformPoint(lrx, lry)
+
+  lat_min = min(lat1,lat2,lat3,lat4)
+  lat_max = max(lat1,lat2,lat3,lat4)
+  lon_min = min(lon1,lon2,lon3,lon4)
+  lon_max = max(lon1,lon2,lon3,lon4)
+
+  return lat_min, lat_max, lon_min, lon_max
+

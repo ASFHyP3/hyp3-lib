@@ -48,7 +48,6 @@ import sys
 import math
 import xml.dom.minidom
 
-
 #####################
 #
 # Subroutines for opening/reading data from a file
@@ -61,6 +60,10 @@ def open_gdal_file(filename):
 
 def gdal_num_bands(filehandle):
         return filehandle.RasterCount
+
+def read_gdal_metadata(filehandle):
+    md = filehandle.GetMetadata()
+    return md
 
 def read_gdal_file(filehandle,band=1,gcps=False):
     geotransform = filehandle.GetGeoTransform()
@@ -109,10 +112,43 @@ def read_gdal_file_geo(filehandle,band=1):
         return filehandle.RasterXSize,filehandle.RasterYSize,geotransform,geoproj
 
 
+def getCorners(fi):
+    (x1,y1,t1,p1) = read_gdal_file_geo(open_gdal_file(fi))
+    ullon1 = t1[0]
+    ullat1 = t1[3]
+    lrlon1 = t1[0] + x1*t1[1]
+    lrlat1 = t1[3] + y1*t1[5]
+    return (ullon1,lrlon1,lrlat1,ullat1)
 
+def getPixSize(fi):
+    (x1,y1,t1,p1) = read_gdal_file_geo(open_gdal_file(fi))
+    return (t1[1])
 
-# Subroutine for generating corners
+# Get the UTM zone
+def get_zone(lon_min,lon_max):
+    center_lon = (lon_min+lon_max)/2;
+    zf = (center_lon+180)/6+1
+    zone = math.floor(zf)
+    return zone
 
+def get_utm_proj(lon_min,lon_max,lat_min,lat_max):
+    zone = get_zone(lon_min,lon_max)
+    if (lat_min+lat_max)/2 > 0:
+        proj = ('EPSG:326%02d' % int(zone))
+    else:
+        proj = ('EPSG:327%02d' % int(zone))
+    print("Found proj {}".format(proj))
+    return proj
+
+# Reproject a GCS file into UTM coordinates
+def reproject_gcs_to_utm(infile,outfile,pixSize):
+    lon_min,lon_max,lat_min,lat_max = getCorners(infile) 
+    proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
+    print("Using pixel size {}".format(pixSize))
+    print("Translating {} to make {}".format(infile,outfile))
+    gdal.Warp(outfile,infile,dstSRS=proj,xRes=pixSize,yRes=pixSize,creationOptions=['COMPRESS=LZW'])
+
+# Subroutine for generating All corners
 def get_corners(originx,originy,xsize,ysize,xres,yres):
         ulx = originx
         uly = originy
@@ -148,7 +184,6 @@ def write_gdal_file_byscanline(driver,xoff,yoff,data,band=1):
         driver.GetRasterBand(band).WriteArray(data,xoff,yoff)
 
 def write_gdal_file(filename,geotransform,geoproj,data,gcps='',gcpproj=''):
-        print 'Writing Output file'
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -170,9 +205,6 @@ def write_gdal_file(filename,geotransform,geoproj,data,gcps='',gcpproj=''):
         return 1
 
 def write_gdal_file_float(filename,geotransform,geoproj,data,nodata=None):
-
-        print 'Writing Output file '+ filename
-
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -193,10 +225,7 @@ def write_gdal_file_float(filename,geotransform,geoproj,data,nodata=None):
         dst_ds.SetProjection(geoproj)
         return 1
 
-def write_gdal_file_byte(filename,geotransform,geoproj,data):
-
-        print 'Writing Output file - %s' % filename
-
+def write_gdal_file_byte(filename,geotransform,geoproj,data,nodata=None):
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -205,13 +234,13 @@ def write_gdal_file_byte(filename,geotransform,geoproj,data):
         geotransform = [item for item in geotransform]
         dst_ds.SetGeoTransform(geotransform)
         dst_ds.GetRasterBand(1).WriteArray(data)
+        if nodata is not None:
+            dst_ds.GetRasterBand(1).SetNoDataValue(nodata)
         dst_ds.SetProjection(geoproj)
 
         return 1
 
 def write_gdal_file_rgb(filename,geotransform,geoproj,b1,b2,b3,metadata=None):
-
-        print 'Writing Output file'
         options = []
         (x,y) = b1.shape
         format = "GTiff"
@@ -229,7 +258,6 @@ def write_gdal_file_rgb(filename,geotransform,geoproj,b1,b2,b3,metadata=None):
         return 1
 
 def write_gdal_file_rgba(filename,geotransform,geoproj,b1,b2,b3,b4):
-        print 'Writing Output file'
         options = []
         (x,y) = b1.shape
         format = "GTiff"
@@ -260,7 +288,7 @@ def boxcar_y(image,bsize):
         for i in range (0,y):
             progressbar(float(i)/float(y))
             outimage[i,:] = np.convolve(w/w.sum(),image[i,:],mode='same')
-        print '100'
+        print('100')
         return outimage
         
 def boxcar_x(image,bsize):
@@ -272,7 +300,7 @@ def boxcar_x(image,bsize):
         for j in range (0,x):
             progressbar(float(j)/float(x))
             outimage[:,j] = np.convolve(w/w.sum(),image[:,j],mode='same')
-        print '100'
+        print('100')
         return outimage
 
 def lee(image):
@@ -300,10 +328,10 @@ def progressbar(complete = 0.0):
         gdal.TermProgress_nocb(complete)
 
 def Usage(message):
-    print "---------------------------------------"
-    print "Usage: "
-    print message 
-    print "---------------------------------------"
+    print("---------------------------------------")
+    print("Usage: ")
+    print(message )
+    print("---------------------------------------")
 
 def is_in_BB():
         if bb:
