@@ -137,15 +137,15 @@ def get_utm_proj(lon_min,lon_max,lat_min,lat_max):
         proj = ('EPSG:326%02d' % int(zone))
     else:
         proj = ('EPSG:327%02d' % int(zone))
-    print "Found proj {}".format(proj)
+    print("Found proj {}".format(proj))
     return proj
 
 # Reproject a GCS file into UTM coordinates
 def reproject_gcs_to_utm(infile,outfile,pixSize):
     lon_min,lon_max,lat_min,lat_max = getCorners(infile) 
     proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
-    print "Using pixel size {}".format(pixSize)
-    print "Translating {} to make {}".format(infile,outfile)
+    print("Using pixel size {}".format(pixSize))
+    print("Translating {} to make {}".format(infile,outfile))
     gdal.Warp(outfile,infile,dstSRS=proj,xRes=pixSize,yRes=pixSize,creationOptions=['COMPRESS=LZW'])
 
 # Subroutine for generating All corners
@@ -234,7 +234,7 @@ def write_gdal_file_byte(filename,geotransform,geoproj,data,nodata=None):
         geotransform = [item for item in geotransform]
         dst_ds.SetGeoTransform(geotransform)
         dst_ds.GetRasterBand(1).WriteArray(data)
-	if nodata is not None:
+        if nodata is not None:
             dst_ds.GetRasterBand(1).SetNoDataValue(nodata)
         dst_ds.SetProjection(geoproj)
 
@@ -288,7 +288,7 @@ def boxcar_y(image,bsize):
         for i in range (0,y):
             progressbar(float(i)/float(y))
             outimage[i,:] = np.convolve(w/w.sum(),image[i,:],mode='same')
-        print '100'
+        print('100')
         return outimage
         
 def boxcar_x(image,bsize):
@@ -300,7 +300,7 @@ def boxcar_x(image,bsize):
         for j in range (0,x):
             progressbar(float(j)/float(x))
             outimage[:,j] = np.convolve(w/w.sum(),image[:,j],mode='same')
-        print '100'
+        print('100')
         return outimage
 
 def lee(image):
@@ -328,10 +328,10 @@ def progressbar(complete = 0.0):
         gdal.TermProgress_nocb(complete)
 
 def Usage(message):
-    print "---------------------------------------"
-    print "Usage: "
-    print message 
-    print "---------------------------------------"
+    print("---------------------------------------")
+    print("Usage: ")
+    print(message )
+    print("---------------------------------------")
 
 def is_in_BB():
         if bb:
