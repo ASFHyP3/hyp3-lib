@@ -3,9 +3,11 @@
 from execute import execute
 import logging
 import shutil
+import glob
 from par_s1_slc_single import par_s1_slc_single
 from SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
 from getBursts import getBursts
+from get_orb import getOrbFile
 import os
 
 def ingest_S1_granule(inFile,pol,look_fact,outFile):
@@ -22,13 +24,13 @@ def ingest_S1_granule(inFile,pol,look_fact,outFile):
 
         # Fetch precision state vectors
         try:
-            url,orb = getOrbFile(inFile)
-            cmd = "wget {}".format(url)
-            logging.info("Getting precision orbit information")
+            logging.info("Trying to get orbit file information from file {}".format(inFile))
+            cmd = "get_orb.py {}".format(inFile)
             execute(cmd,uselogging=True)
-            logging.debug("Applying precision orbit information")
-            cmd = "S1_OPOD_vec {grd}.par {eof}".format(grd=grd,eof=orb)
-            execute(cmd,uselogging=True)
+            for orb in glob.glob("*.EOF"):
+                logging.debug("Applying precision orbit information")
+                cmd = "S1_OPOD_vec {grd}.par {eof}".format(grd=grd,eof=orb)
+                execute(cmd,uselogging=True)
         except:
             logging.warning("Unable to fetch precision state vectors... continuing")
 	
