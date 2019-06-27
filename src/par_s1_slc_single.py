@@ -85,13 +85,19 @@ def par_s1_slc_single(myfile,pol=None):
         execute(cmd,uselogging=True)
 
     os.chdir(path)
-    
-    (orburl,orb) = getOrbFile(myfile)
-    shutil.copy("../{}".format(orb),".")
-    
-    execute("S1_OPOD_vec {}_001.slc.par *.EOF".format(acqdate))
-    execute("S1_OPOD_vec {}_002.slc.par *.EOF".format(acqdate))
-    execute("S1_OPOD_vec {}_003.slc.par *.EOF".format(acqdate))
+
+    # Fetch precision state vectors
+    try:
+        url,orb = getOrbFile(inFile)
+        cmd = "wget {}".format(url)
+        logging.info("Getting precision orbit information")
+        execute(cmd,uselogging=True)
+        logging.info("Applying precision orbit information")
+        execute("S1_OPOD_vec {}_001.slc.par {}".format(acqdate,orb))
+        execute("S1_OPOD_vec {}_002.slc.par {}".format(acqdate,orb))
+        execute("S1_OPOD_vec {}_003.slc.par {}".format(acqdate,orb))
+    except:
+        logging.warning("Unable to fetch precision state vectors... continuing")
 
     slc = glob.glob("*_00*.slc")
     slc.sort()

@@ -19,16 +19,19 @@ def ingest_S1_granule(inFile,pol,look_fact,outFile):
         cmd = "par_S1_GRD {inf}/*/*{pol}*.tiff {inf}/*/*{pol}*.xml {inf}/*/*/calibration-*{pol}*.xml \
               {inf}/*/*/noise-*{pol}*.xml {grd}.par {grd}".format(inf=inFile,pol=pol,grd=grd)
         execute(cmd,uselogging=True)
-	
-        # Update the state vectors
-        try:
-            for eoffile in glob.glob("*.EOF"):
-                logging.debug("Applying precision orbit information")
-                cmd = "S1_OPOD_vec {grd}.par {eof}".format(grd=grd,eof=eoffile)
-                execute(cmd,uselogging=True)
-        except:
-            logging.warning("Unable to get precision state vectors... continuing...")
 
+        # Fetch precision state vectors
+        try:
+            url,orb = getOrbFile(inFile)
+            cmd = "wget {}".format(url)
+            logging.info("Getting precision orbit information")
+            execute(cmd,uselogging=True)
+            logging.debug("Applying precision orbit information")
+            cmd = "S1_OPOD_vec {grd}.par {eof}".format(grd=grd,eof=orb)
+            execute(cmd,uselogging=True)
+        except:
+            logging.warning("Unable to fetch precision state vectors... continuing")
+	
         # Multi-look the image
         if look_fact > 1.0:
             cmd = "multi_look_MLI {grd} {grd}.par {outFile} {outFile}.par {lks} {lks}".format(grd=grd,outFile=outFile,lks=look_fact)
