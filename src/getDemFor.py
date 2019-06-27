@@ -68,6 +68,7 @@ if __name__ == '__main__':
     parser.add_argument("-o","--opentopo",action="store_true",help="Use opentopo instead of get_dem")
     parser.add_argument("-u","--utm",action="store_true",help="Make DEM file in UTM coordinates (defaults is GCS)")
     parser.add_argument("-d","--dem",help="Only use the specified DEM type")
+    parser.add_argument("-p","--post",help="Posting for creating DEM",type=float)
     args = parser.parse_args()
 
     logFile = "getDemFor_{}.log".format(os.getpid())
@@ -76,5 +77,6 @@ if __name__ == '__main__':
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info("Starting run")
 
-    outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,utmFlag=args.utm,demName=args.dem)
+    outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,
+                                 utmFlag=args.utm,post=args.post,demName=args.dem)
     logging.info("Wrote DEM file %s" % outfile)
