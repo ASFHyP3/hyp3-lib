@@ -280,8 +280,8 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
         for ii in range(tileX):
 
           tileStr = (' (tile {0} {1})'.format(ii+1,kk+1))
-          originX = maskGT[0] + (ii+1)*width
-          originY = maskGT[3] - (kk+1)*height
+          originX = maskGT[0] + (ii+1)*width*posting
+          originY = maskGT[3] - (kk+1)*height*posting
 
           meta = {}
           meta['institution'] = yamlData['global']['institution']
