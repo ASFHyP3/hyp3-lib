@@ -271,13 +271,14 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes
         (lat_min, lat_max) = (lat_max, lat_min)
 
     # Handle cases near anti-meridian
-    if lon_min <= -178 and lon_max >= 178:
-        if utmflag:
-            handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile)
-            return(0)
-        else:
-            logging.error("ERROR: May only create a DEM file over anti-meridian using UTM coordinates")
-            sys.exit(1)
+    # NOTE: This is a kludged solution just for unblocking RTC for a specific site
+    # This code should not be merged to the main test branch!
+    logging.debug("Lat/lon Box: lat {0} - {1} lon {2} - {3}".format(lat_min, lat_max, lon_min, lon_max))
+    if lon_min <= -176 and lon_max >= 176:
+        # Hard coded values that work for the specific site needed
+        lon_min = 176.001
+        lon_max = 179.999
+        logging.info('Anti-meridian longitude kludge: Lon range is {0} - {1}'.format(lon_min, lon_max))
 
     # Figure out which DEM and get the tile list
     (demname, tile_list) = get_best_dem(lat_min,lat_max,lon_min,lon_max,demName)
