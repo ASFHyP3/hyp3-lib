@@ -5,6 +5,10 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 from asf_geometry import *
+import logging
+
+# stub logger
+log = logging.getLogger(__name__)
 
 
 def point2aoi(lat, lon, rows, cols, pixelSize):
@@ -44,7 +48,7 @@ def point2aoi(lat, lon, rows, cols, pixelSize):
 def point2aoiShape(lat, lon, rows, cols, pixelSize, outFile):
 
   ### Generate AOI polygon
-  print('Generating AOI polygon ...')
+  log.info('Generating AOI polygon ...')
   polygon = point2aoi(lat, lon, rows, cols, pixelSize)
 
   ### Prepare for writing to shapefile
@@ -104,7 +108,7 @@ def point2aoiShape(lat, lon, rows, cols, pixelSize, outFile):
   values.append(value)
 
   ### Save AOI to shapefile
-  print('Saving areas of interest to shapefile ({0}) ...' \
+  log.info('Saving areas of interest to shapefile ({0}) ...' \
     .format(os.path.basename(outFile)))
   geometry2shape(fields, values, proj, False, outFile)
 
@@ -130,6 +134,9 @@ if __name__ == '__main__':
     parser.print_help()
     sys.exit(1)
   args = parser.parse_args()
+
+  # configure logging
+  log = logging.getLogger()
 
   point2aoiShape(float(args.lat), float(args.lon), int(args.height), \
     int(args.width), args.pixelSize, args.outFile)

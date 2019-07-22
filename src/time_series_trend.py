@@ -9,12 +9,16 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 import statsmodels.api as sm
 import time as ti
 import matplotlib.pyplot as plt
+import logging
+
+# stub logger
+log = logging.getLogger(__name__)
 
 
 def time_series_trend(inFile, outFile):
 
   ### Reading time series
-  print('Removing trend from {0} ...'.format(inFile))
+  log.info('Removing trend from {0} ...'.format(inFile))
   meta = nc2meta(inFile)
   dataset = nc.Dataset(inFile, 'r')
   xGrid = meta['cols']
@@ -50,7 +54,7 @@ def time_series_trend(inFile, outFile):
         image[:,y,x] = mean
 
     last = ti.time()
-    print('loop %4d: %.3lf' % (x, last-first))
+    log.info('loop %4d: %.3lf' % (x, last-first))
 
   ### Write residuals to file
   dataset = nc.Dataset(outFile, 'a')
@@ -77,8 +81,11 @@ if __name__ == '__main__':
     sys.exit(1)
   args = parser.parse_args()
 
+  # configure logging
+  log = logging.getLogger()
+
   if not os.path.exists(args.inFile):
-    print('netCDF file (%s) does not exist!' % args.inFile)
+    log.error('netCDF file (%s) does not exist!' % args.inFile)
     sys.exit(1)
 
   time_series_trend(args.inFile, args.outFile)
