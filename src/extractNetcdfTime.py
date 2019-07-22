@@ -6,6 +6,10 @@ import os
 import sys
 from datetime import datetime, timedelta
 from asf_time_series import *
+import logging
+
+# stub logger
+log = logging.getLogger(__name__)
 
 
 def extractNetcdfTime(ncFile, csvFile):
@@ -35,8 +39,11 @@ if __name__ == '__main__':
     sys.exit(1)
   args = parser.parse_args()
 
+  # configure logging
+  log = logging.getLogger()
+
   if not os.path.exists(args.inFile):
-    print('NetCDF file (%s) does not exist!' % args.inFile)
+    log.error('NetCDF file (%s) does not exist!' % args.inFile)
     sys.exit(1)
 
   extractNetcdfTime(args.inFile, args.outFile)

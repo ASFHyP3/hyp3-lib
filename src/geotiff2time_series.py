@@ -10,6 +10,10 @@ from asf_time_series import *
 from asf_geometry import *
 import netCDF4 as nc
 import yaml
+import logging
+
+# stub logger
+log = logging.getLogger(__name__)
 
 
 def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
@@ -46,7 +50,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
   cols = []
   for ii in range(numGranules):
     inFile = os.path.basename(files[ii])
-    print('Extracting metadata from {0} ...'.format(inFile))
+    log.info('Extracting metadata from {0} ...'.format(inFile))
     granule.append(inFile.replace('.tif', ''))
     (proj, gt, shape, pixel) = raster_meta(files[ii])
     if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
@@ -187,7 +191,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
     files = [line.rstrip('\n') for line in open(listFile)]
     for ii in range(numGranules):
       inFile = os.path.basename(files[ii])
-      print('Creating boundary mask ({0}) ...'.format(inFile))
+      log.info('Creating boundary mask ({0}) ...'.format(inFile))
       (mask, colFirst, rowFirst, gt, proj) = \
         geotiff2boundary_mask(files[ii], tsEPSG, None)
       (maskRows, maskCols) = mask.shape
@@ -206,19 +210,19 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
       dataMask = None
 
     ## Cut blackfill
-    print('Cutting blackfill ...')
+    log.info('Cutting blackfill ...')
     (mask, colFirst, rowFirst, maskGT) = cut_blackfill(maskMax, maskMaxGT)
     maskMax = None
 
   ### Save mask (if requested)
   if maskFile != None:
-    print('Saving mask file ({0}) ...'.format(os.path.basename(maskFile)))
+    log.info('Saving mask file ({0}) ...'.format(os.path.basename(maskFile)))
     data2geotiff(mask, maskGT, proj, 'BYTE', 0, maskFile)
 
   ### Write metadata to Excel spreadsheet (if requested)
   if xlsxFile != None:
     outFile = os.path.basename(xlsxFile)
-    print('Writing information to Excel spreadsheet file (%s) ...' % outFile)
+    log.info('Writing information to Excel spreadsheet file (%s) ...' % outFile)
     workbook = xlsxwriter.Workbook(xlsxFile)
     worksheet = workbook.add_worksheet('metadata')
     bold = workbook.add_format({'bold':True})
@@ -258,7 +262,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
   if netcdfFile != None:
 
     ### Generate nedCDF time series file
-    print('Generate netCDF time series file(s) ...')
+    log.info('Generate netCDF time series file(s) ...')
 
     if tiled == True:
       (rows, cols) = mask.shape
@@ -336,10 +340,10 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
     for ii in range(numGranules):
       kk = timeIndex[ii]
       inFile = os.path.basename(files[kk])
-      print('Applying mask to image ({0}) ...'.format(inFile))
+      log.info('Applying mask to image ({0}) ...'.format(inFile))
       inRaster = gdal.Open(files[kk])
       if epsg[kk] != tsEPSG:
-        print('Reprojecting ...')
+        log.info('Reprojecting ...')
         inRaster = reproject2grid(inRaster, tsEPSG)
       dataGT = inRaster.GetGeoTransform()
       data = inRaster.GetRasterBand(1).ReadAsArray()
@@ -355,7 +359,7 @@ def geotiff2time_series(listFile, tsEPSG, maskFile, xlsxFile, latlon, aoiFile,
               beginY = mm*height
               endX = beginX + width
               endY = beginY + height
-              #print('Adding layer to {0} ...'.format(tileFile))
+              #log.info('Adding layer to {0} ...'.format(tileFile))
               addImage2netcdf(data[beginY:endY,beginX:endX], tileFile,
                 granule[kk], timestamp[kk])
         else:
@@ -404,8 +408,11 @@ if __name__ == '__main__':
     sys.exit(1)
   args = parser.parse_args()
 
+  # configure logging
+  log = logging.getLogger()
+
   if not os.path.exists(args.input):
-    print('GeoTIFF list file (%s) does not exist!' % args.input)
+    log.error('GeoTIFF list file (%s) does not exist!' % args.input)
     sys.exit(1)
 
   noiseFloor = 0.001
