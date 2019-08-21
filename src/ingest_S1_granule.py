@@ -7,7 +7,7 @@ import glob
 from par_s1_slc_single import par_s1_slc_single
 from SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
 from getBursts import getBursts
-from get_orb import getOrbFile
+from verify_opod import verify_opod
 import os
 
 def ingest_S1_granule(inFile,pol,look_fact,outFile):
@@ -28,6 +28,7 @@ def ingest_S1_granule(inFile,pol,look_fact,outFile):
             cmd = "get_orb.py {}".format(inFile)
             execute(cmd,uselogging=True)
             for orb in glob.glob("*.EOF"):
+                verify_opod(orb)
                 logging.debug("Applying precision orbit information")
                 cmd = "S1_OPOD_vec {grd}.par {eof}".format(grd=grd,eof=orb)
                 execute(cmd,uselogging=True)
