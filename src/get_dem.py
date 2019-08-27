@@ -227,11 +227,12 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
 
 # GET DEM file and convert into ISCE format
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):
-        get_dem(west,south,east,north,"temp_dem.tif",False)
-        gdal.Translate(demName,"temp_dem.tif",format="ENVI")
-        ext = os.path.splitext(demName)[1]
-        hdrName = demName.replace(ext,".hdr")
-        dem2isce.dem2isce(demName,hdrName,demXMLName)
+    chosen_dem = get_dem(west,south,east,north,"temp_dem.tif",False)
+    gdal.Translate(demName,"temp_dem.tif",format="ENVI")
+    ext = os.path.splitext(demName)[1]
+    hdrName = demName.replace(ext,".hdr")
+    dem2isce.dem2isce(demName,hdrName,demXMLName)
+    return chosen_dem
 
 def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes=1):
 
