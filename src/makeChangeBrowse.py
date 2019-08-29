@@ -21,17 +21,6 @@ def makeChangeBrowse(geotiff,type="MSCD"):
 
     if type == "SACD": 
 
-        median = np.median(data)
-        bins = np.zeros(MAX_CLASSES,dtype=np.int8)
-        for i in range(MAX_CLASSES):
-            bins[i] = i
-        hist = np.histogram(data,bins=bins)
-
-        print "Median is {}".format(median)
-        print "hist bins {}".format(hist[1])
-        print "hist vals {}".format(hist[0])
-
-
         #
         # Make the greyscale image
         #
@@ -40,9 +29,9 @@ def makeChangeBrowse(geotiff,type="MSCD"):
         #
         # Make the color images
         #
-        red_lut  =   [0,255,  0,  0]
-        green_lut  = [0,  0,  0,  0]
-        blue_lut =   [0,  0,  0,255]
+        red_lut  =   [0,255,  0,  1]
+        green_lut  = [0,  1,  0,  1]
+        blue_lut =   [0,  1,  0,255]
 
         for i in range(y):
             for j in range(x):    
@@ -117,9 +106,9 @@ def makeChangeBrowse(geotiff,type="MSCD"):
         # Here, we use the same classifications as
         # an index into a color look up table.
         #
-        red_lut  =  [0,255,  0,  0,255,255,  0,128,128,  0]
-        green_lut = [0,  0,  0,255,128,  0,255,255,  0,128]
-        blue_lut  = [0,  0,255,  0,  0,128,128,  0,255,255]
+        red_lut  =  [1,255,  1,  1,255,255,  1,128,128,  1]
+        green_lut = [1,  1,  1,255,128,  1,255,255,  1,128]
+        blue_lut  = [1,  1,255,  1,  1,128,128,  1,255,255]
 
         for i in range(y):
             for j in range(x):    
@@ -147,7 +136,7 @@ def makeChangeBrowse(geotiff,type="MSCD"):
     #
     # Make the ASF standard browse and kmz images
     # 
-    makeAsfBrowse(outName,tmpName)
+    makeAsfBrowse(outName,tmpName,use_nn=True)
     os.remove(outName)
 
 if __name__ == '__main__':
