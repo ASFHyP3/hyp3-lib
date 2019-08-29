@@ -12,13 +12,18 @@ import zipfile
 import glob
 
 
-def resample_geotiff(geotiff, width, outFormat, outFile):
+def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
 
   # Check output format
   formats = ['GEOTIFF', 'JPEG', 'JPG', 'PNG', 'KML']
   if outFormat.upper() not in formats:
     print('Unkown output format ({0})!'.format(outFormat.upper()))
     sys.exit(1)
+
+  if use_nn:
+      resampleMethod = GRIORA_NearestNeighbour
+  else:
+      resampleMethod = GRIORA_Cubic
 
   # Suppress GDAL warnings
   gdal.UseExceptions()
@@ -50,33 +55,33 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
       tmpExt2 = ('_resamp2{0}.png'.format(os.getpid()))
       resampleFile2 = outFile.replace(orgExt, tmpExt2)
       gdal.Translate(resampleFile,raster,format='PNG',noData='0 0 0')
-      gdal.Translate(resampleFile2,resampleFile, resampleAlg=GRIORA_Average, format='PNG',
+      gdal.Translate(resampleFile2,resampleFile, resampleAlg=resampleMethod, format='PNG',
         xRes=pixelWidth, yRes=pixelHeight, noData="0 0 0")
       raster = gdal.Open(resampleFile2)
     else:
       tmpExt = ('_resamp{0}.tif'.format(os.getpid()))
       resampleFile = outFile.replace(orgExt, tmpExt)
-      gdal.Translate(resampleFile, raster, resampleAlg=GRIORA_Bilinear,
-        xRes=pixelWidth, yRes=pixelHeight, noData="0")
+      gdal.Translate(resampleFile, raster, resampleAlg=resampleMethod,
+          xRes=pixelWidth, yRes=pixelHeight, noData="0")
       raster = gdal.Open(resampleFile)
 
   # Resample image using cubic interpolation
   # Save it in the various image formats
   if outFormat.upper() == 'GEOTIFF':
-    gdal.Translate(outFile, raster, resampleAlg=GRIORA_Cubic, width=width)
+    gdal.Translate(outFile, raster, resampleAlg=resampleMethod, width=width)
   elif outFormat.upper() == 'JPEG' or outFormat.upper() == 'JPG':
     if colorTable == None:
-      gdal.Translate(outFile, raster, format='JPEG', resampleAlg=GRIORA_Cubic,
+      gdal.Translate(outFile, raster, format='JPEG', resampleAlg=resampleMethod,
         width=width)
     else:
-      gdal.Translate(outFile, raster, format='JPEG', resampleAlg=GRIORA_Cubic,
+      gdal.Translate(outFile, raster, format='JPEG', resampleAlg=resampleMethod,
         width=width, rgbExpand='RGB')
   elif outFormat.upper() == 'PNG':
     if bandCount == 1:
-      gdal.Translate(outFile, raster, format='PNG', resampleAlg=GRIORA_Bilinear,
+      gdal.Translate(outFile, raster, format='PNG', resampleAlg=resampleMethod,
         width=width, noData='0')
     elif bandCount == 3:
-      gdal.Translate(outFile, raster, format='PNG', resampleAlg=GRIORA_Bilinear,
+      gdal.Translate(outFile, raster, format='PNG', resampleAlg=resampleMethod,
         width=width, noData='0 0 0')
   elif outFormat.upper() == 'KML':
 
@@ -103,7 +108,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile):
     # Convert GeoTIFF to PNG - since warp cannot do that in one step
     raster = gdal.Open(tmpFile)
     pngFile = outFile.replace(orgExt, '.png')
-    gdal.Translate(pngFile, raster, format='PNG', resampleAlg=GRIORA_Cubic)
+    gdal.Translate(pngFile, raster, format='PNG', resampleAlg=resampleMethod)
 
     # Extract metadata from GeoTIFF to fill into the KML
     gt = raster.GetGeoTransform()
