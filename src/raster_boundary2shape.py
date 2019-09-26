@@ -70,7 +70,8 @@ def raster_metadata(input):
   return (fields, values, outSpatialRef)
 
 
-def raster_boundary2shape(inFile, threshold, outShapeFile):
+def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fill_holes = False,
+                          pixel_shift=False):
     # Extract raster image metadata
     print('Extracting raster information ...')
     (fields, values, spatialRef) = raster_metadata(inFile)
@@ -79,10 +80,25 @@ def raster_boundary2shape(inFile, threshold, outShapeFile):
     # Generate GeoTIFF boundary geometry
     print('Extracting boundary geometry ...')
     (data, colFirst, rowFirst, geoTrans, proj) = \
-        geotiff2boundary_mask(inFile, epsg, threshold)
+        geotiff2boundary_mask(inFile, epsg, threshold,use_closing=use_closing)
     (rows, cols) = data.shape
-    values[0]['originX'] = geoTrans[0]
-    values[0]['originY'] = geoTrans[3]
+ 
+    if fill_holes:
+      data = ndimage.binary_fill_holes(data).astype(bool)
+
+    if pixel_shift:
+      minx = geoTrans[0]
+      maxy = geoTrans[3]
+      maxx = geoTrans[0] + cols*geoTrans[1]
+      miny = geoTrans[3] + rows*geoTrans[5]
+
+      # compute the pixel-aligned bounding box (larger than the feature's bbox)
+      left = minx -  (geoTrans[1]/2)
+      top = maxy - (geoTrans[5]/2)
+
+      values[0]['originX'] = left
+      values[0]['originY'] = top 
+
     values[0]['rows'] = rows
     values[0]['cols'] = cols
 

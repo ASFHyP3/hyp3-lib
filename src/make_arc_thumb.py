@@ -13,10 +13,8 @@ import os
 def pngtothumb(pngfile):
 
     # Modify the png to a jpg thumbnail, then encode to base64
-    im = Image.open(pngfile)
-    x, y = im.size
-    rgb_im = im.convert('RGB')
-    
+    rgb_im = Image.open(pngfile).convert('RGBA')
+    x, y = rgb_im.size
     if x>y:
         width = 200
 	length = 200 * y/x
@@ -26,7 +24,7 @@ def pngtothumb(pngfile):
 
     size = length,width
     thumb = rgb_im.thumbnail(size)
-    thumbfile = im.save('tmp_thumb.jpg')
+    thumbfile = rgb_im.save('tmp_thumb.jpg')
     encoded = base64.b64encode(open(r'tmp_thumb.jpg', "rb").read())
     os.remove("tmp_thumb.jpg")
     return(encoded)
