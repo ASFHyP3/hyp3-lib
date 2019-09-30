@@ -75,6 +75,9 @@ def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fil
     # Extract raster image metadata
     print('Extracting raster information ...')
     (fields, values, spatialRef) = raster_metadata(inFile)
+
+    print("Initial origin {x},{y}".format(x=values[0]['originX'],y=values[0]['originY']))
+
     if spatialRef.GetAttrValue('AUTHORITY', 0) == 'EPSG':
         epsg = int(spatialRef.GetAttrValue('AUTHORITY', 1))
     # Generate GeoTIFF boundary geometry
@@ -82,22 +85,27 @@ def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fil
     (data, colFirst, rowFirst, geoTrans, proj) = \
         geotiff2boundary_mask(inFile, epsg, threshold,use_closing=use_closing)
     (rows, cols) = data.shape
+
+    print("After geotiff2boundary_mask origin {x},{y}".format(x=geoTrans[0],y=geoTrans[3]))
  
     if fill_holes:
       data = ndimage.binary_fill_holes(data).astype(bool)
 
-    if pixel_shift:
-      minx = geoTrans[0]
-      maxy = geoTrans[3]
-      maxx = geoTrans[0] + cols*geoTrans[1]
-      miny = geoTrans[3] + rows*geoTrans[5]
+#    if pixel_shift:
+      if values[0]['pixel']:
+          minx = geoTrans[0]
+          maxy = geoTrans[3]
+          maxx = geoTrans[0] + cols*geoTrans[1]
+          miny = geoTrans[3] + rows*geoTrans[5]
 
-      # compute the pixel-aligned bounding box (larger than the feature's bbox)
-      left = minx -  (geoTrans[1]/2)
-      top = maxy - (geoTrans[5]/2)
+          # compute the pixel-aligned bounding box (larger than the feature's bbox)
+          left = minx -  (geoTrans[1]/2)
+          top = maxy - (geoTrans[5]/2)
 
-      values[0]['originX'] = left
-      values[0]['originY'] = top 
+          values[0]['originX'] = left
+          values[0]['originY'] = top 
+
+    print("After pixel_shift origin {x},{y}".format(x=values[0]['originX'],y=values[0]['originY']))
 
     values[0]['rows'] = rows
     values[0]['cols'] = cols
@@ -116,6 +124,17 @@ if __name__ == '__main__':
              default=None, help='threshold value what is considered blackfill')
     parser.add_argument('shape', metavar='<shape file>',
              help='name of the shapefile')
+
+    parser.add_argument('--no_closing', metavar="<don't use closing>",default=True,action='store_false',
+             help='Switch to turn off closing operation')
+
+    parser.add_argument('--fill_holes', metavar="<fill holes>",default=False,
+            action="store_true", help='Turn on hole filling')
+
+    parser.add_argument('--pixel_shift', metavar="<apply pixel shift>",default=False,
+            action="store_true", help='apply pixel shift')
+
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -125,6 +144,5 @@ if __name__ == '__main__':
         print('GeoTIFF file (%s) does not exist!' % args.input)
         sys.exit(1)
 
-    raster_boundary2shape(args.input, args.threshold, args.shape)
-
-
+    raster_boundary2shape(args.input, args.threshold, args.shape, args.no_closing, 
+        args.fill_holes, args.pixel_shift)
