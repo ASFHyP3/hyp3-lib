@@ -1,74 +1,10 @@
 #!/usr/bin/python
 import argparse
 from argparse import RawTextHelpFormatter
-import os
-from osgeo import gdal, ogr, osr
-import sys
+
 from asf_geometry import *
-
-# from asf_time_series import raster_metadata
+from asf_time_series import raster_metadata
  
-def raster_metadata(input):
-
-  # Set up shapefile attributes
-  fields = []
-  field = {}
-  values = []
-  field['name'] = 'granule'
-  field['type'] = ogr.OFTString
-  field['width'] = 254
-  fields.append(field)
-  field = {}
-  field['name'] = 'epsg'
-  field['type'] = ogr.OFTInteger
-  fields.append(field)
-  field = {}
-  field['name'] = 'originX'
-  field['type'] = ogr.OFTReal
-  fields.append(field)
-  field = {}
-  field['name'] = 'originY'
-  field['type'] = ogr.OFTReal
-  fields.append(field)
-  field = {}
-  field['name'] = 'pixSize'
-  field['type'] = ogr.OFTReal
-  fields.append(field)
-  field = {}
-  field['name'] = 'cols'
-  field['type'] = ogr.OFTInteger
-  fields.append(field)
-  field = {}
-  field['name'] = 'rows'
-  field['type'] = ogr.OFTInteger
-  fields.append(field)
-  field = {}
-  field['name'] = 'pixel'
-  field['type'] = ogr.OFTString
-  field['width'] = 8
-  fields.append(field)
-
-  # Extract other raster image metadata
-  (outSpatialRef, outGt, outShape, outPixel) = raster_meta(input)
-  if outSpatialRef.GetAttrValue('AUTHORITY', 0) == 'EPSG':
-    epsg = int(outSpatialRef.GetAttrValue('AUTHORITY', 1))
-
-  # Add granule name and geometry
-  base = os.path.basename(input)
-  granule = os.path.splitext(base)[0]
-  value = {}
-  value['granule'] = granule
-  value['epsg'] = epsg
-  value['originX'] = outGt[0]
-  value['originY'] = outGt[3]
-  value['pixSize'] = outGt[1]
-  value['cols'] = outShape[1]
-  value['rows'] = outShape[0]
-  value['pixel'] = outPixel
-  values.append(value)
-
-  return (fields, values, outSpatialRef)
-
 
 def raster_boundary2shape(inFile, threshold, outShapeFile):
     # Extract raster image metadata
