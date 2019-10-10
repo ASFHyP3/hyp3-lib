@@ -35,6 +35,7 @@
 from lxml import etree
 import get_dem
 import os
+import sys
 import argparse
 from getSubSwath import get_bounding_box_file
 from execute import execute
