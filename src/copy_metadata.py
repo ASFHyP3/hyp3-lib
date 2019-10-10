@@ -11,7 +11,7 @@ def copy_metadata(infile, outfile):
     md = ds.GetMetadata()
     print(md)
 
-#    ds = saa.open_gdal_file(outfile)
+    #    ds = saa.open_gdal_file(outfile)
 #    ds.SetMetadata(md)
 
     outfile2 = "tmp_outfile.tif"

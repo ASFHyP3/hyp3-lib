@@ -162,7 +162,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         greenf = np.zeros(data.shape)
         bluef = np.zeros(data.shape)
 
- 	# Scale from 0 .. 1
+         # Scale from 0 .. 1
         redf[::] = red[::]/255.0
         greenf[::] = green[::]/255.0
         bluef[::] = blue[::]/255.0
@@ -170,7 +170,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         # Read in the amplitude data
         x1,y1,trans1,proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(ampFile))
 
-	# If too large, resize the data
+        # If too large, resize the data
         if x1 > 4096 or y1 > 4096:
             ampTmp = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
             gdal.Translate(ampTmp,ampFile,height=y,width=x)
@@ -234,7 +234,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         # Scale amplitude from 0.0 to 1.0
         ampf = np.zeros(data.shape)
         ampf = amp / 255.0
-	ampf = ampf + float(scale)
+        ampf = ampf + float(scale)
         ampf[ampf>1.0]=1.0
 
         print("SCALED AMP HISTOGRAM:")

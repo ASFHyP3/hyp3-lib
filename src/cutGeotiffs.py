@@ -114,7 +114,7 @@ def cutFiles(arg):
     pixSize = getPixSize(arg[0])
     for x in range (len(arg)-1):
         tmp = getPixSize(arg[x+1])
-	pixSize = max(pixSize,tmp)
+        pixSize = max(pixSize,tmp)
     
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))

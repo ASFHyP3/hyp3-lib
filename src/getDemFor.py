@@ -51,12 +51,12 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None,demName=N
         if utmFlag:
             proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
-	    shutil.move("tmpdem.tif","%s" % outfile)
+            shutil.move("tmpdem.tif","%s" % outfile)
     else:
         if post is not None:
              if not utmFlag:
-	        logging.error("ERROR: May use posting with UTM projection only")
-	        sys.exit(1)
+                logging.error("ERROR: May use posting with UTM projection only")
+                sys.exit(1)
         demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag,post,demName=demName)
 
     return(outfile,demtype)

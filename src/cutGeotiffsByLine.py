@@ -66,8 +66,8 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
     outfiles = []   
     for i in range(len(files)):
         outfile = files[i].replace(".tif","_cut.tif")
-	if all_coords is not None:
-	    outfile = os.path.basename(outfile)
+        if all_coords is not None:
+            outfile = os.path.basename(outfile)
         print("Processing file {} to create file {}".format(files[i], outfile))
         gdal.Translate(outfile,files[i],srcWin=[diff_ul[0,i],diff_ul[1,i],lenx,leny],noData=0)
         outfiles.append(outfile)
