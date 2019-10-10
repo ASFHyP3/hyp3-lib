@@ -68,7 +68,7 @@ def getOverlap(coords,fi):
 def cutFiles(arg):
 
     if len(arg) == 1:
-        print "Nothing to do!!!  Exiting..."
+        print("Nothing to do!!!  Exiting...")
         return(0)
 
     file1 = arg[0]
@@ -94,13 +94,13 @@ def cutFiles(arg):
             zone2 = int(zone2[0])
 
             if zone1 != zone2:
-                print "Projections don't match... Reprojecting %s" % file2
+                print("Projections don't match... Reprojecting %s" % file2)
                 if hemi == "N":
                     proj = ('EPSG:326%02d' % int(zone1))
                 else:
                     proj = ('EPSG:327%02d' % int(zone1))
-	        print "    reprojecting post image"
-                print "    proj is %s" % proj
+                print("    reprojecting post image")
+                print("    proj is %s" % proj)
                 name = file2.replace(".tif","_reproj.tif")
                 gdal.Warp(name,file2,dstSRS=proj,xRes=pixsize,yRes=pixsize)
                 arg[x+1] = name
@@ -120,10 +120,10 @@ def cutFiles(arg):
     print("Clipping coordinates: {}".format(coords))
     diff1 = (coords[2] - coords[0]) / pixSize
     diff2 = (coords[3] - coords[1]) / pixSize * -1.0
-    print "Found overlap size of {}x{}".format(int(diff1),int(diff2))
+    print("Found overlap size of {}x{}".format(int(diff1), int(diff2)))
     if diff1 < 1 or diff2 < 1:
-         print "ERROR:  There was no overlap between scenes"
-         exit(1) 
+         print("ERROR:  There was no overlap between scenes")
+         exit(1)
     # Finally, clip all scenes to the overlap region at the largest pixel size
     lst = list(coords)
     tmp = lst[3]
@@ -134,8 +134,8 @@ def cutFiles(arg):
     for x in range (len(arg)):
         file1 = arg[x]
         file1_new = file1.replace('.tif','_clip.tif')
-        print "    clipping file {} to create file {}".format(file1,file1_new)
-#        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
+        print("    clipping file {} to create file {}".format(file1, file1_new))
+        #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
         gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pixSize,yRes=-1*pixSize,creationOptions = ['COMPRESS=LZW'])
 
 if __name__ == "__main__":

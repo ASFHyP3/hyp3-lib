@@ -45,6 +45,6 @@ def get_bb_from_shape(shapeFile):
   maxX = envelope[1]
   maxY = envelope[3]
 
-  print minX,minY,maxX,maxY
+  print(minX, minY, maxX, maxY)
 
   return(minX,minY,maxX,maxY)

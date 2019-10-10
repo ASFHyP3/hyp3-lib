@@ -216,8 +216,8 @@ def get_real_cc(myxml):
 	    lons.append(i[5].text)
 		        
     if len(lats) != 4 or len(lons) != 4:
-        print "ERROR: Unable to find corner points!"
-	exit(1)
+        print("ERROR: Unable to find corner points!")
+        exit(1)
     return lats, lons
 
 ###############################################################################

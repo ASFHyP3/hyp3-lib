@@ -139,8 +139,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for g in sys.argv[1:]:
-        print "Getting: " + g
+        print("Getting: " + g)
         (orburl,f1) = getOrbFile(g)
-        print orburl
+        print(orburl)
         cmd = 'wget ' + orburl
         os.system(cmd)

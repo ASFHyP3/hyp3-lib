@@ -9,7 +9,7 @@ from osgeo import gdal
 def copy_metadata(infile, outfile):
     ds = saa.open_gdal_file(infile)
     md = ds.GetMetadata()
-    print md
+    print(md)
 
 #    ds = saa.open_gdal_file(outfile)
 #    ds.SetMetadata(md)

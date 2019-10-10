@@ -13,10 +13,10 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
     logname = basename + "_utm_dem.log"
     log = open(logname,"w")
 
-    print "UTM DEM in GEOTIFF format: {}".format(inDem)
-    print "output DEM: {}".format(outDem)
-    print "output DEM parameter file: {}".format(demPar)
-    print "log file: {}".format(logname)
+    print("UTM DEM in GEOTIFF format: {}".format(inDem))
+    print("output DEM: {}".format(outDem))
+    print("output DEM parameter file: {}".format(demPar))
+    print("log file: {}".format(logname))
 
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(inDem))
 
@@ -36,32 +36,32 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
              v = u[2].split(",")
              w = v[1].split("]")
              false_north = w[0]
-    print "found false_north {}".format(false_north)
+    print("found false_north {}".format(false_north))
 
     srs=osr.SpatialReference(wkt=prj)
     string = srs.GetAttrValue('projcs')
     t = string.split(" ")
     zone = t[5]
-    print "Found zone string {} of length {}".format(zone,len(zone))
-    
+    print("Found zone string {} of length {}".format(zone, len(zone)))
+
     if len(zone) == 3:
         zone = zone[0:2]
     else:
         zone = zone[0]
-    print "found zone {}".format(zone)
+    print("found zone {}".format(zone))
 
     src = gdal.Open(inDem, gdalconst.GA_ReadOnly)
     string = src.GetMetadata()
     pixasarea = string["AREA_OR_POINT"]
     if "AREA" in pixasarea:
-        print "Pixel as Area! Updating corner coordinates to pixel as point"
-        print "pixel upper northing (m): {}    easting (m): {}".format(north,east)
+        print("Pixel as Area! Updating corner coordinates to pixel as point")
+        print("pixel upper northing (m): {}    easting (m): {}".format(north, east))
         east = east + pix_east / 2.0
         north = north + pix_north / 2.0
-        print "Update pixel upper northing (m): {}    easting (m): {}".format(north,east)
+        print("Update pixel upper northing (m): {}    easting (m): {}".format(north, east))
 
     pix_size = pix_east
-    print "approximate DEM latitude pixel spacing (m): {}".format(pix_size)
+    print("approximate DEM latitude pixel spacing (m): {}".format(pix_size))
 
     # Create the input file for create_dem_par    
     f = open(demParIn,"w")
