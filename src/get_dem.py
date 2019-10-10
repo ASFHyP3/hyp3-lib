@@ -259,7 +259,7 @@ def get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmflag,post=None, processes
         sys.exit(1)
 
     if lat_min < -90 or lat_max > 90:
-        loggging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max))
+        logging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max))
         sys.exit(1)
 
     if lon_min > lon_max:
