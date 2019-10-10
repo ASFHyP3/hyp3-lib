@@ -9,6 +9,7 @@ from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
 from saa_func_lib import get_zone
+import logging
 
 # Determine the boundary polygon of a GeoTIFF file
 def geotiff2polygon_ext(geotiff):
@@ -396,12 +397,12 @@ def spatial_query(source, reference, function):
   # Extract information from tiles and boundary shapefiles
   (geoTile, spatialRef, nameTile) = shape2geometry(reference, 'tile')
   if geoTile is None:
-    log.error('Could not extract information (tile) out of shapefile (%s)' %
+    logging.error('Could not extract information (tile) out of shapefile (%s)' %
       reference)
     sys.exit(1)
   (boundary, spatialRef, granule) = shape2geometry(source, 'granule')
   if boundary is None:
-    log.error('Could not extract information (granule) out of shapefile (%s)' %
+    logging.error('Could not extract information (granule) out of shapefile (%s)' %
       source)
     sys.exit(1)
 
