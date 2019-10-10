@@ -9,7 +9,7 @@ import sys
 import argparse
 import requests
 from requests.adapters import HTTPAdapter
-from urlparse import urlparse
+from six.moves.urllib import parse as urlparse
 
 
 class FileException(Exception):
