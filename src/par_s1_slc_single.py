@@ -88,7 +88,7 @@ def par_s1_slc_single(myfile,pol=None):
 
     # Fetch precision state vectors
     try:
-        url,orb = getOrbFile(inFile)
+        url,orb = getOrbFile(myfile)
         cmd = "wget {}".format(url)
         logging.info("Getting precision orbit information")
         execute(cmd,uselogging=True)

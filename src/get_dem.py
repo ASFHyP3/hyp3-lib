@@ -195,7 +195,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
                     s3 = boto3.resource('s3')
                     s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
                     mybucket = mydir.split("/")[-1]
-                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
+                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}".format(dem_file))
                 else:
                     myfile = os.path.join(mydir,dem_file)
                     logging.info("Tile: {}".format(myfile))

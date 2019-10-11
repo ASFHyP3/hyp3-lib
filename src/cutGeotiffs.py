@@ -76,7 +76,13 @@ def cutFiles(arg):
     # Open file1, get projection and pixsize
     dst1 = gdal.Open(file1)
     p1 = dst1.GetProjection()
-    
+
+    # Find the largest pixel size of all scenes
+    pixSize = getPixSize(arg[0])
+    for x in range(len(arg) - 1):
+        tmp = getPixSize(arg[x + 1])
+        pixSize = max(pixSize, tmp)
+
     # Make sure that UTM projections match
     ptr = p1.find("UTM zone ")
     if ptr != -1:
@@ -102,19 +108,13 @@ def cutFiles(arg):
                 print("    reprojecting post image")
                 print("    proj is %s" % proj)
                 name = file2.replace(".tif","_reproj.tif")
-                gdal.Warp(name,file2,dstSRS=proj,xRes=pixsize,yRes=pixsize)
+                gdal.Warp(name,file2,dstSRS=proj,xRes=pixSize,yRes=pixSize)
                 arg[x+1] = name
 
     # Find the overlap between all scenes
     coords = getCorners(arg[0])
     for x in range (len(arg)-1):
         coords = getOverlap(coords,arg[x+1])
-    
-    # Find the largest pixel size of all scenes
-    pixSize = getPixSize(arg[0])
-    for x in range (len(arg)-1):
-        tmp = getPixSize(arg[x+1])
-        pixSize = max(pixSize,tmp)
     
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))
