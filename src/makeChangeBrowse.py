@@ -121,7 +121,7 @@ def makeChangeBrowse(geotiff,type="MSCD"):
     # Write out the greyscale png files
     # 
     outName = geotiff.replace(".tif","_byte.tif")
-    pngName = geotiff.replace(".tif","_byte.png")
+    pngName = geotiff.replace(".tif","_byte_full.png")
     saa.write_gdal_file_float(outName,trans,proj,newData)
     gdal.Translate(pngName,outName,format="PNG",outputType=gdal.GDT_Byte,scaleParams=[[0,255]],noData="0 0 0")
     os.remove(outName)
@@ -130,12 +130,14 @@ def makeChangeBrowse(geotiff,type="MSCD"):
     # Write out the RGB tif
     #
     outName = geotiff.replace(".tif","_rgb.tif")
-    tmpName = geotiff.replace(".tif","_rgb")
+    pngName = geotiff.replace(".tif","_rgb_full.png")
     saa.write_gdal_file_rgb(outName,trans,proj,red,green,blue) 
-    
+    gdal.Translate(pngName,outName,format="PNG",outputType=gdal.GDT_Byte,scaleParams=[[0,255]],noData="0 0 0")
+
     #
     # Make the ASF standard browse and kmz images
     # 
+    tmpName = geotiff.replace(".tif","_rgb")
     makeAsfBrowse(outName,tmpName,use_nn=True)
     os.remove(outName)
 

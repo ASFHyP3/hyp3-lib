@@ -43,7 +43,7 @@ def geotiff2polygon(geotiff):
   return polygon
 
 
-def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold):
+def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
 
   inRaster = gdal.Open(inGeotiff)
   proj = osr.SpatialReference()
@@ -78,8 +78,9 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold):
       data[np.isnan(data)==False] = 1
     else:
       data[data>noDataValue] = 1
-    data = ndimage.binary_closing(data, iterations=10,
-      structure=np.ones((3,3))).astype(data.dtype)
+    if use_closing:
+      data = ndimage.binary_closing(data, iterations=10,
+        structure=np.ones((3,3))).astype(data.dtype)
     inRaster = None
 
     (data, colFirst, rowFirst, geoTrans) = cut_blackfill(data, geoTrans)
