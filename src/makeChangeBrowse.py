@@ -81,7 +81,7 @@ def makeChangeBrowse(geotiff,type="MSCD"):
         #
         lut = np.zeros(class_cnt,dtype=np.uint8)
         if class_cnt == 1:
-            print "ERROR: Only found one class"
+            print("ERROR: Only found one class")
             exit(1)
         if (class_cnt == 2):
             lut[0] = 0
