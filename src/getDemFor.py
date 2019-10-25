@@ -35,6 +35,7 @@
 from lxml import etree
 import get_dem
 import os
+import sys
 import argparse
 from getSubSwath import get_bounding_box_file
 from execute import execute
@@ -51,12 +52,12 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None,demName=N
         if utmFlag:
             proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
-	    shutil.move("tmpdem.tif","%s" % outfile)
+            shutil.move("tmpdem.tif","%s" % outfile)
     else:
         if post is not None:
              if not utmFlag:
-	        logging.error("ERROR: May use posting with UTM projection only")
-	        sys.exit(1)
+                logging.error("ERROR: May use posting with UTM projection only")
+                sys.exit(1)
         demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag,post,demName=demName)
 
     return(outfile,demtype)
@@ -68,6 +69,7 @@ if __name__ == '__main__':
     parser.add_argument("-o","--opentopo",action="store_true",help="Use opentopo instead of get_dem")
     parser.add_argument("-u","--utm",action="store_true",help="Make DEM file in UTM coordinates (defaults is GCS)")
     parser.add_argument("-d","--dem",help="Only use the specified DEM type")
+    parser.add_argument("-p","--post",help="Posting for creating DEM",type=float)
     args = parser.parse_args()
 
     logFile = "getDemFor_{}.log".format(os.getpid())
@@ -76,5 +78,6 @@ if __name__ == '__main__':
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info("Starting run")
 
-    outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,utmFlag=args.utm,demName=args.dem)
+    outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,
+                                 utmFlag=args.utm,post=args.post,demName=args.dem)
     logging.info("Wrote DEM file %s" % outfile)

@@ -19,7 +19,7 @@ def get2sigmacutoffs(fi):
 
 def byteSigmaScale(infile,outfile):
     lo,hi = get2sigmacutoffs(infile)
-    print "2-sigma cutoffs are {} {}".format(lo,hi)
+    print("2-sigma cutoffs are {} {}".format(lo, hi))
     gdal.Translate(outfile,infile,outputType=gdal.GDT_Byte,scaleParams=[[lo,hi,1,255]],resampleAlg="average",noData="0")
 
     # For some reason, I'm still getting zeros in my byte images eventhough I'm using 1,255 scaling!

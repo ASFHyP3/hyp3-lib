@@ -9,7 +9,7 @@ import sys
 import argparse
 import requests
 from requests.adapters import HTTPAdapter
-from urlparse import urlparse
+from six.moves.urllib import parse as urlparse
 
 
 class FileException(Exception):
@@ -139,8 +139,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for g in sys.argv[1:]:
-        print "Getting: " + g
+        print("Getting: " + g)
         (orburl,f1) = getOrbFile(g)
-        print orburl
+        print(orburl)
         cmd = 'wget ' + orburl
         os.system(cmd)

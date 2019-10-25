@@ -37,10 +37,10 @@ def get_file_list():
             m = [myfile,t[4][0:15]]
             files.append(m)
             i = i+1
-	
-    print 'Found %s files to process' % i
+
+    print('Found %s files to process' % i)
     files.sort(key = lambda row: row[1])
-    print files
+    print(files)
 
     for i in range(len(files)): 
         filenames.append(files[i][0])
