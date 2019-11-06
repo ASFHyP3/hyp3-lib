@@ -13,7 +13,7 @@ def makeAsfBrowse(geotiff, baseName, use_nn=False):
     lrgName = baseName + "_large.png"
     x1,y1,trans1,proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
     if (x1 < 2048):
-        print "Warning: width exceeds image dimension - using actual value"
+        print("Warning: width exceeds image dimension - using actual value")
         resample_geotiff(geotiff,x1,"KML",kmzName,use_nn)
         if x1 < 1024:      
             resample_geotiff(geotiff,x1,"PNG",pngName,use_nn)

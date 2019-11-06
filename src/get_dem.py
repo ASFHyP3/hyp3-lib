@@ -204,9 +204,9 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
                 if "s3" in mydir:
                     myfile = os.path.join(dem_name,dem_file)
                     s3 = boto3.resource('s3')
-                    resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
                     mybucket = mydir.split("/")[-1]
-                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
+                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}".format(dem_file))
                 else:
                     myfile = os.path.join(mydir,dem_file)
                     logging.info("Tile: {}".format(myfile))
@@ -248,11 +248,12 @@ def anti_meridian_kludge(dem_file,dem_name,south,lat_min,lat_max,lon_min,lon_max
 
 # GET DEM file and convert into ISCE format
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):
-        get_dem(west,south,east,north,"temp_dem.tif",False)
-        gdal.Translate(demName,"temp_dem.tif",format="ENVI")
-        ext = os.path.splitext(demName)[1]
-        hdrName = demName.replace(ext,".hdr")
-        dem2isce.dem2isce(demName,hdrName,demXMLName)
+    chosen_dem = get_dem(west,south,east,north,"temp_dem.tif",False)
+    gdal.Translate(demName,"temp_dem.tif",format="ENVI")
+    ext = os.path.splitext(demName)[1]
+    hdrName = demName.replace(ext,".hdr")
+    dem2isce.dem2isce(demName,hdrName,demXMLName)
+    return chosen_dem
 
 
 def writeVRT(tile_list, poly_list, outFile):
@@ -342,7 +343,7 @@ def get_dem(lon_min, lat_min, lon_max, lat_max, outfile, utmflag, post=None,
         logging.info("Snapping to grid at posting of %s meters" % posting)
 
     if lat_min < -90 or lat_max > 90:
-        loggging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max))
+        logging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (lat_min,lat_max))
         sys.exit(1)
 
     if lon_min > lon_max:

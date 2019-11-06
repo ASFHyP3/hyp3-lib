@@ -9,6 +9,7 @@ from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
 from saa_func_lib import get_zone
+import logging
 
 # Determine the boundary polygon of a GeoTIFF file
 def geotiff2polygon_ext(geotiff):
@@ -43,7 +44,7 @@ def geotiff2polygon(geotiff):
   return polygon
 
 
-def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold):
+def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
 
   inRaster = gdal.Open(inGeotiff)
   proj = osr.SpatialReference()
@@ -78,8 +79,9 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold):
       data[np.isnan(data)==False] = 1
     else:
       data[data>noDataValue] = 1
-    data = ndimage.binary_closing(data, iterations=10,
-      structure=np.ones((3,3))).astype(data.dtype)
+    if use_closing:
+      data = ndimage.binary_closing(data, iterations=10,
+        structure=np.ones((3,3))).astype(data.dtype)
     inRaster = None
 
     (data, colFirst, rowFirst, geoTrans) = cut_blackfill(data, geoTrans)
@@ -433,12 +435,12 @@ def spatial_query(source, reference, function):
   # Extract information from tiles and boundary shapefiles
   (geoTile, spatialRef, nameTile) = shape2geometry(reference, 'tile')
   if geoTile is None:
-    log.error('Could not extract information (tile) out of shapefile (%s)' %
+    logging.error('Could not extract information (tile) out of shapefile (%s)' %
       reference)
     sys.exit(1)
   (boundary, spatialRef, granule) = shape2geometry(source, 'granule')
   if boundary is None:
-    log.error('Could not extract information (granule) out of shapefile (%s)' %
+    logging.error('Could not extract information (granule) out of shapefile (%s)' %
       source)
     sys.exit(1)
 
