@@ -19,7 +19,7 @@ def cogify_dir(dir="PRODUCT",debug=False,res=30):
     os.chdir(back)
 
 def make_cog(inFile,outFile,debug=False,res=30):
-    print "Creating COG file {} from input file {}".format(outFile,inFile)
+    print("Creating COG file {} from input file {}".format(outFile, inFile))
     tmpFile = 'cog_{}.tif'.format(os.getpid())
     shutil.copy(inFile,tmpFile)
 

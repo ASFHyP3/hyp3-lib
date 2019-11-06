@@ -34,20 +34,20 @@ def ingest_S1_granule(inFile,pol,look_fact,outFile):
                 execute(cmd,uselogging=True)
         except:
             logging.warning("Unable to fetch precision state vectors... continuing")
-	
+        
         # Multi-look the image
         if look_fact > 1.0:
             cmd = "multi_look_MLI {grd} {grd}.par {outFile} {outFile}.par {lks} {lks}".format(grd=grd,outFile=outFile,lks=look_fact)
             execute(cmd,uselogging=True)
         else:
-	    shutil.copy(grd,outFile)
+            shutil.copy(grd,outFile)
             shutil.copy("{}.par".format(grd),"{}.par".format(outFile))
 
     else:
         #  Ingest SLC data files into gamma format
         par_s1_slc_single(inFile,pol)
         date = inFile[17:25]
-	make_tab_flag = True
+        make_tab_flag = True
         burst_tab = getBursts(inFile,make_tab_flag)
         shutil.copy(burst_tab,date)
 

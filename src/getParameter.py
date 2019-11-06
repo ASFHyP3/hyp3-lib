@@ -28,7 +28,7 @@ def getParameter(parFile,parameter,uselogging=False):
         if uselogging:
             logging.error("ERROR: Unable to find parameter {} in file {}".format(parameter,parFile))
         else:
-            print "ERROR: Unable to find parameter {} in file {}".format(parameter,parFile)
+            print("ERROR: Unable to find parameter {} in file {}".format(parameter, parFile))
         exit(1)
     return value
 
