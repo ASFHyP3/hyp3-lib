@@ -44,16 +44,16 @@ def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
 
     else:
         if ymin > 0:
-	     mask_file = "{}/WB_MASKS/Antimeridian_UTM1N_WaterMask1.tif".format(cfgdir)
-	else:
-	     mask_file = "{}/WB_MASKS/Antimeridian_UTM1S_WaterMask1.tif".format(cfgdir)
-	tmpfile = "water_mask.tif"
-	
-	coords = [xmin,ymax,xmax,ymin]
-	gdal.Translate(tmpfile,mask_file,projWin=coords,xRes=res,yRes=res)
-	x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(tmpfile))
-	final_mask = data
-#	os.remove(tmpfile)
+            mask_file = "{}/WB_MASKS/Antimeridian_UTM1N_WaterMask1.tif".format(cfgdir)
+        else:
+            mask_file = "{}/WB_MASKS/Antimeridian_UTM1S_WaterMask1.tif".format(cfgdir)
+        tmpfile = "water_mask.tif"
+
+        coords = [xmin,ymax,xmax,ymin]
+        gdal.Translate(tmpfile,mask_file,projWin=coords,xRes=res,yRes=res)
+        x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(tmpfile))
+        final_mask = data
+        # os.remove(tmpfile)
 
     return(final_mask)
 

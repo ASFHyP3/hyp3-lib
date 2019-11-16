@@ -1,18 +1,22 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 import sys
+import csv
 import math
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
 from saa_func_lib import get_zone
+import logging
 
 # Determine the boundary polygon of a GeoTIFF file
-def geotiff2polygon(geotiff):
+def geotiff2polygon_ext(geotiff):
 
   raster = gdal.Open(geotiff)
+  proj = osr.SpatialReference()
+  proj.ImportFromWkt(raster.GetProjectionRef())
   gt = raster.GetGeoTransform()
   originX = gt[0]
   originY = gt[3]
@@ -31,7 +35,101 @@ def geotiff2polygon(geotiff):
   ring = None
   raster = None
 
+  return (polygon, proj)
+
+
+def geotiff2polygon(geotiff):
+
+  (polygon, proj) = geotiff2polygon_ext(geotiff)
   return polygon
+
+
+def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
+
+  inRaster = gdal.Open(inGeotiff)
+  proj = osr.SpatialReference()
+  proj.ImportFromWkt(inRaster.GetProjectionRef())
+  if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
+    epsg = int(proj.GetAttrValue('AUTHORITY', 1))
+
+  if tsEPSG != 0 and epsg != tsEPSG:
+    print('Reprojecting ...')
+    inRaster = reproject2grid(inRaster, tsEPSG)
+    proj.ImportFromWkt(inRaster.GetProjectionRef())
+    if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
+      epsg = int(proj.GetAttrValue('AUTHORITY', 1))
+
+  geoTrans = inRaster.GetGeoTransform()
+  inBand = inRaster.GetRasterBand(1)
+  noDataValue = inBand.GetNoDataValue()
+  data = inBand.ReadAsArray()
+  minValue = np.min(data)
+
+  ### Check for black fill
+  if minValue > 0:
+    data /= data
+    colFirst = 0
+    rowFirst = 0
+  else:
+    data[np.isnan(data)==True] = noDataValue
+    if threshold != None:
+      print('Applying threshold ({0}) ...'.format(threshold))
+      data[data<np.float(threshold)] = noDataValue
+    if noDataValue == np.nan or noDataValue == -np.nan:
+      data[np.isnan(data)==False] = 1
+    else:
+      data[data>noDataValue] = 1
+    if use_closing:
+      data = ndimage.binary_closing(data, iterations=10,
+        structure=np.ones((3,3))).astype(data.dtype)
+    inRaster = None
+
+    (data, colFirst, rowFirst, geoTrans) = cut_blackfill(data, geoTrans)
+
+  return (data, colFirst, rowFirst, geoTrans, proj)
+
+
+def reproject2grid(inRaster, tsEPSG):
+
+  # Read basic metadata
+  cols = inRaster.RasterXSize
+  rows = inRaster.RasterYSize
+  geoTrans = inRaster.GetGeoTransform()
+  proj = osr.SpatialReference()
+  proj.ImportFromEPSG(tsEPSG)
+
+  # Define warping options
+  rasterFormat = 'VRT'
+  xRes = geoTrans[1]
+  yRes = xRes
+  resampleAlg = gdal.GRA_Bilinear
+  options = ['COMPRESS=DEFLATE']
+
+  outRaster = gdal.Warp('', inRaster, format=rasterFormat, dstSRS=proj,
+    targetAlignedPixels=True, xRes=xRes, yRes=yRes, resampleAlg=resampleAlg,
+    options=options)
+  inRaster = None
+
+  return outRaster
+
+
+def cut_blackfill(data, geoTrans):
+
+  originX = geoTrans[0]
+  originY = geoTrans[3]
+  pixelSize = geoTrans[1]
+  colProfile = list(data.max(axis=1))
+  rows = colProfile.count(1)
+  rowFirst = colProfile.index(1)
+  rowProfile = list(data.max(axis=0))
+  cols = rowProfile.count(1)
+  colFirst = rowProfile.index(1)
+  originX += colFirst*pixelSize
+  originY -= rowFirst*pixelSize
+  data = data[rowFirst:rows+rowFirst,colFirst:cols+colFirst]
+  geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
+
+  return (data, colFirst, rowFirst, geoTrans)
 
 
 def geotiff_overlap(firstFile, secondFile, type):
@@ -110,6 +208,9 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
     fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
     if field['type'] == ogr.OFTString:
       fieldDefinition.SetWidth(field['width'])
+    elif field['type'] == ogr.OFTReal:
+      fieldDefinition.SetWidth(24)
+      fieldDefinition.SetPrecision(8)
     outLayer.CreateField(fieldDefinition)
   featureDefinition = outLayer.GetLayerDefn()
   if merge == True:
@@ -135,6 +236,153 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
   outShape.Destroy()
 
 
+# Save data with fields to shapefile
+def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
+  classes, threshold, background, shapeFile):
+
+  # Check input
+  if threshold != None:
+    threshold = float(threshold)
+  if background != None:
+    background = int(background)
+
+  # Buffer data
+  (rows, cols) = data.shape
+  pixelSize = geoTrans[1]
+  originX = geoTrans[0] - 10*pixelSize
+  originY = geoTrans[3] + 10*pixelSize
+  geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
+  mask = np.zeros((rows+20, cols+20), dtype=np.float32)
+  mask[10:rows+10,10:cols+10] = data
+  data = mask
+
+  # Save in memory
+  (rows, cols) = data.shape
+  maxArea = rows*cols*pixelSize*pixelSize
+  data = data.astype(np.byte)
+  gdalDriver = gdal.GetDriverByName('Mem')
+  outRaster = gdalDriver.Create('value', cols, rows, 1, gdal.GDT_Byte)
+  outRaster.SetGeoTransform(geoTrans)
+  outRaster.SetProjection(spatialRef.ExportToWkt())
+  outBand = outRaster.GetRasterBand(1)
+  outBand.WriteArray(data)
+
+  # Write data to shapefile
+  driver = ogr.GetDriverByName('ESRI Shapefile')
+  if os.path.exists(shapeFile):
+    driver.DeleteDataSource(shapeFile)
+  outShape = driver.CreateDataSource(shapeFile)
+  outLayer = outShape.CreateLayer('polygon', srs=spatialRef)
+  outField = ogr.FieldDefn('value', ogr.OFTInteger)
+  outLayer.CreateField(outField)
+  gdal.Polygonize(outBand, None, outLayer, 0, [], callback=None)
+  for field in fields:
+    fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
+    if field['type'] == ogr.OFTString:
+      fieldDefinition.SetWidth(field['width'])
+    outLayer.CreateField(fieldDefinition)
+  fieldDefinition = ogr.FieldDefn('area', ogr.OFTReal)
+  fieldDefinition.SetWidth(16)
+  fieldDefinition.SetPrecision(3)
+  outLayer.CreateField(fieldDefinition)
+  fieldDefinition = ogr.FieldDefn('centroid', ogr.OFTString)
+  fieldDefinition.SetWidth(50)
+  outLayer.CreateField(fieldDefinition)
+  if classes:
+    fieldDefinition = ogr.FieldDefn('size', ogr.OFTString)
+    fieldDefinition.SetWidth(25)
+    outLayer.CreateField(fieldDefinition)
+  featureDefinition = outLayer.GetLayerDefn()
+  for outFeature in outLayer:
+    for value in values:
+      for field in fields:
+        name = field['name']
+        outFeature.SetField(name, value[name])
+    cValue = outFeature.GetField('value')
+    fill = False
+    if cValue == 0:
+      fill = True
+    if background != None and cValue == background:
+      fill = True
+    geometry = outFeature.GetGeometryRef()
+    area = float(geometry.GetArea())
+    outFeature.SetField('area', area)
+    if classes:
+      for ii in range(len(classes)):
+        if area > classes[ii]['minimum'] and area < classes[ii]['maximum']:
+          outFeature.SetField('size',classes[ii]['class'])
+    centroid = geometry.Centroid().ExportToWkt()
+    outFeature.SetField('centroid', centroid)
+    if fill == False and area > threshold:
+      outLayer.SetFeature(outFeature)
+    else:
+      outLayer.DeleteFeature(outFeature.GetFID())
+  outShape.Destroy()
+
+
+def data_geometry2shape(data, fields, values, spatialRef, geoTrans, shapeFile):
+
+  return data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
+    None, 0, None, shapeFile)
+
+
+def geotiff2data(inGeotiff):
+
+  inRaster = gdal.Open(inGeotiff)
+  proj = osr.SpatialReference()
+  proj.ImportFromWkt(inRaster.GetProjectionRef())
+  if proj.GetAttrValue('AUTHORITY', 0) == 'EPSG':
+    epsg = int(proj.GetAttrValue('AUTHORITY', 1))
+  geoTrans = inRaster.GetGeoTransform()
+  inBand = inRaster.GetRasterBand(1)
+  noData = inBand.GetNoDataValue()
+  data = inBand.ReadAsArray()
+  if data.dtype == np.uint8:
+    dtype = 'BYTE'
+  elif data.dtype == np.float32:
+    dtype = 'FLOAT'
+  elif data.dtype == np.float64:
+    dtype = 'DOUBLE'
+
+  return (data, geoTrans, proj, epsg, dtype, noData)
+
+
+def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
+
+  (rows, cols) = data.shape
+  gdalDriver = gdal.GetDriverByName('GTiff')
+  if dtype == 'BYTE':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
+      ['COMPRESS=DEFLATE'])
+  elif dtype == 'FLOAT':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Float32,
+      ['COMPRESS=DEFLATE'])
+  outRaster.SetGeoTransform(geoTrans)
+  outRaster.SetProjection(proj.ExportToWkt())
+  outBand = outRaster.GetRasterBand(1)
+  outBand.SetNoDataValue(noData)
+  outBand.WriteArray(data)
+  outRaster = None
+
+
+# Save raster information (fields, values) to CSV file
+def raster2csv(fields, values, csvFile):
+
+  header = []
+  for field in fields:
+    header.append(field['name'])
+  line = []
+  for value in values:
+    for field in fields:
+      name = field['name']
+      line.append(value[name])
+
+  with open(csvFile, 'wb') as outF:
+    writer = csv.writer(outF, delimiter=';')
+    writer.writerow(header)
+    writer.writerow(line)
+
+
 # Combine all geometries in a list
 def union_geometries(geometries):
 
@@ -150,12 +398,12 @@ def spatial_query(source, reference, function):
   # Extract information from tiles and boundary shapefiles
   (geoTile, spatialRef, nameTile) = shape2geometry(reference, 'tile')
   if geoTile is None:
-    log.error('Could not extract information (tile) out of shapefile (%s)' %
+    logging.error('Could not extract information (tile) out of shapefile (%s)' %
       reference)
     sys.exit(1)
   (boundary, spatialRef, granule) = shape2geometry(source, 'granule')
   if boundary is None:
-    log.error('Could not extract information (granule) out of shapefile (%s)' %
+    logging.error('Could not extract information (granule) out of shapefile (%s)' %
       source)
     sys.exit(1)
 
@@ -221,20 +469,177 @@ def geometry_geo2proj(lat_max,lat_min,lon_max,lon_min):
     return zone, false_northing, y_min, y_max, x_min, x_max
 
 
-# Extract boundary of GeoTIFF file into geometry with geographic coordinates
-def geotiff2boundary(inGeotiff):
+def reproject_corners(corners, posting, inEPSG, outEPSG):
 
-  # Generating a mask for the GeoTIFF
-  inRaster = gdal.Open(inGeotiff)
-  geoTrans = inRaster.GetGeoTransform()
-  proj = osr.SpatialReference()
-  proj.ImportFromWkt(inRaster.GetProjectionRef())
-  inBand = inRaster.GetRasterBand(1)
-  data = inBand.ReadAsArray()
-  [cols, rows] = data.shape
-  data[data>0] = 1
-  data = ndimage.binary_closing(data, iterations=10,
-    structure=np.ones((3,3))).astype(data.dtype)
+  # Reproject coordinates
+  inProj = osr.SpatialReference()
+  inProj.ImportFromEPSG(inEPSG)
+  outProj = osr.SpatialReference()
+  outProj.ImportFromEPSG(outEPSG)
+  transform = osr.CoordinateTransformation(inProj, outProj)
+  corners.Transform(transform)
+
+  # Get extent and round to even coordinates
+  (minX, maxX, minY, maxY) = corners.GetEnvelope()
+  #posting = inGT[1]
+  minX = np.ceil(minX/posting)*posting
+  minY = np.ceil(minY/posting)*posting
+  maxX = np.ceil(maxX/posting)*posting
+  maxY = np.ceil(maxY/posting)*posting
+
+  # Add points to multiPoint
+  corners = ogr.Geometry(ogr.wkbMultiPoint)
+  ul = ogr.Geometry(ogr.wkbPoint)
+  ul.AddPoint(minX, maxY)
+  corners.AddGeometry(ul)
+  ll = ogr.Geometry(ogr.wkbPoint)
+  ll.AddPoint(minX, minY)
+  corners.AddGeometry(ll)
+  ur = ogr.Geometry(ogr.wkbPoint)
+  ur.AddPoint(maxX, maxY)
+  corners.AddGeometry(ur)
+  lr = ogr.Geometry(ogr.wkbPoint)
+  lr.AddPoint(maxX, minY)
+  corners.AddGeometry(lr)
+
+  return corners
+
+
+def raster_meta(rasterFile):
+
+  raster = gdal.Open(rasterFile)
+  spatialRef = osr.SpatialReference()
+  spatialRef.ImportFromWkt(raster.GetProjectionRef())
+  gt = raster.GetGeoTransform()
+  shape = [ raster.RasterYSize, raster.RasterXSize ]
+  pixel = raster.GetMetadataItem('AREA_OR_POINT')
+  raster = None
+
+  return (spatialRef, gt, shape, pixel)
+
+
+def overlapMask(meta, maskShape, invert, outFile):
+
+  ### Extract metadata
+  posting = meta['pixelSize']
+  proj = meta['proj']
+  imageEPSG = meta['epsg']
+  multiBoundary = meta['boundary']
+  dataRows = meta['rows']
+  dataCols = meta['cols']
+  geoEPSG = 4326
+
+  ### Extract mask polygon
+  ogrDriver = ogr.GetDriverByName('ESRI Shapefile')
+  inShape = ogrDriver.Open(maskShape)
+  outLayer = inShape.GetLayer()
+  outProj = outLayer.GetSpatialRef()
+  outEPSG = int(outProj.GetAttrValue('AUTHORITY', 1))
+  if geoEPSG != outEPSG:
+    print('Expecting mask file with EPSG code: {0}'.format(geoEPSG))
+    sys.exit(1)
+
+  ### Define re-projection from geographic to UTM
+  inProj = osr.SpatialReference()
+  inProj.ImportFromEPSG(4326)
+  outProj = osr.SpatialReference()
+  outProj.ImportFromEPSG(imageEPSG)
+  transform = osr.CoordinateTransformation(inProj, outProj)
+
+  ### Loop through features
+  for boundary in multiBoundary:
+    for feature in outLayer:
+      outMultipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
+      inMultiPolygon = feature.GetGeometryRef()
+      for polygon in inMultiPolygon:
+        overlap = boundary.Intersection(polygon)
+        if 'POLYGON' in overlap.ExportToWkt():
+          overlap.Transform(transform)
+          outMultipolygon.AddGeometry(overlap)
+
+  ### Save intersection polygon in memory
+  spatialRef = osr.SpatialReference()
+  spatialRef.ImportFromEPSG(imageEPSG)
+  memDriver = ogr.GetDriverByName('Memory')
+  outVector = memDriver.CreateDataSource('mem')
+  outLayer = outVector.CreateLayer('', spatialRef, ogr.wkbMultiPolygon)
+  outLayer.CreateField(ogr.FieldDefn('id', ogr.OFTInteger))
+  definition = outLayer.GetLayerDefn()
+  outFeature = ogr.Feature(definition)
+  outFeature.SetField('id', 0)
+  geometry = ogr.CreateGeometryFromWkb(outMultipolygon.ExportToWkb())
+  outFeature.SetGeometry(geometry)
+  outLayer.CreateFeature(outFeature)
+  outFeature = None
+
+  ### Calculate extent
+  (aoiMinX, aoiMaxX, aoiMinY, aoiMaxY) = outLayer.GetExtent()
+  aoiLines = int(np.rint((aoiMaxY - aoiMinY)/posting))
+  aoiSamples = int(np.rint((aoiMaxX - aoiMinX)/posting))
+  maskGeoTrans = (aoiMinX, posting, 0, aoiMaxY, 0, -posting)
+
+  ### Rasterize mask polygon
+  gdalDriver = gdal.GetDriverByName('MEM')
+  outRaster = gdalDriver.Create('', aoiSamples, aoiLines, 1, gdal.GDT_Float32)
+  outRaster.SetGeoTransform((aoiMinX, posting, 0, aoiMaxY, 0, -posting))
+  outRaster.SetProjection(outProj.ExportToWkt())
+  outBand = outRaster.GetRasterBand(1)
+  outBand.SetNoDataValue(0)
+  outBand.FlushCache()
+  gdal.RasterizeLayer(outRaster, [1], outLayer, burn_values=[1])
+  mask = outRaster.GetRasterBand(1).ReadAsArray()
+  outVector = None
+  outRaster = None
+
+  ### Invert mask (if requested)
+  if invert == True:
+    mask = 1.0 - mask
+
+  ### Final adjustments
+  mask = mask[:dataRows,:dataCols]
+  mask[mask==0] = np.nan
+
+  return (mask, maskGeoTrans)
+
+
+def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):
+
+  (dataRows, dataCols) = data.shape
+  dataOriginX = dataGeoTrans[0]
+  dataOriginY = dataGeoTrans[3]
+  dataPixelSize = dataGeoTrans[1]
+  (maskRows, maskCols) = mask.shape
+  maskOriginX = maskGeoTrans[0]
+  maskOriginY = maskGeoTrans[3]
+  maskPixelSize = maskGeoTrans[1]
+  offsetX = int(np.rint((maskOriginX - dataOriginX)/maskPixelSize))
+  offsetY = int(np.rint((dataOriginY - maskOriginY)/maskPixelSize))
+  data = data[offsetY:maskRows+offsetY,offsetX:maskCols+offsetX]
+  data *= mask
+
+  return data
+
+
+def geotiff2boundary_ext(inGeotiff, maskFile, geographic):
+
+  # Extract metadata
+  (spatialRef, gt, shape, pixel) = raster_meta(inGeotiff)
+  epsg = int(spatialRef.GetAttrValue('AUTHORITY', 1))
+  (data, colFirst, rowsFirst, geoTrans, proj) = \
+    geotiff2boundary_mask(inGeotiff, epsg, None)
+  (rows, cols) = data.shape
+
+  # Save in mask file (if defined)
+  if maskFile != None:
+    gdalDriver = gdal.GetDriverByName('GTiff')
+    outRaster = gdalDriver.Create(maskFile, rows, cols, 1, gdal.GDT_Byte)
+    outRaster.SetGeoTransform(geoTrans)
+    outRaster.SetProjection(proj.ExportToWkt())
+    outBand = outRaster.GetRasterBand(1)
+    outBand.WriteArray(data)
+    outRaster = None
+
+  # Save in memory
   gdalDriver = gdal.GetDriverByName('Mem')
   outRaster = gdalDriver.Create('out', rows, cols, 1, gdal.GDT_Byte)
   outRaster.SetGeoTransform(geoTrans)
@@ -264,10 +669,23 @@ def geotiff2boundary(inGeotiff):
     outFeature = None
   outLayer = None
 
-  # Convert geometry from projected to geographic coordinates
-  (multipolygon, outSpatialRef) = geometry_proj2geo(multipolygon, inSpatialRef)
+  # Convert geometry from projected to geographic coordinates (if requested)
+  if geographic == True:
+    (multipolygon, outSpatialRef) = \
+      geometry_proj2geo(multipolygon, inSpatialRef)
+    return (multipolygon, outSpatialRef)
+  else:
+    return (multipolygon, inSpatialRef)
 
-  return (multipolygon, outSpatialRef)
+
+def geotiff2boundary(inGeotiff, maskFile):
+
+  return geotiff2boundary_ext(inGeotiff, maskFile, False)
+
+
+def geotiff2boundary_geo(inGeotiff, maskFile):
+
+  return geotiff2boundary_ext(inGeotiff, maskFile, True)
 
 
 # Get polygon for a tile
@@ -392,7 +810,7 @@ def list2shape(csvFile, shapeFile):
       print('Reading %s ...' % file)
       # Generate GeoTIFF boundary geometry
       data = None
-      (geometry, spatialRef) = geotiff2boundary(file)
+      (geometry, spatialRef) = geotiff2boundary(file, None)
 
       # Simplify the geometry - only works with GDAL 1.8.0
       #geometry = geometry.Simplify(float(tolerance))

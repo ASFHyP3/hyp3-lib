@@ -139,19 +139,19 @@ def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
     ss = 0
     if (area1 > area2):
         if (area1 > area3):
-	    ss = 1
-	    i = intersect1
-	else:
-	    ss = 3
-	    i = intersect3
+            ss = 1
+            i = intersect1
+        else:
+            ss = 3
+            i = intersect3
     else:
         if (area2 > area3):
-	    ss = 2
-	    i = intersect2
-	else:
-	    if (area3 > 0):
-	        ss = 3
-  	        i = intersect3
+            ss = 2
+            i = intersect2
+        else:
+            if (area3 > 0):
+                ss = 3
+                i = intersect3
 
     return ss, i.GetEnvelope()
 
@@ -184,40 +184,40 @@ def get_real_cc(myxml):
 
     for i in root.iter('numberOfLines'):
         nl = int(i.text)
-	
+        
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
-	samp = int(i[3].text)
-	if samp==0 and line==0:
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
+        samp = int(i[3].text)
+        if samp==0 and line==0:
+            lats.append(i[4].text)
+            lons.append(i[5].text)
 
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
-	samp = int(i[3].text)
-	# the last line is sometimes nl, sometimes nl-1
-	if samp==0 and (abs(line-nl) <= 1):
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
-	    
+        samp = int(i[3].text)
+        # the last line is sometimes nl, sometimes nl-1
+        if samp==0 and (abs(line-nl) <= 1):
+            lats.append(i[4].text)
+            lons.append(i[5].text)
+            
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
-	samp = int(i[3].text)
-	# the last line is sometimes nl, sometimes nl-1
-	if samp==ns-1 and (abs(line-nl) <= 1):
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
+        samp = int(i[3].text)
+        # the last line is sometimes nl, sometimes nl-1
+        if samp==ns-1 and (abs(line-nl) <= 1):
+            lats.append(i[4].text)
+            lons.append(i[5].text)
 
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
-	samp = int(i[3].text)
+        samp = int(i[3].text)
         if samp==ns-1 and line==0:
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
-		        
+            lats.append(i[4].text)
+            lons.append(i[5].text)
+                        
     if len(lats) != 4 or len(lons) != 4:
-        print "ERROR: Unable to find corner points!"
-	exit(1)
+        print("ERROR: Unable to find corner points!")
+        exit(1)
     return lats, lons
 
 ###############################################################################
@@ -266,14 +266,14 @@ def SelectAllSubswaths(safeFile,lon_min,lat_min,lon_max,lat_max):
     
     if area1 > 0.0:
         ss.append(1)
-	polygon.append(intersect1.GetEnvelope())
+        polygon.append(intersect1.GetEnvelope())
    
     if area2 > 0.0:
         ss.append(2)
-	polygon.append(intersect2.GetEnvelope())
-	
+        polygon.append(intersect2.GetEnvelope())
+        
     if area3 > 0.0:
         ss.append(3)
-	polygon.append(intersect3.GetEnvelope())
-	
+        polygon.append(intersect3.GetEnvelope())
+        
     return ss, polygon
