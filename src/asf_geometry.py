@@ -196,6 +196,43 @@ def shape2geometry(shapeFile, field):
   return (multipolygon, spatialRef, name)
 
 
+def shape2geometry_ext(shapeFile):
+
+  values = []
+  fields = []
+  driver = ogr.GetDriverByName('ESRI Shapefile')
+  shape = driver.Open(shapeFile, 0)
+  layer = shape.GetLayer()
+  spatialRef = layer.GetSpatialRef()
+  layerDef = layer.GetLayerDefn()
+  featureCount = layerDef.GetFieldCount()
+  for ii in range(featureCount):
+    field = {}
+    field['name'] = layerDef.GetFieldDefn(ii).GetName()
+    field['type'] = layerDef.GetFieldDefn(ii).GetType()
+    if field['type'] == ogr.OFTString:
+      field['width'] = layerDef.GetFieldDefn(ii).GetWidth()
+    fields.append(field)
+  for feature in layer:
+    multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
+    geometry = feature.GetGeometryRef()
+    count = geometry.GetGeometryCount()
+    if geometry.GetGeometryName() == 'MULTIPOLYGON':
+      for i in range(0, count):
+        polygon = geometry.GetGeometryRef(i)
+        multipolygon.AddGeometry(polygon)
+    else:
+      multipolygon.AddGeometry(geometry)
+    value = {}
+    for field in fields:
+      value[field['name']] = feature.GetField(field['name'])
+    value['geometry'] = multipolygon
+    values.append(value)
+  shape.Destroy()
+
+  return (fields, values, spatialRef)
+
+
 # Save geometry with fields to shapefile
 def geometry2shape(fields, values, spatialRef, merge, shapeFile):
 
@@ -503,6 +540,30 @@ def reproject_corners(corners, posting, inEPSG, outEPSG):
   corners.AddGeometry(lr)
 
   return corners
+
+
+def reproject_extent(minX, maxX, minY, maxY, posting, inEPSG, outEPSG):
+
+  # Add points to multiPoint
+  corners = ogr.Geometry(ogr.wkbMultiPoint)
+  ul = ogr.Geometry(ogr.wkbPoint)
+  ul.AddPoint(minX, maxY)
+  corners.AddGeometry(ul)
+  ll = ogr.Geometry(ogr.wkbPoint)
+  ll.AddPoint(minX, minY)
+  corners.AddGeometry(ll)
+  ur = ogr.Geometry(ogr.wkbPoint)
+  ur.AddPoint(maxX, maxY)
+  corners.AddGeometry(ur)
+  lr = ogr.Geometry(ogr.wkbPoint)
+  lr.AddPoint(maxX, minY)
+  corners.AddGeometry(lr)
+
+  # Re-project corners
+  reproject_corners(corners, posting, inEPSG, outEPSG)
+
+  # Extract min/max values
+  return corners.GetEnvelope()
 
 
 def raster_meta(rasterFile):
