@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import re
-import requests
 from lxml import html
 import os
 from datetime import datetime, timedelta
@@ -9,7 +8,7 @@ import sys
 import argparse
 import requests
 from requests.adapters import HTTPAdapter
-from six.moves.urllib import parse as urlparse
+from six.moves.urllib.parse import urlparse
 
 
 class FileException(Exception):
