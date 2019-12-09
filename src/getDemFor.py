@@ -32,7 +32,6 @@
 # Import all needed modules right away
 #
 #####################
-from lxml import etree
 import get_dem
 import os
 import sys

@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
-import time
+import argparse
+from argparse import RawTextHelpFormatter
 import datetime
-import shutil
-from osgeo import gdal, ogr, osr
-from asf_geometry import *
+from osgeo import gdal, osr
+from asf_geometry import geotiff2polygon, overlap_indices, geotiff_overlap
 from rtc2color import rtc2color
 from execute import execute
 

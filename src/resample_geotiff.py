@@ -6,8 +6,8 @@ import os
 import sys
 import math
 import lxml.etree as et
-from osgeo import gdal, ogr, osr
-from osgeo.gdalconst import *
+from osgeo import gdal
+from osgeo.gdalconst import GRIORA_Cubic, GRIORA_NearestNeighbour
 import zipfile
 import glob
 

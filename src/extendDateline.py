@@ -4,7 +4,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 import os
 import sys
-from osgeo import gdal, ogr, osr
+from osgeo import ogr
 
 
 def extendDateline(inFile, outFile, degrees):

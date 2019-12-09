@@ -24,9 +24,7 @@
 # Import all needed modules right away
 #
 #####################
-import sys
 import os
-from lxml import etree
 from osgeo import ogr
 import glob
 from lxml import etree

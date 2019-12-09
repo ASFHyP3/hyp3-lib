@@ -5,10 +5,8 @@ import argparse
 from argparse import RawTextHelpFormatter
 from execute import execute
 from getParameter import getParameter
-import sys, re, os
-import zipfile
+import os
 import glob
-import shutil
 from get_orb import getOrbFile
 
 #

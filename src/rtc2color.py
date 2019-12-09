@@ -2,12 +2,9 @@
 
 import argparse
 from argparse import RawTextHelpFormatter
-import os
 import sys
-import datetime
-import logging
 import numpy as np
-from osgeo import gdal, ogr, osr
+from osgeo import gdal, osr
 
 
 def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,

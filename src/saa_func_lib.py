@@ -43,10 +43,7 @@
 
 from osgeo import gdal
 import numpy as np
-import os
-import sys
 import math
-import xml.dom.minidom
 
 #####################
 #
