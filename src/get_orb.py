@@ -98,7 +98,7 @@ def getOrbitFileESA(dataFile):
         orbitFile = findOrbFile(plat, st, files)
         if len(orbitFile) > 0:
           url = restituted+orbitFile
-          break;
+          break
   if len(orbitFile) == 0:
     error = 'Could not find orbit file on ESA website'
     raise FileException(error)

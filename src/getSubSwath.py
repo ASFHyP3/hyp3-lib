@@ -55,15 +55,15 @@ def get_bounding_box_file(safeFile):
     lon_min = min(lon1,lon2,lon3,lon4)
 
     if (lon_min <= -177 and lon_max>177):
-        lat_max = lat_max - 0.15;
-        lat_min = lat_min + 0.15;
-        lon_max = lon_max - 0.15;
-        lon_min = lon_min + 0.15;
+        lat_max = lat_max - 0.15
+        lat_min = lat_min + 0.15
+        lon_max = lon_max - 0.15
+        lon_min = lon_min + 0.15
     else:
-        lat_max = lat_max + 0.15;
-        lat_min = lat_min - 0.15;
-        lon_max = lon_max + 0.15;
-        lon_min = lon_min - 0.15;
+        lat_max = lat_max + 0.15
+        lat_min = lat_min - 0.15
+        lon_max = lon_max + 0.15
+        lon_min = lon_min - 0.15
 
     return lat_max,lat_min,lon_max,lon_min
 

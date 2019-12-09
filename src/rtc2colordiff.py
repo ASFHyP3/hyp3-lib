@@ -188,10 +188,10 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
   postGreen = postGreen[yPostOff:yPostEnd, xPostOff:xPostEnd]
   preMask = (preGreen > 0).astype(int)
   postMask = (postGreen > 0).astype(int)
-  mask = preMask*postMask;
-  red = postRed*255*mask;
-  green = postGreen*255*mask;
-  blue = 5.0*(postGreen - preGreen)*255*mask;
+  mask = preMask*postMask
+  red = postRed*255*mask
+  green = postGreen*255*mask
+  blue = 5.0*(postGreen - preGreen)*255*mask
 
   # Write output GeoTIFF
   print('Writing color difference image to GeoTIFF (%s)' % geotiff)
