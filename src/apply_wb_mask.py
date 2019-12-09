@@ -1,15 +1,13 @@
 #!/usr/bin/python
 
 import os
-import numpy as np
+# import numpy as np
 import scipy.misc
 import argparse
 import logging
-import shutil
 from osgeo import gdal
 from create_wb_mask import create_wb_mask
 import saa_func_lib as saa
-from osgeo.gdalconst import *
 
 def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
 

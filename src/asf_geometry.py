@@ -3,7 +3,6 @@
 import os
 import sys
 import csv
-import math
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np

@@ -4,10 +4,8 @@ import argparse
 from argparse import RawTextHelpFormatter
 import os
 import sys
-import lxml.etree as et
 import numpy as np
-from osgeo import gdal, ogr, osr
-from osgeo.gdalconst import *
+from osgeo import gdal, osr
 
 
 def geotiff_lut(geotiff, lutFile, outFile):
