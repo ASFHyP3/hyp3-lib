@@ -132,7 +132,7 @@ def cut_blackfill(data, geoTrans):
   return (data, colFirst, rowFirst, geoTrans)
 
 
-def geotiff_overlap(firstFile, secondFile, type):
+def geotiff_overlap(firstFile, secondFile, method):
 
   # Check map projections
   raster = gdal.Open(firstFile)
@@ -145,9 +145,9 @@ def geotiff_overlap(firstFile, secondFile, type):
   firstPolygon = geotiff2polygon(firstFile)
   secondPolygon = geotiff2polygon(secondFile)
 
-  if type == 'intersection':
+  if method == 'intersection':
     overlap = firstPolygon.Intersection(secondPolygon)
-  elif type == 'union':
+  elif method == 'union':
     overlap = firstPolygon.Union(secondPolygon)
 
   return (firstPolygon, secondPolygon, overlap, proj, pixelSize)
