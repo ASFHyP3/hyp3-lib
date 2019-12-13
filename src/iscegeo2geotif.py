@@ -26,13 +26,10 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 ###############################################################################
-import sys
 import os
-import re
 import zipfile
 import shutil
 from lxml import etree
-import numpy as np
 from osgeo import gdal
 from execute import execute
 import argparse

@@ -182,10 +182,10 @@ def handle_anti_meridian(lat_min,lat_max,lon_min,lon_max,outfile):
     logging.info("Handling using anti-meridian special code")
     if (lat_min>49 and lat_max<54):
         logging.info("DEM will be SRTMUS1")
-        anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",lat_min,lat_max,lon_min,lon_max,outfile);
+        anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",lat_min,lat_max,lon_min,lon_max,outfile)
     elif (lat_min>-52 and lat_max<-6):
         logging.info("DEM will be SRTMGL3")
-        anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",lat_min,lat_max,lon_min,lon_max,outfile);
+        anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",lat_min,lat_max,lon_min,lon_max,outfile)
     else:
         logging.error("ERROR: Unable to find a DEM")
         sys.exit(1)

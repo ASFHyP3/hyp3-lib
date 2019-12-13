@@ -5,9 +5,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 from execute import execute
 from getParameter import getParameter
-import sys, re, os
-import zipfile
-import glob
+import os
 import shutil
 
 def SLC_copy_S1_fullSW(path,slcname,tabin,burst_tab,mode=2,dem=None,dempath=None,raml=10,azml=2):

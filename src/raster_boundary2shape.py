@@ -1,10 +1,11 @@
 #!/usr/bin/python
+import os
+import sys
 import argparse
 from argparse import RawTextHelpFormatter
-import os
-from osgeo import gdal, ogr, osr
-import sys
-from asf_geometry import *
+from scipy import ndimage
+from osgeo import ogr
+from asf_geometry import raster_meta, geotiff2boundary_mask, data_geometry2shape
 
 # from asf_time_series import raster_metadata
  

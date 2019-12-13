@@ -3,7 +3,6 @@
 import argparse
 from argparse import RawTextHelpFormatter
 import sys
-import os
 from lxml import etree as et
 
 ns_gmd = {'gmd' : 'http://www.isotc211.org/2005/gmd'}

@@ -1,13 +1,10 @@
 #!/usr/bin/python
 
 import os
-import numpy as np
 import logging
-import argparse
 from osgeo import gdal
 from osgeo import ogr
 import scipy.misc
-import saa_func_lib as saa
 
 def create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile=None,mask=1,gcs=True):
     
