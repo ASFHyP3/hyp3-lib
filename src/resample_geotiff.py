@@ -70,7 +70,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
   if outFormat.upper() == 'GEOTIFF':
     gdal.Translate(outFile, raster, resampleAlg=resampleMethod, width=width)
   elif outFormat.upper() == 'JPEG' or outFormat.upper() == 'JPG':
-    if colorTable is not None:
+    if colorTable is None:
       gdal.Translate(outFile, raster, format='JPEG', resampleAlg=resampleMethod,
         width=width)
     else:
@@ -90,7 +90,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
     tmpFile = outFile.replace(orgExt, tmpExt)
     rgbFile = None
     if bandCount == 1:
-      if colorTable is not None:
+      if colorTable is None:
         gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
           srcNodata='0', dstSRS='EPSG:4326', dstAlpha=True)
       else:
