@@ -31,7 +31,7 @@ def commonOverlapBoundary(listFile, granuleDir, granuleFile, shapeFile):
   print('Forming intersections of all geometries ...')
   index = []
   for ii in range(fileCount):
-    print('Intersections with %s ...' % files[ii])
+    print('Intersections with %s ...' % os.path.basename(files[ii]))
     for kk in range(fileCount):
       if ii < kk:
         poly1 = ogr.CreateGeometryFromWkt(geometry[ii])
