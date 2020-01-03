@@ -34,6 +34,7 @@
 #####################
 import get_dem
 import os
+import sys
 import argparse
 from getSubSwath import get_bounding_box_file
 from execute import execute
@@ -50,7 +51,7 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=N
         if utmFlag:
             proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
-	    shutil.move("tmpdem.tif","%s" % outfile)
+            shutil.move("tmpdem.tif","%s" % outfile)
     else:
         if utmFlag:
             demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)

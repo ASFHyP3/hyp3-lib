@@ -1,22 +1,20 @@
 #!/usr/bin/python
 
-import os
 import argparse
 import saa_func_lib as saa
-import shutil
 from osgeo import gdal
 
 def copy_metadata(infile, outfile):
     ds = saa.open_gdal_file(infile)
     md = ds.GetMetadata()
-    print md
+    print(md)
 
-#    ds = saa.open_gdal_file(outfile)
-#    ds.SetMetadata(md)
+    # ds = saa.open_gdal_file(outfile)
+    # ds.SetMetadata(md)
 
-    outfile2 = "tmp_outfile.tif"
-#    gdal.Translate(outfile2,outfile, metadataOptions = md)
-#    shutil.move(outfile2,outfile)
+    # outfile2 = "tmp_outfile.tif"
+    # gdal.Translate(outfile2,outfile, metadataOptions = md)
+    # shutil.move(outfile2,outfile)
 
 
     ds = saa.open_gdal_file(outfile)

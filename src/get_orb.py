@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import re
-import requests
 from lxml import html
 import os
 from datetime import datetime, timedelta
@@ -9,7 +8,7 @@ import sys
 import argparse
 import requests
 from requests.adapters import HTTPAdapter
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 
 class FileException(Exception):
@@ -103,7 +102,7 @@ def getOrbitFileESA(dataFile):
         orbitFile = findOrbFile(plat, st, files)
         if len(orbitFile) > 0:
           url = restituted+orbitFile
-          break;
+          break
   if len(orbitFile) == 0:
     error = 'Could not find orbit file on ESA website'
     raise FileException(error)
@@ -144,8 +143,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for g in sys.argv[1:]:
-        print "Getting: " + g
+        print("Getting: " + g)
         (orburl,f1) = getOrbFile(g)
-        print orburl
+        print(orburl)
         cmd = 'wget ' + orburl
         os.system(cmd)

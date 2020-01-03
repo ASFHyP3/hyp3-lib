@@ -5,10 +5,8 @@ import argparse
 from argparse import RawTextHelpFormatter
 from execute import execute
 from getParameter import getParameter
-import sys, re, os
-import zipfile
+import os
 import glob
-import shutil
 from get_orb import getOrbFile
 
 #
@@ -88,7 +86,7 @@ def par_s1_slc_single(myfile,pol=None):
 
     # Fetch precision state vectors
     try:
-        url,orb = getOrbFile(inFile)
+        url,orb = getOrbFile(myfile)
         cmd = "wget {}".format(url)
         logging.info("Getting precision orbit information")
         execute(cmd,uselogging=True)

@@ -50,10 +50,10 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
    
     diff_ul[0] = (max(ul[0])-ul[0])/xres    
     diff_ul[1] = -1*(min(ul[1])-ul[1])/(-1*yres)
- 
-    print "Difference list:"
-    print diff_ul
- 
+
+    print("Difference list:")
+    print(diff_ul)
+
     lrx = min(lr[0])
     lry = max(lr[1])
     lenx = (lrx-max(ul[0])) / xres
@@ -61,14 +61,14 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
     if leny < 0:
         leny = abs(leny)
         diff_ul[1] = diff_ul[1] * -1
-    print "Size of output images {} x {}".format(lenx,leny)
+    print("Size of output images {} x {}".format(lenx, leny))
 
     outfiles = []   
     for i in range(len(files)):
         outfile = files[i].replace(".tif","_cut.tif")
-	if all_coords is not None:
-	    outfile = os.path.basename(outfile)
-	print "Processing file {} to create file {}".format(files[i],outfile)
+        if all_coords is not None:
+            outfile = os.path.basename(outfile)
+        print("Processing file {} to create file {}".format(files[i], outfile))
         gdal.Translate(outfile,files[i],srcWin=[diff_ul[0,i],diff_ul[1,i],lenx,leny],noData=0)
         outfiles.append(outfile)
 

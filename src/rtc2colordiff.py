@@ -1,15 +1,12 @@
 #!/usr/bin/python
 
-import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
-import time
+import argparse
+from argparse import RawTextHelpFormatter
 import datetime
-import shutil
-from osgeo import gdal, ogr, osr
-from asf_geometry import *
-from asf_utils import *
+from osgeo import gdal, osr
+from asf_geometry import geotiff2polygon, overlap_indices, geotiff_overlap
 from rtc2color import rtc2color
 from execute import execute
 
@@ -95,6 +92,21 @@ def check_projection(tmpDir, preFullpol, preCrosspol, postFullpol, postCrosspol)
   return (preFullpol, preCrosspol, postFullpol, postCrosspol)
 
 
+def make_tmp_dir(path, prefix):
+    # Generate the temporary directory in location defined in the configuration
+    # file states. As general failover method generate a temporary directory in
+    # the current directory
+
+    tmpStr = prefix + '_' + datetime.datetime.utcnow().isoformat()
+    if path:
+        tmpDir = os.path.join(path, tmpStr)
+    else:
+        tmpDir = tmpStr
+    os.makedirs(tmpDir)
+
+    return tmpDir
+
+
 def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
   geotiff, teal, amp):
 
@@ -174,10 +186,10 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
   postGreen = postGreen[yPostOff:yPostEnd, xPostOff:xPostEnd]
   preMask = (preGreen > 0).astype(int)
   postMask = (postGreen > 0).astype(int)
-  mask = preMask*postMask;
-  red = postRed*255*mask;
-  green = postGreen*255*mask;
-  blue = 5.0*(postGreen - preGreen)*255*mask;
+  mask = preMask*postMask
+  red = postRed*255*mask
+  green = postGreen*255*mask
+  blue = 5.0*(postGreen - preGreen)*255*mask
 
   # Write output GeoTIFF
   print('Writing color difference image to GeoTIFF (%s)' % geotiff)

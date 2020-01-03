@@ -1,14 +1,6 @@
 #!/usr/bin/python
 
-import argparse
-from argparse import RawTextHelpFormatter
-import os
-import sys
-import datetime
-import logging
-import numpy as np
-from osgeo import gdal, ogr, osr
-import shutil
+from osgeo import ogr
 
 def get_bb_from_shape(shapeFile):
 
@@ -17,7 +9,7 @@ def get_bb_from_shape(shapeFile):
   shape = driver.Open(shapeFile, 0)
   vectorMultipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
   layer = shape.GetLayer()
-  vectorSpatialRef = layer.GetSpatialRef()
+  # vectorSpatialRef = layer.GetSpatialRef()
 
   # Reproject polygon if necessary
   # if vectorSpatialRef != rasterSpatialRef:
@@ -45,6 +37,6 @@ def get_bb_from_shape(shapeFile):
   maxX = envelope[1]
   maxY = envelope[3]
 
-  print minX,minY,maxX,maxY
+  print(minX, minY, maxX, maxY)
 
   return(minX,minY,maxX,maxY)

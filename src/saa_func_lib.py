@@ -43,10 +43,7 @@
 
 from osgeo import gdal
 import numpy as np
-import os
-import sys
 import math
-import xml.dom.minidom
 
 #####################
 #
@@ -126,7 +123,7 @@ def getPixSize(fi):
 
 # Get the UTM zone
 def get_zone(lon_min,lon_max):
-    center_lon = (lon_min+lon_max)/2;
+    center_lon = (lon_min+lon_max)/2
     zf = (center_lon+180)/6+1
     zone = math.floor(zf)
     return zone
@@ -286,7 +283,7 @@ def boxcar_y(image,bsize):
         w = np.ones(bsize)
         edge = int((bsize-1)/2)
         for i in range (0,y):
-            progressbar(float(i)/float(y))
+            gdal.TermProgress_nocb(float(i)/float(y))
             outimage[i,:] = np.convolve(w/w.sum(),image[i,:],mode='same')
         print('100')
         return outimage
@@ -298,62 +295,13 @@ def boxcar_x(image,bsize):
         w = np.ones(bsize)
         edge = int((bsize-1)/2)
         for j in range (0,x):
-            progressbar(float(j)/float(x))
+            gdal.TermProgress_nocb(float(j)/float(x))
             outimage[:,j] = np.convolve(w/w.sum(),image[:,j],mode='same')
         print('100')
         return outimage
 
 def lee(image):
         return 1
-
-
-
-
-
-
-
-#####################
-#
-# Generic subroutines
-#
-#####################
-
-def resample():
-        return 1
-
-def parse_eq(equation):
-        return 1
-
-def progressbar(complete = 0.0):
-        gdal.TermProgress_nocb(complete)
-
-def Usage(message):
-    print("---------------------------------------")
-    print("Usage: ")
-    print(message )
-    print("---------------------------------------")
-
-def is_in_BB():
-        if bb:
-            return 1
-        else:
-            return 0
-
-def getText(nodelist):
-    rc = []
-    for node in nodelist:
-        if node.nodeType == node.TEXT_NODE:
-            rc.append(node.data)
-    return ''.join(rc)
-
-
-def getKMLcoords(file):
-    dom1 = xml.dom.minidom.parse(file)
-    north =  getText(dom1.getElementsByTagName("north")[0].childNodes)
-    south =  getText(dom1.getElementsByTagName("south")[0].childNodes)
-    east =  getText(dom1.getElementsByTagName("east")[0].childNodes)
-    west =  getText(dom1.getElementsByTagName("west")[0].childNodes)
-    return north,south,east,west
 
 
 #####################

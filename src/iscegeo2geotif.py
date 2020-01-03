@@ -26,13 +26,10 @@
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 ###############################################################################
-import sys
 import os
-import re
 import zipfile
 import shutil
 from lxml import etree
-import numpy as np
 from osgeo import gdal
 from execute import execute
 import argparse
@@ -107,21 +104,21 @@ def convert_files(s1aFlag,proj=None,res=30):
         gdal.Translate("phase.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
         shutil.copy("phase.tif",gcsname)        
     else:
-        print "Creating tmp.tif"
+        print("Creating tmp.tif")
         gdal.Translate("tmp.tif","filt_topophase.unw.geo.vrt",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
-        print "phase.tif"
+        print("phase.tif")
         gdal.Warp("phase.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions=['COMPRESS=LZW'])
-        print "mv tmp.tif {}".format(gcsname)
-        shutil.copy("tmp.tif",gcsname)        
+        print("mv tmp.tif {}".format(gcsname))
+        shutil.copy("tmp.tif",gcsname)
 #        os.remove("tmp.tif")
 
-        print "Creating browse image colorized_unw.png"
+        print("Creating browse image colorized_unw.png")
         create_browse("unw.png","colorized_unw.png","colorized_unw.png.aux.xml",gcsname,proj,1024)
         create_browse("unw.png","colorized_unw_large.png","colorized_unw_large.png.aux.xml",gcsname,proj,2048)
-        
-        print "Creating browse image color.png"
+
+        print("Creating browse image color.png")
         create_browse("col.png","color.png","color.png.aux.xml",gcsname,proj,1024)
-        print "Creating browse image color_large.png"
+        print("Creating browse image color_large.png")
         create_browse("col.png","color_large.png","color_large.png.aux.xml",gcsname,proj,2048)
 
 

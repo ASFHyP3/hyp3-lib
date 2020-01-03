@@ -52,7 +52,7 @@ def createAmp(fi):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
     ampdata = np.sqrt(data)
     outfile = fi.replace('.tif','-amp.tif')
-    print outfile
+    print(outfile)
     saa.write_gdal_file_float(outfile,trans,proj,ampdata)
     return outfile
 
@@ -73,7 +73,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
     elif table=='RWB':
         R, G, B = makeRWBColor(samples)
     else:
-        print "ERROR: Unknown color table: {}".format(table)
+        print("ERROR: Unknown color table: {}".format(table))
         exit(1)
 
     #
@@ -86,10 +86,10 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         phaseTmp = "{}_small.tif".format(os.path.basename(inFile.replace(".tif","")))
         gdal.Translate(phaseTmp,inFile,height=4096)
         x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(phaseTmp))
-        print "Created small tif of size {} x {}".format(x,y)
+        print("Created small tif of size {} x {}".format(x, y))
     else:
         x,y,trans,proj,data= saa.read_gdal_file(saa.open_gdal_file(inFile))
-        print "Using full size tif of size {} x {}".format(x,y)
+        print("Using full size tif of size {} x {}".format(x, y))
         phaseTmp = inFile
         
     # Make a black mask for use after colorization
@@ -122,13 +122,13 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
    
         data[:] = (data[:] - mini) / (maxi - mini)
         data[:] = data * float(samples)
-        
-        print np.max(data)
-        print np.min(data)
-        
+
+        print(np.max(data))
+        print(np.min(data))
+
         hist = np.histogram(data)
-        print hist[1]
-        print hist[0]
+        print(hist[1])
+        print(hist[0])
 
     data[data==samples]=samples-1
 
@@ -162,7 +162,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         greenf = np.zeros(data.shape)
         bluef = np.zeros(data.shape)
 
- 	# Scale from 0 .. 1
+         # Scale from 0 .. 1
         redf[::] = red[::]/255.0
         greenf[::] = green[::]/255.0
         bluef[::] = blue[::]/255.0
@@ -170,7 +170,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         # Read in the amplitude data
         x1,y1,trans1,proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(ampFile))
 
-	# If too large, resize the data
+        # If too large, resize the data
         if x1 > 4096 or y1 > 4096:
             ampTmp = "{}_small.tif".format(os.path.basename(ampFile.replace(".tif","")))
             gdal.Translate(ampTmp,ampFile,height=y,width=x)
@@ -191,9 +191,8 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
             ampTmp = ampTmp.replace(".tif","_clip.tif")
             x1,y1,trans1,proj1,amp = saa.read_gdal_file(saa.open_gdal_file(ampTmp))
 
-        print "Data shape is {}".format(data.shape)
-        print "Amp shape is {}".format(amp.shape)
-       
+        print("Data shape is {}".format(data.shape))
+        print("Amp shape is {}".format(amp.shape))
 
         # Make a black mask for use after colorization
         mask = np.ones(amp.shape,dtype=np.uint8)
@@ -203,18 +202,18 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         amp[mask==0]=0
 
         ave = np.mean(amp)
-        print "Mean of amp data is {}".format(ave)
+        print("Mean of amp data is {}".format(ave))
         amp[mask==0]=ave
 
-        print "AMP HISTOGRAM:"
+        print("AMP HISTOGRAM:")
         hist = np.histogram(amp)
-        print hist[1]
-        print hist[0]
+        print(hist[1])
+        print(hist[0])
 
         ave = np.mean(amp)
-        print "Amp average is {}".format(ave)
-        print "Amp median is {}".format(np.median(amp))
-        print "Amp stddev is {}".format(np.std(amp))
+        print("Amp average is {}".format(ave))
+        print("Amp median is {}".format(np.median(amp)))
+        print("Amp stddev is {}".format(np.std(amp)))
 
         # Rescale amplitude to 2-sigma byte range, otherwise may be all dark
         amp2File = createAmp(ampTmp)
@@ -226,22 +225,22 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
 #            os.remove(ampTmp)
 #        os.remove(amp2File)
 #        os.remove(newFile)
-        
-        print "2-sigma AMP HISTOGRAM:"
+
+        print("2-sigma AMP HISTOGRAM:")
         hist = np.histogram(amp)
-        print hist[1]
-        print hist[0]
+        print(hist[1])
+        print(hist[0])
 
         # Scale amplitude from 0.0 to 1.0
         ampf = np.zeros(data.shape)
         ampf = amp / 255.0
-	ampf = ampf + float(scale)
+        ampf = ampf + float(scale)
         ampf[ampf>1.0]=1.0
-        
-        print "SCALED AMP HISTOGRAM:"
+
+        print("SCALED AMP HISTOGRAM:")
         hist = np.histogram(ampf)
-        print hist[1]
-        print hist[0]
+        print(hist[1])
+        print(hist[0])
 
         # Perform color transformation 
         h = np.zeros(data.shape)
@@ -251,18 +250,18 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         for j in range(x):
             for i in range(y):
                 h[i,j],l[i,j],s[i,j] = colorsys.rgb_to_hls(redf[i,j],greenf[i,j],bluef[i,j])
-                
-        print "LIGHTNESS HISTOGRAM:"
+
+        print("LIGHTNESS HISTOGRAM:")
         hist = np.histogram(l)
-        print hist[1]
-        print hist[0]
-                
+        print(hist[1])
+        print(hist[0])
+
         l = l * ampf
-        
-        print "NEW LIGHTNESS HISTOGRAM:"
+
+        print("NEW LIGHTNESS HISTOGRAM:")
         hist = np.histogram(l)
-        print hist[1]
-        print hist[0]
+        print(hist[1])
+        print(hist[0])
 
         for j in range(x):
             for i in range(y):
@@ -271,11 +270,11 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
         red = redf * 255
         green = greenf * 255
         blue = bluef * 255
-       
-        print "TRANFORMED RED HISTOGRAM:"
+
+        print("TRANFORMED RED HISTOGRAM:")
         hist = np.histogram(red)
-        print hist[1]
-        print hist[0]
+        print(hist[1])
+        print(hist[0])
 
         # Apply mask
         red[mask==0]=0

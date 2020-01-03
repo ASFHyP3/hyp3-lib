@@ -17,10 +17,10 @@ def pngtothumb(pngfile):
     x, y = rgb_im.size
     if x>y:
         width = 200
-	length = 200 * y/x
+        length = 200 * y/x
     else:
         length = 200
-	width = 200 * x/y
+        width = 200 * x/y
 
     size = length,width
     thumb = rgb_im.thumbnail(size)

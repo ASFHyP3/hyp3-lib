@@ -31,7 +31,7 @@ import os
 import sys
 import shutil
 import math
-from osgeo import gdal
+from osgeo import gdal, ogr, osr
 import argparse
 import boto3
 from botocore.handlers import disable_signing
@@ -39,6 +39,9 @@ import subprocess
 import dem2isce
 import saa_func_lib as saa
 import multiprocessing as mp
+import lxml.etree as et
+import numpy as np
+from asf_geometry import raster_meta
 import logging
 from osgeo import ogr
 from osgeo import osr
@@ -119,6 +122,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
         coverage = 0
         tiles = ""
         tile_list = []
+        poly_list = []
         layer = dataset.GetLayer()
         for i in range(layer.GetFeatureCount()):
             feature = layer.GetFeature(i)
@@ -128,13 +132,15 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             intersect = tile_poly.Intersection(poly)
             a = intersect.GetArea()
             if a > 0:
+                poly_list.append(wkt)
                 tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
                 logging.info("Working on tile {}".format(tile))
                 coverage += a
                 tiles += "," + tile
                 tile_list.append(tile)
 
-        logging.info("Totals: {} {} {} {}".format(DEM,coverage,total_area,coverage/total_area))
+        logging.info("Totals: {} {} {} {}".format(DEM, coverage, total_area,
+          coverage/total_area))
         pct = coverage/total_area
         if pct >= .99:
             best_dem = DEM.upper() + tiles
@@ -142,6 +148,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             best_name = DEM.upper()
             best_tile_list = tile_list
             best_epsg = demEPSG
+            best_poly_list = poly_list
             break
         if best_pct == 0 or pct > best_pct+0.05:
             best_dem = DEM.upper() + tiles
@@ -149,13 +156,14 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             best_name = DEM.upper()
             best_tile_list = tile_list
             best_epsg = demEPSG
+            best_poly_list = poly_list
 
     if best_pct < .20:
         logging.error("ERROR: Unable to find a DEM file for that area")
         sys.exit(1)
     logging.info("Best DEM: {}".format(best_name))
     logging.info("Tile List: {}".format(best_tile_list))
-    return(best_name, best_epsg, best_tile_list)
+    return(best_name, best_epsg, best_tile_list, best_poly_list)
 
 def get_tile_for(args):
     demname, fi = args
@@ -243,9 +251,9 @@ def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile
                 if "s3" in mydir:
                     myfile = os.path.join(dem_name,dem_file)
                     s3 = boto3.resource('s3')
-                    resource.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
+                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
                     mybucket = mydir.split("/")[-1]
-                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}.tif".format(fi))
+                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}".format(dem_file))
                 else:
                     myfile = os.path.join(mydir,dem_file)
                     logging.info("Tile: {}".format(myfile))
@@ -285,16 +293,94 @@ def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile
     logging.info("Creating output file {} with bounds {}".format(outfile,bounds))
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
+def writeVRT(tile_list, poly_list, outFile):
+
+    # Get dimensions and pixel size from first DEM in tile ListCommand
+    demFile = os.path.join('DEM', '{0}.tif'.format(tile_list[0]))
+    (spatialRef, gt, shape, pixel) = raster_meta(demFile)
+    (rows, cols) = shape
+    pixSize = gt[1]
+
+    # Determine coverage
+    minLon = 360
+    maxLon = -180
+    minLat = 90
+    maxLat = -90
+    for poly in poly_list:
+        polygon = ogr.CreateGeometryFromWkt(poly)
+        envelope = polygon.GetEnvelope()
+        if envelope[0] < minLon: minLon = envelope[0]
+        if envelope[1] > maxLon: maxLon = envelope[1]
+        if envelope[2] < minLat: minLat = envelope[2]
+        if envelope[3] > maxLat: maxLat = envelope[3]
+    rasterXSize = np.int(np.rint((maxLon-minLon)/pixSize)) + 1
+    rasterYSize = np.int(np.rint((maxLat-minLat)/pixSize)) + 1
+
+    # Determine offsets
+    offsetX = []
+    offsetY = []
+    for poly in poly_list:
+        polygon = ogr.CreateGeometryFromWkt(poly)
+        envelope = polygon.GetEnvelope()
+        offsetX.append(np.int(np.rint((envelope[0] - minLon)/pixSize)))
+        offsetY.append(np.int(np.rint((maxLat - envelope[3])/pixSize)))
+
+    # Generate XML structure
+    vrt = et.Element('VRTDataset', rasterXSize=str(rasterXSize),
+        rasterYSize=str(rasterYSize))
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(4326)
+    et.SubElement(vrt, 'SRS').text = srs.ExportToWkt()
+    geoTrans = ('%.6f, %.6f, 0.0, %.6f, 0.0, %.6f' % (minLon, pixSize, maxLat,
+        -pixSize))
+    et.SubElement(vrt, 'GeoTransform').text = geoTrans
+    bands = et.SubElement(vrt, 'VRTRasterBand', dataType='Float32', band='1')
+    et.SubElement(bands, 'NoDataValue').text = '-32768'
+    et.SubElement(bands, 'ColorInterp').text = 'Gray'
+    tileCount = len(tile_list)
+    for ii in range(tileCount):
+        source = et.SubElement(bands, 'ComplexSource')
+        demFile = os.path.join('DEM', '{0}.tif'.format(tile_list[ii]))
+        et.SubElement(source, 'SourceFilename', relativeToVRT='1').text = \
+            demFile
+        et.SubElement(source, 'SourceBand').text = '1'
+        properties = et.SubElement(source, 'SourceProperties')
+        properties.set('RasterXSize', str(cols))
+        properties.set('RasterYSize', str(rows))
+        properties.set('DataType', 'Float32')
+        properties.set('BlockXSize', str(cols))
+        properties.set('BlockYSize', '1')
+        src = et.SubElement(source, 'SrcRect')
+        src.set('xOff', '0')
+        src.set('yOff', '0')
+        src.set('xSize', str(cols))
+        src.set('ySize', str(rows))
+        dst = et.SubElement(source, 'DstRect')
+        dst.set('xOff', str(offsetX[ii]))
+        dst.set('yOff', str(offsetY[ii]))
+        dst.set('xSize', str(cols))
+        dst.set('ySize', str(rows))
+        et.SubElement(source, 'NODATA').text = '-32768'
+
+    # Write VRT file
+    with open(outFile, 'w') as outF:
+        outF.write(et.tostring(vrt, xml_declaration=False, encoding='utf-8',
+            pretty_print=True))
+        outF.close()
+
+
 # GET DEM file and convert into ISCE format
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):
-    get_dem(west,south,east,north,"temp_dem.tif")
-   
+    # Get the DEM file
+    chosen_dem = get_dem(west,south,east,north,"temp_dem.tif",False)
+
     # Reproject DEM into Lat, Lon space
     pixsize = 0.000277777777778
     gdal.Warp(demName,"temp_dem.tif",format="ENVI",dstSRS="EPSG:4326",xRes=pixsize,yRes=pixsize,resampleAlg="cubic",dstNodata=-32767)
     ext = os.path.splitext(demName)[1]
     hdrName = demName.replace(ext,".hdr")
     dem2isce.dem2isce(demName,hdrName,demXMLName)
+    return chosen_dem
 
 # GET DEM file and convert into lat,lon format
 def get_ll_dem(west,south,east,north,outDem,post=None,processes=1,demName=None,leave=False):
@@ -326,20 +412,8 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         logging.warning("WARNING: minimum northing > maximum northing - swapping")
         (y_min, y_max) = (y_max, y_min)
 
-    # Handle cases near anti-meridian
-#
-# not sure how to fix this right now
-#
-#    if prj_out:
-#        if x_min <= -178 and x_max >= 178:
-#            handle_anti_meridian(y_min,y_max,x_min,x_max,outfile)
-#            return(0)
-#        else:
-#            logging.error("ERROR: May only create a DEM file over anti-meridian using UTM coordinates")
-#            sys.exit(1)
-
     # Figure out which DEM and get the tile list
-    (demname, demproj, tile_list) = get_best_dem(y_min,y_max,x_min,x_max,demName=demName)
+    (demname, demproj, tile_list, poly_list) = get_best_dem(y_min,y_max,x_min,x_max,demName=demName)
     demproj = int(demproj)
     logging.info("demproj is {}".format(demproj))
 
@@ -361,9 +435,10 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         get_tile_for,
         [(demname, fi) for fi in tile_list]
     )
- 
-    os.system("gdalbuildvrt temp.vrt DEM/*.tif")
 
+    #os.system("gdalbuildvrt temp.vrt DEM/*.tif")
+    writeVRT(tile_list, poly_list, 'temp.vrt')
+ 
 #
 #   Set the output projection to either NPS, SPS, or UTM
 #
@@ -424,13 +499,15 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     else:
         gdal.Warp(tmpdem,"temp.vrt",xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
-    # If DEM is from NED collection, then it will have a NAD83 ellipse - need to convert to WGS84
+    # If DEM is from NED collection, then it will have a NAD83 ellipse -
+    # need to convert to WGS84
     # Also, need to convert from pixel as area to pixel as point
     if "NED" in demname:
         logging.info("Converting to WGS84")
         gdal.Warp("temp_dem_wgs84.tif",tmpdem, dstSRS="EPSG:4326")
         logging.info("Converting to pixel as point")
-        x1,y1,t1,p1,data = saa.read_gdal_file(saa.open_gdal_file("temp_dem_wgs84.tif"))
+        x1, y1, t1, p1, data = \
+            saa.read_gdal_file(saa.open_gdal_file("temp_dem_wgs84.tif"))
         lon = t1[0]
         resx = t1[1]
         rotx = t1[2]

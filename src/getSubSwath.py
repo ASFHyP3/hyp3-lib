@@ -2,17 +2,17 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 ###############################################################################
 # Copyright (c) 2017, Alaska Satellite Facility
-# 
+#
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Library General Public
 # License as published by the Free Software Foundation; either
 # version 2 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Library General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Library General Public
 # License along with this library; if not, write to the
 # Free Software Foundation, Inc., 59 Temple Place - Suite 330,
@@ -24,9 +24,7 @@
 # Import all needed modules right away
 #
 #####################
-import sys
 import os
-from lxml import etree
 from osgeo import ogr
 import glob
 from lxml import etree
@@ -39,13 +37,13 @@ def get_bounding_box_file(safeFile):
     # Get corners from first and last swath
     name = "001.xml"
     for myfile in os.listdir(mydir):
-        if name in myfile:      
+        if name in myfile:
             myxml = "%s/annotation/%s" % (safeFile,myfile)
     (lat1,lat2,lon1,lon2) = get_bounding_box(myxml)
 
     name = "003.xml"
     for myfile in os.listdir(mydir):
-        if name in myfile:      
+        if name in myfile:
             myxml = "%s/annotation/%s" % (safeFile,myfile)
     (lat3,lat4,lon3,lon4) = get_bounding_box(myxml)
 
@@ -55,54 +53,50 @@ def get_bounding_box_file(safeFile):
     lon_min = min(lon1,lon2,lon3,lon4)
 
     if (lon_min <= -177 and lon_max>177):
-        lat_max = lat_max - 0.15;
-        lat_min = lat_min + 0.15;
-        lon_max = lon_max - 0.15;
-        lon_min = lon_min + 0.15;
+        lat_max = lat_max - 0.15
+        lat_min = lat_min + 0.15
+        lon_max = lon_max - 0.15
+        lon_min = lon_min + 0.15
     else:
-        lat_max = lat_max + 0.15;
-        lat_min = lat_min - 0.15;
-        lon_max = lon_max + 0.15;
-        lon_min = lon_min - 0.15;
+        lat_max = lat_max + 0.15
+        lat_min = lat_min - 0.15
+        lon_max = lon_max + 0.15
+        lon_min = lon_min - 0.15
 
     return lat_max,lat_min,lon_max,lon_min
 
 
 def get_bounding_box(myxml):
     lon_max = -180
-    lon_min = 180
+    lon_min = 360
     lat_max = -90
     lat_min = 90
     lon = []
     root = etree.parse(myxml)
     for coord in root.iter('latitude'):
-         lat_max = max(float(coord.text),lat_max)
-         lat_min = min(float(coord.text),lat_min)
+        lat_max = max(float(coord.text),lat_max)
+        lat_min = min(float(coord.text),lat_min)
     for coord in root.iter('longitude'):
-         lon.append(float(coord.text))
-
+        lon.append(float(coord.text))
     lon_max = max(lon)
     lon_min = min(lon)
+    diff = lon_max - lon_min
+    if diff > 180:
+        for ii in range(len(lon)):
+          if lon[ii] < 0:
+            lon[ii] += 360
+        lon_min = min(lon)
+        lon_max = max(lon)
 
-    # Fix case that crosses the date line
-    if lon_min <= -178 and lon_max >= 178:
-        lon_left = 180
-        lon_right = -180
-        for l in lon:
-            if (l > 0):
-                lon_left = min(l,lon_left)
-            else:
-                lon_right = max(l,lon_right)
-        lon_max = lon_left
-        lon_min = lon_right
     return lat_max,lat_min,lon_max,lon_min
+
 
 ###############################################################################
 # selectSubswath
 #
 # Purpose:  Figure out the best subswath a given bounding box lies in.
-# Returns:  1-3 for a valid subswath or 0 if not a valid overlap         
-# 
+# Returns:  1-3 for a valid subswath or 0 if not a valid overlap
+#
 ###############################################################################
 def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
 
@@ -139,19 +133,19 @@ def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
     ss = 0
     if (area1 > area2):
         if (area1 > area3):
-	    ss = 1
-	    i = intersect1
-	else:
-	    ss = 3
-	    i = intersect3
+            ss = 1
+            i = intersect1
+        else:
+            ss = 3
+            i = intersect3
     else:
         if (area2 > area3):
-	    ss = 2
-	    i = intersect2
-	else:
-	    if (area3 > 0):
-	        ss = 3
-  	        i = intersect3
+            ss = 2
+            i = intersect2
+        else:
+            if (area3 > 0):
+                ss = 3
+                i = intersect3
 
     return ss, i.GetEnvelope()
 
@@ -160,7 +154,7 @@ def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
 # get_real_cc
 #
 # Purpose:  Get the actual corner coordinates of a Sentinel1 xml file
-# Returns:  lists of lat, lon for each corner      
+# Returns:  lists of lat, lon for each corner
 # :
 #         pt1---------------pt4
 #         /                /
@@ -170,54 +164,54 @@ def SelectSubswath(safeFile,lon_min,lat_min,lon_max,lat_max):
 #     /                /
 #    /                /
 #  pt2---------------pt3
-# 
+#
 ###############################################################################
 
 def get_real_cc(myxml):
 
     lats = []
     lons = []
-    
+
     root = etree.parse(myxml)
     for i in root.iter('numberOfSamples'):
         ns = int(i.text)
 
     for i in root.iter('numberOfLines'):
         nl = int(i.text)
-	
-    for i in root.iter('geolocationGridPoint'):
-        line = int(i[2].text)
-	samp = int(i[3].text)
-	if samp==0 and line==0:
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
 
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
-	samp = int(i[3].text)
-	# the last line is sometimes nl, sometimes nl-1
-	if samp==0 and (abs(line-nl) <= 1):
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
-	    
-    for i in root.iter('geolocationGridPoint'):
-        line = int(i[2].text)
-	samp = int(i[3].text)
-	# the last line is sometimes nl, sometimes nl-1
-	if samp==ns-1 and (abs(line-nl) <= 1):
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
+        samp = int(i[3].text)
+        if samp==0 and line==0:
+            lats.append(i[4].text)
+            lons.append(i[5].text)
 
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
-	samp = int(i[3].text)
+        samp = int(i[3].text)
+        # the last line is sometimes nl, sometimes nl-1
+        if samp==0 and (abs(line-nl) <= 1):
+            lats.append(i[4].text)
+            lons.append(i[5].text)
+            
+    for i in root.iter('geolocationGridPoint'):
+        line = int(i[2].text)
+        samp = int(i[3].text)
+        # the last line is sometimes nl, sometimes nl-1
+        if samp==ns-1 and (abs(line-nl) <= 1):
+            lats.append(i[4].text)
+            lons.append(i[5].text)
+
+    for i in root.iter('geolocationGridPoint'):
+        line = int(i[2].text)
+        samp = int(i[3].text)
         if samp==ns-1 and line==0:
-	    lats.append(i[4].text)
-	    lons.append(i[5].text)
-		        
+            lats.append(i[4].text)
+            lons.append(i[5].text)
+                        
     if len(lats) != 4 or len(lons) != 4:
-        print "ERROR: Unable to find corner points!"
-	exit(1)
+        print("ERROR: Unable to find corner points!")
+        exit(1)
     return lats, lons
 
 ###############################################################################
@@ -263,17 +257,17 @@ def SelectAllSubswaths(safeFile,lon_min,lat_min,lon_max,lat_max):
 
     ss = []
     polygon = []
-    
+
     if area1 > 0.0:
         ss.append(1)
-	polygon.append(intersect1.GetEnvelope())
+        polygon.append(intersect1.GetEnvelope())
    
     if area2 > 0.0:
         ss.append(2)
-	polygon.append(intersect2.GetEnvelope())
-	
+        polygon.append(intersect2.GetEnvelope())
+        
     if area3 > 0.0:
         ss.append(3)
-	polygon.append(intersect3.GetEnvelope())
-	
+        polygon.append(intersect3.GetEnvelope())
+        
     return ss, polygon
