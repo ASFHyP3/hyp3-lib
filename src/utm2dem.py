@@ -3,12 +3,13 @@
 import argparse
 import saa_func_lib as saa
 import os, sys
+import numpy as np
 from osgeo import gdal,osr,gdalconst
 from execute import execute
 
 def utm2dem(inDem,outDem,demPar,dataType="float"):
     demParIn = "dem_par.in"
-
+    dataType = dataType.lower()
     basename = os.path.basename(inDem)
     logname = basename + "_utm_dem.log"
     log = open(logname,"w")
@@ -88,10 +89,6 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
         os.remove(demPar)
     execute("create_dem_par {} < {}".format(demPar,demParIn),logfile=log)
 
-    # Replace 0 with -1; Replace anything <= -32767 with -1; byteswap
-#    data[data==0] = -1
-#    data[data<=-32767] = -1
-
     # Replace 0 with 1; Replace anything <= -32767 with 0; byteswap
     data[data==0] = 1
     data[data<=-32767] = 0
@@ -100,7 +97,7 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
     # Convert to ENVI (binary) format
     tmptif = "temporary_dem_file.tif"
     if "float" in dataType:
-        saa.write_gdal_file_float(tmptif,trans,proj,data)
+        saa.write_gdal_file_float(tmptif,trans,proj,data.astype(np.float32))
     elif "int16" in dataType:
         saa.write_gdal_file(tmptif,trans,proj,data)
     gdal.Translate(outDem,tmptif,format="ENVI")

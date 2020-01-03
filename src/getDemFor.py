@@ -32,7 +32,6 @@
 # Import all needed modules right away
 #
 #####################
-from lxml import etree
 import get_dem
 import os
 import argparse
@@ -43,7 +42,7 @@ import shutil
 import logging
 from saa_func_lib import get_utm_proj
 
-def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None,demName=None):
+def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=None):
     lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)
     if opentopoFlag:
         cmd = "wget -O%s \"http://opentopo.sdsc.edu/otr/getdem?demtype=SRTMGL1&west=%s&south=%s&east=%s&north=%s&outputFormat=GTiff\"" % (outfile,lon_min,lat_min,lon_max,lat_max)
@@ -53,12 +52,11 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=None,post=None,demName=N
             gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
 	    shutil.move("tmpdem.tif","%s" % outfile)
     else:
-        if post is not None:
-             if not utmFlag:
-	        logging.error("ERROR: May use posting with UTM projection only")
-	        sys.exit(1)
-        demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,utmFlag,post,demName=demName)
-
+        if utmFlag:
+            demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)
+        else:
+            demtype = get_dem.get_ll_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)
+            
     return(outfile,demtype)
     
 if __name__ == '__main__':
@@ -66,7 +64,8 @@ if __name__ == '__main__':
     parser.add_argument("SAFEfile",help="S1 SAFE file")
     parser.add_argument("outfile",help="Name of output geotiff DEM file")
     parser.add_argument("-o","--opentopo",action="store_true",help="Use opentopo instead of get_dem")
-    parser.add_argument("-u","--utm",action="store_true",help="Make DEM file in UTM coordinates (defaults is GCS)")
+    parser.add_argument("-l","--latlon",action="store_false",
+        help="Create DEM in lat,lon space - dangerous option for polar imagery")
     parser.add_argument("-d","--dem",help="Only use the specified DEM type")
     parser.add_argument("-p","--post",help="Posting for creating DEM",type=float)
     args = parser.parse_args()
@@ -78,5 +77,5 @@ if __name__ == '__main__':
     logging.info("Starting run")
 
     outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,
-                                 utmFlag=args.utm,post=args.post,demName=args.dem)
+                                 utmFlag=args.latlon,post=args.post,demName=args.dem)
     logging.info("Wrote DEM file %s" % outfile)

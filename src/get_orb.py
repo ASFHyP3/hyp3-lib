@@ -53,6 +53,11 @@ def getOrbFile(s1Granule):
     url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
     url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/'
     Granule = os.path.basename(s1Granule)
+
+    # get rid of ending "/" 
+    if Granule.endswith("/"):
+        Granule = Granule[0:len(granule)-1]
+
     t = re.split('_+',Granule)
     st = t[4].replace('T','')
     url = url1

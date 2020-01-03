@@ -122,7 +122,7 @@ def makeChangeBrowse(geotiff,type="MSCD"):
     # 
     outName = geotiff.replace(".tif","_byte.tif")
     pngName = geotiff.replace(".tif","_byte_full.png")
-    saa.write_gdal_file_float(outName,trans,proj,newData)
+    saa.write_gdal_file_byte(outName,trans,proj,newData.astype(np.byte))
     gdal.Translate(pngName,outName,format="PNG",outputType=gdal.GDT_Byte,scaleParams=[[0,255]],noData="0 0 0")
     os.remove(outName)
 
