@@ -293,7 +293,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile
     logging.info("Creating output file {} with bounds {}".format(outfile,bounds))
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
-def writeVRT(tile_list, poly_list, outFile):
+def writeVRT(dem_proj, tile_list, poly_list, outFile):
 
     # Get dimensions and pixel size from first DEM in tile ListCommand
     demFile = os.path.join('DEM', '{0}.tif'.format(tile_list[0]))
@@ -329,9 +329,9 @@ def writeVRT(tile_list, poly_list, outFile):
     vrt = et.Element('VRTDataset', rasterXSize=str(rasterXSize),
         rasterYSize=str(rasterYSize))
     srs = osr.SpatialReference()
-    srs.ImportFromEPSG(4326)
+    srs.ImportFromEPSG(dem_proj)
     et.SubElement(vrt, 'SRS').text = srs.ExportToWkt()
-    geoTrans = ('%.6f, %.6f, 0.0, %.6f, 0.0, %.6f' % (minLon, pixSize, maxLat,
+    geoTrans = ('%.16f, %.16f, 0.0, %.16f, 0.0, %.16f' % (minLon, pixSize, maxLat,
         -pixSize))
     et.SubElement(vrt, 'GeoTransform').text = geoTrans
     bands = et.SubElement(vrt, 'VRTRasterBand', dataType='Float32', band='1')
@@ -437,7 +437,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     )
 
     #os.system("gdalbuildvrt temp.vrt DEM/*.tif")
-    writeVRT(tile_list, poly_list, 'temp.vrt')
+    writeVRT(demproj, tile_list, poly_list, 'temp.vrt')
  
 #
 #   Set the output projection to either NPS, SPS, or UTM
