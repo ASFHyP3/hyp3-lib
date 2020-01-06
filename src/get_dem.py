@@ -418,7 +418,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     logging.info("demproj is {}".format(demproj))
 
     # Add buffer for REMA
-    if 'REMA' in demname:
+    if 'REMA' in demname or 'GIMP' in demname:
         y_min -= 2
         y_max += 2
         x_min -= 2
