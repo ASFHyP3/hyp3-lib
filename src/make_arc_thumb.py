@@ -13,7 +13,7 @@ import os
 def pngtothumb(pngfile):
 
     # Modify the png to a jpg thumbnail, then encode to base64
-    rgb_im = Image.open(pngfile).convert('RGBA')
+    rgb_im = Image.open(pngfile).convert('RGB')
     x, y = rgb_im.size
     if x>y:
         width = 200
