@@ -1,1 +1,1 @@
-/hugeslice/rtc/TOM/GSHHG
+/usr/local/water_mask
