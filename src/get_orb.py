@@ -49,8 +49,8 @@ def findOrbFile(plat,tm,lst):
     return best
 
 def getOrbFile(s1Granule):
-    url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
-    url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/'
+    url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/index.html'
+    url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/index.html'
     Granule = os.path.basename(s1Granule)
 
     # get rid of ending "/" 
