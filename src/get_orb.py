@@ -60,12 +60,12 @@ def getOrbFile(s1Granule):
     t = re.split('_+',Granule)
     st = t[4].replace('T','')
     url = url1
-    files = getPageContents(url, True)
+    files = getPageContents(url + 'index.html', True)
     plat = Granule[0:3]
     orb = findOrbFile(plat,st,files)
     if orb == '':
         url = url2
-        files = getPageContents(url, True)
+        files = getPageContents(url + 'index.html', True)
         orb = findOrbFile(plat,st,files)
     if orb == '':
         error = 'Could not find orbit file on ASF website'
