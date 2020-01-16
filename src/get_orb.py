@@ -49,8 +49,8 @@ def findOrbFile(plat,tm,lst):
     return best
 
 def getOrbFile(s1Granule):
-    url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/index.html'
-    url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/index.html'
+    url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
+    url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/'
     Granule = os.path.basename(s1Granule)
 
     # get rid of ending "/" 
@@ -60,12 +60,12 @@ def getOrbFile(s1Granule):
     t = re.split('_+',Granule)
     st = t[4].replace('T','')
     url = url1
-    files = getPageContents(url, True)
+    files = getPageContents(url + 'index.html', True)
     plat = Granule[0:3]
     orb = findOrbFile(plat,st,files)
     if orb == '':
         url = url2
-        files = getPageContents(url, True)
+        files = getPageContents(url + 'index.html', True)
         orb = findOrbFile(plat,st,files)
     if orb == '':
         error = 'Could not find orbit file on ASF website'
