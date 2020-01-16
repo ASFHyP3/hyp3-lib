@@ -21,7 +21,7 @@ def getPageContents(url, verify):
     session.mount(hostname, HTTPAdapter(max_retries=10))
     page = session.get(url, timeout=60, verify=verify)
     tree = html.fromstring(page.content)
-    l = tree.xpath('//a[@href]/text()')
+    l = tree.xpath('//a[@href]//@href')
     ret = []
     for item in l:
         if 'EOF' in item:
@@ -60,12 +60,12 @@ def getOrbFile(s1Granule):
     t = re.split('_+',Granule)
     st = t[4].replace('T','')
     url = url1
-    files = getPageContents(url + 'index.html', True)
+    files = getPageContents(url, True)
     plat = Granule[0:3]
     orb = findOrbFile(plat,st,files)
     if orb == '':
         url = url2
-        files = getPageContents(url + 'index.html', True)
+        files = getPageContents(url, True)
         orb = findOrbFile(plat,st,files)
     if orb == '':
         error = 'Could not find orbit file on ASF website'
