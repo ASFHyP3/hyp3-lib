@@ -293,7 +293,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile
     logging.info("Creating output file {} with bounds {}".format(outfile,bounds))
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
-def writeVRT(dem_proj, tile_list, poly_list, outFile):
+def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
 
     # Get dimensions and pixel size from first DEM in tile ListCommand
     demFile = os.path.join('DEM', '{0}.tif'.format(tile_list[0]))
@@ -360,7 +360,7 @@ def writeVRT(dem_proj, tile_list, poly_list, outFile):
         dst.set('yOff', str(offsetY[ii]))
         dst.set('xSize', str(cols))
         dst.set('ySize', str(rows))
-        et.SubElement(source, 'NODATA').text = '-32768'
+        et.SubElement(source, 'NODATA').text = "{}".format(nodata)
 
     # Write VRT file
     with open(outFile, 'w') as outF:
@@ -437,7 +437,18 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     )
 
     #os.system("gdalbuildvrt temp.vrt DEM/*.tif")
-    writeVRT(demproj, tile_list, poly_list, 'temp.vrt')
+    if "EU_DEM" in demname:
+        nodata = -32767
+    elif "SRTMGL1" in demname:
+        nodata = -32768
+    elif "GIMP" in demname:
+        nodata = None
+    elif "REMA" in demname:
+        nodata = 0
+    elif "NED" in demname:
+        nodata = -3.4028234663852886e+38 
+
+    writeVRT(demproj, nodata, tile_list, poly_list, 'temp.vrt')
  
 #
 #   Set the output projection to either NPS, SPS, or UTM
