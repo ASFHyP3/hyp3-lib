@@ -372,7 +372,7 @@ def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
 # GET DEM file and convert into ISCE format
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):
     # Get the DEM file
-    chosen_dem = get_dem(west,south,east,north,"temp_dem.tif",False)
+    chosen_dem = get_dem(west,south,east,north,"temp_dem.tif")
 
     # Reproject DEM into Lat, Lon space
     pixsize = 0.000277777777778

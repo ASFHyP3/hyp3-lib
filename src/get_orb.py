@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timedelta
 import sys
 import argparse
+from verify_opod import verify_opod
 import requests
 from requests.adapters import HTTPAdapter
 from six.moves.urllib.parse import urlparse
@@ -108,7 +109,7 @@ def getOrbitFileESA(dataFile):
     raise FileException(error)
 
   return url, orbitFile
-
+  
 
 def downloadSentinelOrbitFile(granule, provider, directory):
 
@@ -133,9 +134,38 @@ def downloadSentinelOrbitFile(granule, provider, directory):
     return None
 
 
+# For whatever reason, I can not make the above routine work correctly
+# Thus I wrote another using wget instead of request
+def downloadSentinelOrbitFile_2(granule):
+
+    try:
+        urlOrb, fileNameOrb = getOrbFile(granule)
+        cmd = 'wget ' + urlOrb
+        os.system(cmd)
+        provider = "ASF"
+        print("Found state vector file at ASF")
+    except:
+        print("Unable to find statevector at ASF; trying ESA")
+        try:
+            urlOrb, fileNameOrb = getOrbitFileESA(granule)
+            cmd = 'wget ' + urlOrb 
+            os.system(cmd)
+            provider = "ESA"
+            print("Found state vector file at ESA")
+        except:
+            print("Unable to find requested state vector file")
+            provider = "NA"
+            return None,provider
+    
+    verify_opod(fileNameOrb)
+    return(fileNameOrb,provider)
+
+
+
+
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(prog="get_orb.py",description="Get a Sentinel-1 orbit file from ASF website")
+    parser = argparse.ArgumentParser(prog="get_orb.py",description="Get Sentinel-1 orbit file(s) from ASF or ESA website")
     parser.add_argument("safeFile",help="Sentinel-1 SAFE file name",nargs="*")
     if len(sys.argv) == 1:
         parser.print_help()
@@ -143,8 +173,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for g in sys.argv[1:]:
-        print("Getting: " + g)
-        (orburl,f1) = getOrbFile(g)
-        print(orburl)
-        cmd = 'wget ' + orburl
-        os.system(cmd)
+        stVecFile,provider = downloadSentinelOrbitFile_2(g)         
+        print("Downloaded orbit file {} from {}".format(stVecFile,provider))
+        
+#        print("Getting: " + g)
+#        (orburl,f1) = getOrbFile(g)
+#        print(orburl)
+#        cmd = 'wget ' + orburl
+#        os.system(cmd)
