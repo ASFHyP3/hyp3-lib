@@ -8,12 +8,30 @@ import sys
 import argparse
 from verify_opod import verify_opod
 import requests
+import json
 from requests.adapters import HTTPAdapter
 from six.moves.urllib.parse import urlparse
 
 
 class FileException(Exception):
   """Could not download orbit file"""
+
+
+def getPageContentsESA(url, verify):
+    hostname = urlparse(url).hostname
+    session = requests.Session()
+    session.mount(hostname, HTTPAdapter(max_retries=10))
+    page = session.get(url, timeout=60, verify=verify)
+    print page
+    results = json.loads(page.text)
+    print results
+    print("Count is {}".format(results['count']))
+    files = [] 
+    for x in range(0,results['count']): 
+      print results['results'][x]
+      print results['results'][x]['physical_name']
+      files.append(results['results'][x]['physical_name'])
+    return(files)
 
 
 def getPageContents(url, verify):
@@ -28,6 +46,7 @@ def getPageContents(url, verify):
         if 'EOF' in item:
             ret.append(item)
     return ret
+
 
 def findOrbFile(plat,tm,lst):
     d1 = 0
@@ -48,6 +67,7 @@ def findOrbFile(plat,tm,lst):
                     if d>d1:
                         best = item1.replace(' ','')
     return best
+
 
 def getOrbFile(s1Granule):
     url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
@@ -73,45 +93,77 @@ def getOrbFile(s1Granule):
         raise FileException(error)
     return url+orb,orb
 
+
 def getOrbitFileESA(dataFile):
 
-  precise = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
-  restituted = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
-
-  year = os.path.basename(dataFile)[17:21]
-  month = os.path.basename(dataFile)[21:23]
-  day = os.path.basename(dataFile)[23:25]
-  date = datetime.strptime(year+'-'+month+'-'+day, '%Y-%m-%d')
+  prec_url = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
+  rest_url = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
+  precise    = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_POEORB&'
+  restituted = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_RESORB&'
 
   t = re.split('_+',dataFile)
-  st = t[4].replace('T','')
   plat = dataFile[0:3]
+  st = t[4].replace('T','')
+  et = t[5].replace('T','')
 
-  start_time = date - timedelta(days=1)
-  url = precise+'?validity_start_time='+start_time.strftime('%Y-%m-%d')
-  files = getPageContents(url, False)
+  year = st[0:4]
+  month = st[4:6]
+  day = st[6:8]
+  hour = st[8:10]
+  minute = st[10:12]
+  second = st[12:14]
+ 
+  start_time = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
+  print("Looking for validity stop of {}".format(start_time))
+ 
+  year = et[0:4]
+  month = et[4:6]
+  day = et[6:8]
+  hour = et[8:10]
+  minute = et[10:12]
+  second = et[12:14]
+ 
+  end_time = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
+  print("Looking for validity start of {}".format(end_time))
+ 
+  url = precise+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+  print("Using url {}".format(url))
+  files = getPageContentsESA(url, False)
+  print("Files found: {}".format(files))
   if len(files) > 0:
     orbitFile = findOrbFile(plat, st, files)
-    url = precise+orbitFile
+    if len(orbitFile)>0:
+      url = prec_url+orbitFile
   else:
-    start_time = date
-    for page in range(1, 5):
-      url = ('{0}?page={1}&validity_start_time={2}'.format(restituted, page,
-        start_time.strftime('%Y-%m-%d')))
-      files = getPageContents(url, False)
-      if len(files) > 0:
-        orbitFile = findOrbFile(plat, st, files)
-        if len(orbitFile) > 0:
-          url = restituted+orbitFile
-          break
+    url = restituted+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+    print("Using url {}".format(url))
+    files = getPageContentsESA(url, False)
+    print("Files found: {}".format(files))
+    if len(files) > 0:
+      orbitFile = findOrbFile(plat, st, files)
+      if len(orbitFile) > 0:
+        url = rest_url+orbitFile
   if len(orbitFile) == 0:
     error = 'Could not find orbit file on ESA website'
     raise FileException(error)
 
   return url, orbitFile
-  
 
-def downloadSentinelOrbitFile(granule, provider, directory):
+
+
+def fetchOrbitFile(urlOrb,stateVecFile,verify):
+  hostname = urlparse(urlOrb).hostname
+  session = requests.Session()
+  session.mount(hostname, HTTPAdapter(max_retries=10))
+  request = session.get(urlOrb, timeout=60, verify=verify)
+  f = open(stateVecFile, 'w')
+  f.write(request.text)
+  f.close()
+
+
+
+# Specify provider 
+def downloadSentinelOrbitFileProvider(granule, provider, directory):
 
   if provider.upper() == 'ASF':
     urlOrb, fileNameOrb = getOrbFile(granule)
@@ -120,36 +172,33 @@ def downloadSentinelOrbitFile(granule, provider, directory):
     urlOrb, fileNameOrb = getOrbitFileESA(granule)
     verify = False
 
-  if len(fileNameOrb) > 0:
-    hostname = urlparse(urlOrb).hostname
-    session = requests.Session()
-    session.mount(hostname, HTTPAdapter(max_retries=10))
-    request = session.get(urlOrb, timeout=60, verify=verify)
+  if directory:
     stateVecFile = os.path.join(directory, fileNameOrb)
-    f = open(stateVecFile, 'w')
-    f.write(request.text)
-    f.close()
-    return stateVecFile
   else:
-    return None
+    stateVecFile = fileNameOrb
+
+  if not os.path.isfile(stateVecFile):
+    if len(stateVecFile) > 0:
+      fetchOrbitFile(urlOrb,stateVecFile,verify)
+      return stateVecFile
+    else:
+      return None
+  else:
+    print("Using existing orbit file; provider unknown")
+    provider = "UNKNOWN"
+    return stateVecFile
 
 
-# For whatever reason, I can not make the above routine work correctly
-# Thus I wrote another using wget instead of request
-def downloadSentinelOrbitFile_2(granule):
-
+# Main entry point - prefer ASF; failover to ESA
+def downloadSentinelOrbitFile(granule,directory=None):
     try:
-        urlOrb, fileNameOrb = getOrbFile(granule)
-        cmd = 'wget ' + urlOrb
-        os.system(cmd)
+        stateVecFile=downloadSentinelOrbitFileProvider(granule,'ASF',directory)
         provider = "ASF"
         print("Found state vector file at ASF")
     except:
         print("Unable to find statevector at ASF; trying ESA")
         try:
-            urlOrb, fileNameOrb = getOrbitFileESA(granule)
-            cmd = 'wget ' + urlOrb 
-            os.system(cmd)
+            stateVecFile = downloadSentinelOrbitFileProvider(granule,'ESA',directory) 
             provider = "ESA"
             print("Found state vector file at ESA")
         except:
@@ -157,27 +206,25 @@ def downloadSentinelOrbitFile_2(granule):
             provider = "NA"
             return None,provider
     
-    verify_opod(fileNameOrb)
-    return(fileNameOrb,provider)
-
-
+    verify_opod(stateVecFile)
+    return(stateVecFile,provider)
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(prog="get_orb.py",description="Get Sentinel-1 orbit file(s) from ASF or ESA website")
-    parser.add_argument("safeFile",help="Sentinel-1 SAFE file name",nargs="*")
+    parser.add_argument("safeFiles",help="Sentinel-1 SAFE file name(s)",nargs="*")
+    parser.add_argument("-p","--provider",choices=['asf','esa'],help="Name of orbit file server organization")
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
     args = parser.parse_args()
 
-    for g in sys.argv[1:]:
-        stVecFile,provider = downloadSentinelOrbitFile_2(g)         
-        print("Downloaded orbit file {} from {}".format(stVecFile,provider))
-        
-#        print("Getting: " + g)
-#        (orburl,f1) = getOrbFile(g)
-#        print(orburl)
-#        cmd = 'wget ' + orburl
-#        os.system(cmd)
+    provider = args.provider
+    for g in args.safeFiles: 
+        if provider:
+            stVecFile = downloadSentinelOrbitFileProvider(g,provider,None)         
+        else:
+            stVecFile,provider = downloadSentinelOrbitFile(g)
+        print("Downloaded orbit file {} from {}".format(stVecFile,provider.upper()))

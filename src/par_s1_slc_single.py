@@ -7,7 +7,7 @@ from execute import execute
 from getParameter import getParameter
 import os
 import glob
-from get_orb import downloadSentinelOrbitFile_2
+from get_orb import downloadSentinelOrbitFile
 
 #
 # This subroutine assembles the par_S1_SLC gamma commands
@@ -87,7 +87,7 @@ def par_s1_slc_single(myfile,pol=None):
     # Fetch precision state vectors
     try:
         logging.info("Getting precision orbit information")
-        orb,tmp = downloadSentinelOrbitFile_2(inFile) 
+        orb,tmp = downloadSentinelOrbitFile(inFile) 
         logging.info("Applying precision orbit information")
         execute("S1_OPOD_vec {}_001.slc.par {}".format(acqdate,orb))
         execute("S1_OPOD_vec {}_002.slc.par {}".format(acqdate,orb))
