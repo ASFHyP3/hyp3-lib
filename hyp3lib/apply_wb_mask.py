@@ -9,9 +9,11 @@ from osgeo import gdal
 from create_wb_mask import create_wb_mask
 import saa_func_lib as saa
 
+import hyp3lib.etc
+
 def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
 
-    cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config")) 
+    cfgdir =os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
     myfile = os.path.join(cfgdir,"shapefile_dir.txt")
     f = open(myfile,"r")
     for line in f.readlines():

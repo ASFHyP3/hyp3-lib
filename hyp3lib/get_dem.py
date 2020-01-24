@@ -47,6 +47,8 @@ from osgeo import ogr
 from osgeo import osr
 from pyproj import Proj, transform
 
+import hyp3lib.etc
+
 def transform_bounds(inb, inepsg, outepsg):
     ptx = inb[0]
     pty = inb[1]
@@ -82,7 +84,7 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
 def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
 
     driver = ogr.GetDriverByName('ESRI Shapefile')
-    shpdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
+    shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
 
     # Read in the DEM list
     dem_list = []
@@ -167,7 +169,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
 
 def get_tile_for(args):
     demname, fi = args
-    cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
+    cfgdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
 
     with open(myfile) as f:
@@ -240,7 +242,7 @@ def handle_anti_meridian(y_min,y_max,x_min,x_max,outfile):
 def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile):
 
     # Get the appropriate file
-    cfgdir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, "config"))
+    cfgdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
     myfile = os.path.join(cfgdir,"get_dem.py.cfg")
     with open(myfile) as f:
         content = f.readlines()
