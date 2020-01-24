@@ -64,7 +64,13 @@ def commonOverlapBoundary(listFile, granuleDir, granuleFile, shapeFile):
     poly = ogr.CreateGeometryFromWkt(geometry[index[ii]])
     intersection = poly.Intersection(intersection)
   for geometry in intersection:
-    if 'POLYGON' in geometry.ExportToWkt():
+    geomWkt = geometry.ExportToWkt()
+    if 'POLYGON' in geomWkt or 'LINEARRING' in geomWkt:
+      if 'POLYGON' in geomWkt:
+        polygon = geometry
+      elif 'LINEARRING' in geomWkt:
+        polygon = ogr.Geometry(ogr.wkbPolygon)
+        polygon.AddGeometry(geometry)
       envelope = geometry.GetEnvelope()
       area = geometry.GetArea()
       centroid = geometry.Centroid().ExportToWkt()
@@ -78,7 +84,7 @@ def commonOverlapBoundary(listFile, granuleDir, granuleFile, shapeFile):
       value['rows'] = np.int(np.rint((envelope[3] - envelope[2])/pixSize))
       value['pixel'] = pixel
       value['area'] = area
-      value['geometry'] = geometry
+      value['geometry'] = polygon
       value['centroid'] = centroid
       values.append(value)
 

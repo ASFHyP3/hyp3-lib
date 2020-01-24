@@ -206,6 +206,9 @@ def shape2geometry_ext(shapeFile):
   spatialRef = layer.GetSpatialRef()
   layerDef = layer.GetLayerDefn()
   featureCount = layerDef.GetFieldCount()
+
+  linear = False
+
   for ii in range(featureCount):
     field = {}
     field['name'] = layerDef.GetFieldDefn(ii).GetName()
@@ -214,19 +217,26 @@ def shape2geometry_ext(shapeFile):
       field['width'] = layerDef.GetFieldDefn(ii).GetWidth()
     fields.append(field)
   for feature in layer:
-    multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
     geometry = feature.GetGeometryRef()
     count = geometry.GetGeometryCount()
     if geometry.GetGeometryName() == 'MULTIPOLYGON':
+      multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
       for i in range(0, count):
         polygon = geometry.GetGeometryRef(i)
         multipolygon.AddGeometry(polygon)
+    elif geometry.GetGeometryName() == 'LINESTRING':
+      linear = True
+      linestring = ogr.CreateGeometryFromWkt(geometry.ExportToWkt())
     else:
+      multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
       multipolygon.AddGeometry(geometry)
     value = {}
     for field in fields:
       value[field['name']] = feature.GetField(field['name'])
-    value['geometry'] = multipolygon
+    if linear == True:
+      value['geometry'] = linestring
+    else:
+      value['geometry'] = multipolygon
     values.append(value)
   shape.Destroy()
 
