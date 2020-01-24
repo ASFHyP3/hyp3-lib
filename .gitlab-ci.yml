@@ -1,0 +1,25 @@
+image: ubuntu:bionic
+
+stages:
+    - tools-bot
+    - build
+    - test
+    - publish
+    - verify
+    - trigger
+
+
+#before_script:
+#    # TODO: AWS credentials
+#    # TODO: PyPI credentials
+#    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+
+build:
+  stage: build
+  image: ubuntu:bionic
+  tags:
+    - docker
+  script:
+    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+    - echo "Building version $(python setup.py --verison)"
+    - python3 setup.py sdist bdist_wheel
