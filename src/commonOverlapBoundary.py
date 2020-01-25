@@ -99,7 +99,9 @@ if __name__ == '__main__':
     'shapefiles', formatter_class=RawTextHelpFormatter)
   parser.add_argument('input', metavar='<file list>',
     help='name of the boundary shapefile list')
-  parser.add_argument('granules', metavar='<granules list>',
+  parser.add_argument('granuleDir', metavar='<granules directory>',
+    help='name of the directory where granules are stored')
+  parser.add_argument('granuleList', metavar='<granules list>',
     help='name of the common overlap granule list')
   parser.add_argument('shape', metavar='<shape file>',
     help='name of the common overlap shapefile')
@@ -112,4 +114,5 @@ if __name__ == '__main__':
     print('File list (%s) does not exist!' % args.input)
     sys.exit(1)
 
-  commonOverlapBoundary(args.input, args.granules, args.shape)
+  commonOverlapBoundary(args.input, args.granuleDir, args.granuleList,
+    args.shape)
