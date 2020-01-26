@@ -418,7 +418,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     logging.info("demproj is {}".format(demproj))
 
     # Add buffer for REMA
-    if 'REMA' in demname or 'GIMP' in demname:
+    if 'REMA' in demname or 'GIMP' in demname or 'EU_DEM' in demname
         y_min -= 2
         y_max += 2
         x_min -= 2
@@ -546,8 +546,14 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
             logging.info("Copying projected DEM to output file name")
             shutil.copy(tmpproj,outfile)
     else:
-        logging.info("Copying DEM to output file name")
-        shutil.copy(tmpdem,outfile)
+        if post is not None:
+            logging.info("Snapping file to grid at %s meters" % post)
+            (e_min,e_max,n_min,n_max) = get_cc(tmpdem,post,pixsize)
+            bounds = [e_min,n_min,e_max,n_max]
+            gdal.Warp(outfile,tmpdem,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        else:
+            logging.info("Copying DEM to output file name")
+            shutil.copy(tmpdem,outfile)
 
     if not leave:
         if os.path.isfile(tmpdem):
