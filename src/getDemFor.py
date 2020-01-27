@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#m!/usr/bin/env python
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 ###############################################################################
 # getDemFor.py
@@ -50,11 +50,15 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=N
         execute(cmd)
         if utmFlag:
             proj = get_utm_proj(lon_min,lon_max,lat_min,lat_max)
-            gdal.Warp("tmpdem.tif","%s" % outfile,dstSRS=proj,resampleAlg="cubic")
-            shutil.move("tmpdem.tif","%s" % outfile)
+            tmpdem = "tmpdem_getDemFile_utm.tif"
+            gdal.Warp("%s" %tmpdem,"%s" % outfile,dstSRS=proj,resampleAlg="cubic")
+            shutil.move(tmpdem,"%s" % outfile)
     else:
         if utmFlag:
+            logging.debug("Calling get_dem with outfile of {}".format(outfile))
             demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)
+            if not os.path.isfile(outfile):
+                logging.error("Unable to find output file {}".format(outfile))
         else:
             demtype = get_dem.get_ll_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)
             
