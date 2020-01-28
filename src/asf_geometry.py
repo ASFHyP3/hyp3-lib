@@ -3,7 +3,6 @@
 import os
 import sys
 import csv
-import math
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
@@ -72,7 +71,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
     rowFirst = 0
   else:
     data[np.isnan(data)==True] = noDataValue
-    if threshold != None:
+    if threshold is not None:
       print('Applying threshold ({0}) ...'.format(threshold))
       data[data<np.float(threshold)] = noDataValue
     if noDataValue == np.nan or noDataValue == -np.nan:
@@ -132,7 +131,7 @@ def cut_blackfill(data, geoTrans):
   return (data, colFirst, rowFirst, geoTrans)
 
 
-def geotiff_overlap(firstFile, secondFile, type):
+def geotiff_overlap(firstFile, secondFile, method):
 
   # Check map projections
   raster = gdal.Open(firstFile)
@@ -145,9 +144,9 @@ def geotiff_overlap(firstFile, secondFile, type):
   firstPolygon = geotiff2polygon(firstFile)
   secondPolygon = geotiff2polygon(secondFile)
 
-  if type == 'intersection':
+  if method == 'intersection':
     overlap = firstPolygon.Intersection(secondPolygon)
-  elif type == 'union':
+  elif method == 'union':
     overlap = firstPolygon.Union(secondPolygon)
 
   return (firstPolygon, secondPolygon, overlap, proj, pixelSize)
@@ -196,6 +195,43 @@ def shape2geometry(shapeFile, field):
   return (multipolygon, spatialRef, name)
 
 
+def shape2geometry_ext(shapeFile):
+
+  values = []
+  fields = []
+  driver = ogr.GetDriverByName('ESRI Shapefile')
+  shape = driver.Open(shapeFile, 0)
+  layer = shape.GetLayer()
+  spatialRef = layer.GetSpatialRef()
+  layerDef = layer.GetLayerDefn()
+  featureCount = layerDef.GetFieldCount()
+  for ii in range(featureCount):
+    field = {}
+    field['name'] = layerDef.GetFieldDefn(ii).GetName()
+    field['type'] = layerDef.GetFieldDefn(ii).GetType()
+    if field['type'] == ogr.OFTString:
+      field['width'] = layerDef.GetFieldDefn(ii).GetWidth()
+    fields.append(field)
+  for feature in layer:
+    multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
+    geometry = feature.GetGeometryRef()
+    count = geometry.GetGeometryCount()
+    if geometry.GetGeometryName() == 'MULTIPOLYGON':
+      for i in range(0, count):
+        polygon = geometry.GetGeometryRef(i)
+        multipolygon.AddGeometry(polygon)
+    else:
+      multipolygon.AddGeometry(geometry)
+    value = {}
+    for field in fields:
+      value[field['name']] = feature.GetField(field['name'])
+    value['geometry'] = multipolygon
+    values.append(value)
+  shape.Destroy()
+
+  return (fields, values, spatialRef)
+
+
 # Save geometry with fields to shapefile
 def geometry2shape(fields, values, spatialRef, merge, shapeFile):
 
@@ -241,9 +277,9 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
   classes, threshold, background, shapeFile):
 
   # Check input
-  if threshold != None:
+  if threshold is not None:
     threshold = float(threshold)
-  if background != None:
+  if background is not None:
     background = int(background)
 
   # Buffer data
@@ -302,7 +338,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
     fill = False
     if cValue == 0:
       fill = True
-    if background != None and cValue == background:
+    if background is not None and cValue == background:
       fill = True
     geometry = outFeature.GetGeometryRef()
     area = float(geometry.GetArea())
@@ -505,6 +541,30 @@ def reproject_corners(corners, posting, inEPSG, outEPSG):
   return corners
 
 
+def reproject_extent(minX, maxX, minY, maxY, posting, inEPSG, outEPSG):
+
+  # Add points to multiPoint
+  corners = ogr.Geometry(ogr.wkbMultiPoint)
+  ul = ogr.Geometry(ogr.wkbPoint)
+  ul.AddPoint(minX, maxY)
+  corners.AddGeometry(ul)
+  ll = ogr.Geometry(ogr.wkbPoint)
+  ll.AddPoint(minX, minY)
+  corners.AddGeometry(ll)
+  ur = ogr.Geometry(ogr.wkbPoint)
+  ur.AddPoint(maxX, maxY)
+  corners.AddGeometry(ur)
+  lr = ogr.Geometry(ogr.wkbPoint)
+  lr.AddPoint(maxX, minY)
+  corners.AddGeometry(lr)
+
+  # Re-project corners
+  reproject_corners(corners, posting, inEPSG, outEPSG)
+
+  # Extract min/max values
+  return corners.GetEnvelope()
+
+
 def raster_meta(rasterFile):
 
   raster = gdal.Open(rasterFile)
@@ -630,7 +690,7 @@ def geotiff2boundary_ext(inGeotiff, maskFile, geographic):
   (rows, cols) = data.shape
 
   # Save in mask file (if defined)
-  if maskFile != None:
+  if maskFile is not None:
     gdalDriver = gdal.GetDriverByName('GTiff')
     outRaster = gdalDriver.Create(maskFile, rows, cols, 1, gdal.GDT_Byte)
     outRaster.SetGeoTransform(geoTrans)
