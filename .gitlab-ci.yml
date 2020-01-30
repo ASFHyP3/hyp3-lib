@@ -4,12 +4,13 @@ variables:
   GIT_DEPTH: 0
 
 default:
-  image: ubuntu:bionic
+  image: ubuntu:eoan
   # Tags are not(!) inherited by jobs, contrary to the docs.
   # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
   # tags:
   #   - docker
   before_script:
+    - python3 -m pip install --upgrade pip
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
 
