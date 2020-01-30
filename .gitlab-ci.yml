@@ -20,7 +20,7 @@ build:
   before_script:
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
   script:
-    - echo "Building version $(python setup.py --verison)"
+    - echo "Building version $(python3 setup.py --version)"
     - python3 setup.py sdist bdist_wheel
 
 deploy S3 PyPI:
@@ -30,7 +30,7 @@ deploy S3 PyPI:
   before_script:
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
   script:
-    - echo "Uploading version $(python setup.py --verison) to S3-PyPI"
+    - echo "Uploading version $(python3 setup.py --version) to S3-PyPI"
     - s3pypi --bucket hyp3-pypi --verbose
 
 test S3 PyPI:
@@ -38,4 +38,4 @@ test S3 PyPI:
   tags:
     - docker
   script:
-    - pip install hyp3lib --extra-index-url http://hyp3-pypi.s3-website-us-east-1.amazonaws.com
+    - python3 -m pip install hyp3lib --extra-index-url http://hyp3-pypi.s3-website-us-east-1.amazonaws.com
