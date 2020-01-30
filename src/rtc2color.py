@@ -33,7 +33,7 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   pixelHeight = geotransform[5]
 
   # Estimate memory required...
-  size = float((rows*cols)/(1024*1024*1024))
+  size = float(rows*cols)/float(1024*1024*1024)
 
   # print('float16 variables: cp,xp,diff,zp,rp,bp,red = {} GB'.format(size*14))
   # print('uint8 variables: mask, blue_mask = {} GB".format(size*2))
