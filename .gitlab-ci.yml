@@ -9,6 +9,9 @@ default:
   # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
   # tags:
   #   - docker
+  before_script:
+    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+
 
 stages:
     - tools-bot
@@ -22,8 +25,6 @@ build:
   stage: build
   tags:
     - docker
-  before_script:
-    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
   script:
     - echo "Building version $(python3 setup.py --version)"
     - python3 setup.py sdist bdist_wheel
@@ -32,8 +33,6 @@ deploy S3 PyPI:
   stage: publish
   tags:
     - docker
-  before_script:
-    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
   script:
     - echo "Uploading version $(python3 setup.py --version) to S3-PyPI"
     - s3pypi --bucket hyp3-pypi --verbose
