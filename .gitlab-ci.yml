@@ -1,3 +1,8 @@
+# setuptools-scm doesn't work well with a shallow clone, see:
+#    https://docs.gitlab.com/ee/ci/yaml/#shallow-cloning
+variables:
+  GIT_DEPTH: 0
+
 default:
   image: ubuntu:bionic
   # Tags are not(!) inherited by jobs, contrary to the docs.
@@ -38,4 +43,4 @@ test S3 PyPI:
   tags:
     - docker
   script:
-    - python3 -m pip install hyp3lib --extra-index-url https://hyp3-pypi.s3-website-us-east-1.amazonaws.com
+    - python3 -m pip install hyp3lib --trusted-host "${S3_PYPI_HOST}" --extra-index-url "http://${S3_PYPI_HOST}"
