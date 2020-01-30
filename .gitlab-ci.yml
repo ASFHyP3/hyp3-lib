@@ -1,25 +1,33 @@
-image: ubuntu:bionic
+default:
+  image: ubuntu:bionic
+  tags:
+    - docker
 
 stages:
     - tools-bot
     - build
-    - test
+    # - test
     - publish
     - verify
     - trigger
 
-
-#before_script:
-#    # TODO: AWS credentials
-#    # TODO: PyPI credentials
-#    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
-
 build:
   stage: build
-  image: ubuntu:bionic
-  tags:
-    - docker
-  script:
+  before_script:
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+  script:
     - echo "Building version $(python setup.py --verison)"
     - python3 setup.py sdist bdist_wheel
+
+deploy S3 PyPI:
+  stage: publish
+  before_script:
+    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+  script:
+    - echo "Uploading version $(python setup.py --verison) to S3-PyPI"
+    - s3pypi --bucket hyp3-pypi --verbose
+
+test S3 PyPI:
+  stage: verify
+  script:
+    - pip install hyp3lib --extra-index-url http://hyp3-pypi.s3-website-us-east-1.amazonaws.com
