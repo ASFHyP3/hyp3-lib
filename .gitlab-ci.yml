@@ -38,4 +38,4 @@ test S3 PyPI:
   tags:
     - docker
   script:
-    - python3 -m pip install hyp3lib --extra-index-url http://hyp3-pypi.s3-website-us-east-1.amazonaws.com
+    - python3 -m pip install hyp3lib --extra-index-url https://hyp3-pypi.s3-website-us-east-1.amazonaws.com
