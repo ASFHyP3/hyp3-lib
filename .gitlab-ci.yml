@@ -10,6 +10,7 @@ default:
   # tags:
   #   - docker
   before_script:
+    - lsb_release -a
     - python3 -m pip install --upgrade pip
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
