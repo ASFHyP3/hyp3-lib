@@ -1,7 +1,9 @@
 default:
   image: ubuntu:bionic
-  tags:
-    - docker
+  # Tags are not(!) inherited by jobs, contrary to the docs.
+  # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
+  # tags:
+  #   - docker
 
 stages:
     - tools-bot
@@ -13,6 +15,8 @@ stages:
 
 build:
   stage: build
+  tags:
+    - docker
   before_script:
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
   script:
@@ -21,6 +25,8 @@ build:
 
 deploy S3 PyPI:
   stage: publish
+  tags:
+    - docker
   before_script:
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
   script:
@@ -29,5 +35,7 @@ deploy S3 PyPI:
 
 test S3 PyPI:
   stage: verify
+  tags:
+    - docker
   script:
     - pip install hyp3lib --extra-index-url http://hyp3-pypi.s3-website-us-east-1.amazonaws.com
