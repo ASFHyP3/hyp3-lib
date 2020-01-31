@@ -8,9 +8,8 @@ default:
   # Tags are not(!) inherited by jobs, contrary to the docs.
   # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
   # tags:
-  #   - docker
+  #   - kubernetes
   before_script:
-    - lsb_release -a
     - python3 -m pip install --upgrade pip
     - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
@@ -26,7 +25,7 @@ stages:
 build:
   stage: build
   tags:
-    - docker
+    - kubernetes
   script:
     - echo "Building version $(python3 setup.py --version)"
     - python3 setup.py sdist bdist_wheel
@@ -34,7 +33,7 @@ build:
 deploy S3 PyPI:
   stage: publish
   tags:
-    - docker
+    - kubernetes
   script:
     - echo "Uploading version $(python3 setup.py --version) to S3-PyPI"
     - s3pypi --bucket hyp3-pypi --verbose
@@ -42,6 +41,6 @@ deploy S3 PyPI:
 test S3 PyPI:
   stage: verify
   tags:
-    - docker
+    - kubernetes
   script:
     - python3 -m pip install hyp3lib --trusted-host "${S3_PYPI_HOST}" --extra-index-url "http://${S3_PYPI_HOST}"
