@@ -4,7 +4,9 @@ variables:
   GIT_DEPTH: 0
 
 default:
-  image: ubuntu:eoan
+  image:
+    name: python:3.7-buster
+    entrypoint: ["/bin/bash"]
   # Tags are not(!) inherited by jobs, contrary to the docs.
   # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
   # tags:
