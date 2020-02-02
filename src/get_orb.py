@@ -18,6 +18,7 @@ class FileException(Exception):
 
 
 def getPageContentsESA(url, verify):
+    print("Getting result of {}".format(url))
     hostname = urlparse(url).hostname
     session = requests.Session()
     session.mount(hostname, HTTPAdapter(max_retries=10))
@@ -114,7 +115,8 @@ def getOrbitFileESA(dataFile):
   restituted = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_RESORB&ordering=-creation_date&page_size=1&'
   sec60 = timedelta(seconds=60)
   plat = dataFile[0:3]
-
+  precise += 'sentinel1__mission={}&'.format(plat)
+  restituted += 'sentinel1__mission={}&'.format(plat)
   t = re.split('_+',dataFile)
   st = t[4].replace('T','')
   et = t[5].replace('T','')
@@ -125,14 +127,14 @@ def getOrbitFileESA(dataFile):
   start_time = start_time - sec60
   end_time = end_time + sec60
 
-  url = precise+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
-  orbitFile,url = getPageContentsESA(url, False)
+  q = precise+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+  orbitFile,url = getPageContentsESA(q, False)
   if url:
     print("Using url {}".format(url))
   else:
     print("Unable to find POEORB - Looking for RESORB")
-    url = restituted+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
-    orbitFile,url = getPageContentsESA(url, False)
+    q=restituted+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+    orbitFile,url = getPageContentsESA(q, False)
     if url:
       print("Using url {}".format(url))
     else:
