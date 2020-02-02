@@ -24,13 +24,14 @@ def getPageContentsESA(url, verify):
     page = session.get(url, timeout=60, verify=verify)
     results = json.loads(page.text)
     print("results : {}".format(results))
-    if results:
+    if results['count'] > 0:
         print results['results'][0]['physical_name']
         fileName = results['results'][0]['physical_name']
         url = results['results'][0]['remote_url']
         return(fileName,url)
     else:
-        return(None,None)
+        print("WARNING: No results returned from ESA query")
+    return(None,None)
 
 def getPageContents(url, verify):
     hostname = urlparse(url).hostname
