@@ -8,19 +8,27 @@ import os
 def verify_opod(fi):
     logging.info("Verifying state vector file")
     root = etree.parse(fi)
+    check = 0
     for item in root.iter('File_Description'):
          if "Orbit File" not in item.text:
              logging.error("Not an orbit file!")
              exit(1)
          else:
              logging.info("...Found orbit file")
+             check += 1
     for item in root.iter('File_Type'):
          if "AUX_POEORB" not in item.text and "AUX_PREORB" not in item.text and "AUX_RESORB" not in item.text:
              logging.error("Unknown file type!")
              exit(1)
          else:
              logging.info("...Found file type {}".format(item.text))
-    logging.info("State vector file verified")
+             check += 1
+
+    if not check:
+        logging.info("Not a valid state vector file: {}".format(fi))
+        exit(1)
+    else: 
+        logging.info("State vector file verified")
 
 
 if __name__ == '__main__':
