@@ -117,6 +117,17 @@ def extractNetcdfTime(ncFile, csvFile):
   outF.close()
 
 
+def extractNetcdfGranule(ncFile, csvFile):
+
+  outF = open(csvFile, 'w')
+  timeSeries = nc.Dataset(ncFile, 'r')
+  granules = timeSeries.variables['granule']
+  granule = nc.chartostring(granules[:])
+  for g in granule:
+    outF.write('%s\n' % g)
+  outF.close()
+
+
 def nc2meta(ncFile):
 
   dataset = nc.Dataset(ncFile, 'r')
@@ -367,7 +378,7 @@ def netcdf2boundary_mask(ncFile, geographic):
     return (multipolygon, inSpatialRef)
 
 
-def time_series_slice(ncFile, x, y, typeXY):
+def time_series_slice(ncFile, sample, line):
 
   timeSeries = nc.Dataset(ncFile, 'r')
 
@@ -396,60 +407,6 @@ def time_series_slice(ncFile, x, y, typeXY):
   else:
     print('Could not find map projection information!')
     sys.exit(1)
-
-  ### Work out line/sample from various input types
-  if typeXY == 'pixel':
-    sample = x
-    line = y
-  elif typeXY == 'latlon':
-    inProj = osr.SpatialReference()
-    inProj.ImportFromEPSG(4326)
-    outProj = osr.SpatialReference()
-    outProj.ImportFromWkt(wkt)
-    transform = osr.CoordinateTransformation(inProj, outProj)
-    coord = ogr.Geometry(ogr.wkbPoint)
-    coord.AddPoint(x,y)
-    coord.Transform(transform)
-    coordX = np.rint(coord.GetX()/pixelSize)*pixelSize
-    coordY = np.rint(coord.GetY()/pixelSize)*pixelSize
-    sample = xGrid.tolist().index(coordX)
-    line = yGrid.tolist().index(coordY)
-  elif typeXY == 'mapXY':
-    sample = xGrid.tolist().index(x)
-    line = yGrid.tolist().index(y)
   value = data[:,sample,line]
 
-  ### Work on time series
-  ## Fill in gaps by interpolation
-  startDate = timestamp[0].date()
-  stopDate = timestamp[len(timestamp)-1].date()
-  refDates = np.arange(startDate, stopDate + timedelta(days=12), 12).tolist()
-  datestamp = []
-  for t in time:
-    datestamp.append((timeRef + timedelta(seconds=t)).date())
-  missingDates = list(set(refDates) - set(datestamp))
-  f = interp1d(time, value)
-  missingTime = []
-  for missingDate in missingDates:
-    missingTime.append((missingDate - timeRef.date()).total_seconds())
-  missingValues = f(missingTime)
-  allValues = []
-  refType = []
-  for ii in range(len(refDates)):
-    if refDates[ii] in missingDates:
-      index = missingDates.index(refDates[ii])
-      allValues.append(missingValues[index])
-      refType.append('interpolated')
-    else:
-      index = datestamp.index(refDates[ii])
-      allValues.append(value[index])
-      refType.append('acquired')
-  allValues = np.asarray(allValues)
-
-  ## Smoothing the time line with localized regression (LOESS)
-  lowess = sm.nonparametric.lowess
-  smooth = lowess(allValues, np.arange(len(allValues)), frac=0.08, it=0)[:,1]
-
-  sd = seasonal_decompose(x=smooth, model='additive', freq=4)
-
-  return (granule, refDates, refType, smooth, sd)
+  return (granule, timestamp, value)
