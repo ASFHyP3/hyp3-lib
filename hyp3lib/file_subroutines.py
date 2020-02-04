@@ -1,5 +1,6 @@
-import os, re
-from execute import execute
+import os
+import re
+from hyp3lib.execute import execute
 import zipfile
 
 #

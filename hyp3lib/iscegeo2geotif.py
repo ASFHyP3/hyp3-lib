@@ -31,7 +31,7 @@ import zipfile
 import shutil
 from lxml import etree
 from osgeo import gdal
-from execute import execute
+from hyp3lib.execute import execute
 import argparse
 #
 # The kmlfile created by mdx.py contains the wrong png file name.

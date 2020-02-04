@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 import sys
 import argparse
-from verify_opod import verify_opod
+from hyp3lib.verify_opod import verify_opod
 import requests
 from requests.adapters import HTTPAdapter
 from six.moves.urllib.parse import urlparse
@@ -56,7 +56,7 @@ def getOrbFile(s1Granule):
 
     # get rid of ending "/" 
     if Granule.endswith("/"):
-        Granule = Granule[0:len(granule)-1]
+        Granule = Granule[0:len(Granule)-1]
 
     t = re.split('_+',Granule)
     st = t[4].replace('T','')

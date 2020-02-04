@@ -5,9 +5,9 @@ import argparse
 from argparse import RawTextHelpFormatter
 from scipy import ndimage
 from osgeo import ogr
-from asf_geometry import raster_meta, geotiff2boundary_mask, data_geometry2shape
+from hyp3lib.asf_geometry import raster_meta, geotiff2boundary_mask, data_geometry2shape
 
-# from asf_time_series import raster_metadata
+# from hyp3lib.asf_time_series import raster_metadata
  
 def raster_metadata(input):
 

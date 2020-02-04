@@ -6,9 +6,9 @@ import argparse
 from argparse import RawTextHelpFormatter
 import datetime
 from osgeo import gdal, osr
-from asf_geometry import geotiff2polygon, overlap_indices, geotiff_overlap
-from rtc2color import rtc2color
-from execute import execute
+from hyp3lib.asf_geometry import geotiff2polygon, overlap_indices, geotiff_overlap
+from hyp3lib.rtc2color import rtc2color
+from hyp3lib.execute import execute
 
 class FileException(Exception):
   """File does not exist"""

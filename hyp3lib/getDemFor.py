@@ -32,16 +32,15 @@
 # Import all needed modules right away
 #
 #####################
-import get_dem
+from hyp3lib import get_dem
 import os
-import sys
 import argparse
-from getSubSwath import get_bounding_box_file
-from execute import execute
+from hyp3lib.getSubSwath import get_bounding_box_file
+from hyp3lib.execute import execute
 from osgeo import gdal
 import shutil
 import logging
-from saa_func_lib import get_utm_proj
+from hyp3lib.saa_func_lib import get_utm_proj
 
 def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=None):
     lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)

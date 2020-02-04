@@ -4,8 +4,8 @@ import argparse
 import sys
 import numpy as np
 from osgeo import gdal
-from asf_geometry import geotiff2data, data2geotiff
-from asf_time_series import vector_meta
+from hyp3lib.asf_geometry import geotiff2data, data2geotiff
+from hyp3lib.asf_time_series import vector_meta
 
 
 def applyRasterMask(inFile, maskFile, outFile):

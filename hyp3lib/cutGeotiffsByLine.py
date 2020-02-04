@@ -3,7 +3,7 @@
 import argparse
 import os
 from osgeo import gdal
-import saa_func_lib as saa
+from hyp3lib import saa_func_lib as saa
 import numpy as np
 
 def getOrigins(files):

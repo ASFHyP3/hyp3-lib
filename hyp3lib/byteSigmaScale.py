@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import argparse
-import saa_func_lib as saa
+from hyp3lib import saa_func_lib as saa
 import numpy as np
 from osgeo import gdal
 

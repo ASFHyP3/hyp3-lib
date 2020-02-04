@@ -5,7 +5,7 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 from osgeo import ogr, osr
-from asf_geometry import geotiff2polygon, geometry2shape
+from hyp3lib.asf_geometry import geotiff2polygon, geometry2shape
 
 
 def tileList2shape(listFile, shapeFile):

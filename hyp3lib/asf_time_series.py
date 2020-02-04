@@ -10,7 +10,7 @@ import netCDF4 as nc
 from statsmodels.tsa.seasonal import seasonal_decompose
 import statsmodels.api as sm
 from scipy.interpolate import interp1d
-from asf_geometry import geometry_proj2geo, raster_meta
+from hyp3lib.asf_geometry import geometry_proj2geo, raster_meta
 
 tolerance = 0.00005
 

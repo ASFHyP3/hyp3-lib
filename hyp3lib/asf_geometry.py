@@ -7,7 +7,7 @@ from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
 from osgeo.gdalconst import GA_ReadOnly
-from saa_func_lib import get_zone
+from hyp3lib.saa_func_lib import get_zone
 import logging
 
 # Determine the boundary polygon of a GeoTIFF file

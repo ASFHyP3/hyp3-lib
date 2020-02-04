@@ -31,17 +31,17 @@ import os
 import sys
 import shutil
 import math
-from osgeo import gdal, ogr, osr
+from osgeo import gdal
 import argparse
 import boto3
 from botocore.handlers import disable_signing
 import subprocess
-import dem2isce
-import saa_func_lib as saa
+from hyp3lib import dem2isce
+from hyp3lib import saa_func_lib as saa
 import multiprocessing as mp
 import lxml.etree as et
 import numpy as np
-from asf_geometry import raster_meta
+from hyp3lib.asf_geometry import raster_meta
 import logging
 from osgeo import ogr
 from osgeo import osr
@@ -403,7 +403,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         sys.exit(1)
 
     if y_min < -90 or y_max > 90:
-        loggging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (y_min,y_max))
+        logging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (y_min,y_max))
         sys.exit(1)
 
     if x_min > x_max:

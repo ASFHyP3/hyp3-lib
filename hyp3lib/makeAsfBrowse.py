@@ -4,8 +4,8 @@ import argparse
 from argparse import RawTextHelpFormatter
 import os
 import sys
-from resample_geotiff import resample_geotiff
-import saa_func_lib as saa
+from hyp3lib.resample_geotiff import resample_geotiff
+from hyp3lib import saa_func_lib as saa
 
 def makeAsfBrowse(geotiff, baseName, use_nn=False):
     kmzName = baseName + ".kmz"

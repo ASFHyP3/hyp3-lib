@@ -1,5 +1,5 @@
 import unittest
-from get_bounding import get_bounding, get_granule_bounding
+from hyp3lib.get_bounding import get_bounding, get_granule_bounding
 
 
 class TestGetBounding(unittest.TestCase):

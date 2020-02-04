@@ -6,8 +6,8 @@ import scipy.misc
 import argparse
 import logging
 from osgeo import gdal
-from create_wb_mask import create_wb_mask
-import saa_func_lib as saa
+from hyp3lib.create_wb_mask import create_wb_mask
+from hyp3lib import saa_func_lib as saa
 
 import hyp3lib.etc
 

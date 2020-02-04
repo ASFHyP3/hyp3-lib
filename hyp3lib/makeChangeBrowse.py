@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 import argparse
-import saa_func_lib as saa
+import hyp3lib.saa_func_lib as saa
 import numpy as np
-import sys, os
-from makeAsfBrowse import makeAsfBrowse
+import sys
+import os
+from hyp3lib.makeAsfBrowse import makeAsfBrowse
 from osgeo import gdal
 
 MAX_CLASSES = 10

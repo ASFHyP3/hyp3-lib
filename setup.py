@@ -37,7 +37,21 @@ setup(
         ],
 
     install_requires=[
+        'boto3',
+        'botocore',  # FIXME: here because we import it directly... do we need too?
         'importlib_metadata',
+        'lxml',
+        'netCDF4',
+        'numpy',
+        'gdal',  # FIXME: Need to verify if GDAL v2 or v3 is being used
+        'pillow',
+        # FIXME: Need to verify if HyP3 uses pyproj v1 or v2 type syntax:
+        #  http://pyproj4.github.io/pyproj/stable/examples.html
+        'pyproj',
+        'requests',
+        'scipy',
+        'six',
+        'statsmodels',
     ],
 
     packages=find_packages(),

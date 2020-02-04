@@ -33,10 +33,10 @@ import math
 import numpy as np
 import argparse
 from argparse import RawTextHelpFormatter
-import saa_func_lib as saa
+from hyp3lib import saa_func_lib as saa
 import colorsys
 from osgeo import gdal
-from cutGeotiffs import cutFiles
+from hyp3lib.cutGeotiffs import cutFiles
 
 def get2sigmacutoffs(fi):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
