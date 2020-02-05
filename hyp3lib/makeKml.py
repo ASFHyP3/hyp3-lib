@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Create a KML file from a geotiff and a png"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 import lxml.etree as et
@@ -52,17 +52,20 @@ def makeKML(geotiff,pngFile):
     zip.write(pngFile)
     zip.close()
 
-if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(prog='makeKml',
-      description='Create a KML file from a geotiff and a png',
-      formatter_class=RawTextHelpFormatter)
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
     parser.add_argument('pngFile', help='name of PNG file (input)')
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
 
     if not os.path.exists(args.geotiff):
         print('GeoTIFF file (%s) does not exist!' % args.geotiff)
@@ -71,5 +74,8 @@ if __name__ == '__main__':
         print('PNG file (%s) does not exist!' % args.pngFile)
         sys.exit(1)
 
-    makeKML(args.geotiff,args.pngFile)
-    
+    makeKML(args.geotiff, args.pngFile)
+
+
+if __name__ == '__main__':
+    main()

@@ -1,11 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Resamples a GeoTIFF file and saves it in a number of formats"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 from hyp3lib.resample_geotiff import resample_geotiff
 from hyp3lib import saa_func_lib as saa
+
 
 def makeAsfBrowse(geotiff, baseName, use_nn=False):
     kmzName = baseName + ".kmz"
@@ -25,23 +26,30 @@ def makeAsfBrowse(geotiff, baseName, use_nn=False):
         resample_geotiff(geotiff,1024,"PNG",pngName,use_nn)
         resample_geotiff(geotiff,2048,"PNG",lrgName,use_nn)
 
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
+    parser.add_argument('basename', help='base name of output file (output)')
+    args = parser.parse_args(cli_args)
+
+    if not os.path.exists(args.geotiff):
+        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
+        sys.exit(1)
+    if len(os.path.splitext(args.basename)[1]) != 0:
+        print('Output file (%s) has an extension!' % args.basename)
+        sys.exit(1)
+
+    makeAsfBrowse(args.geotiff, args.basename)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='makeAsfBrowse',
-    description='Resamples a GeoTIFF file and saves it in a number of formats',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
-  parser.add_argument('basename', help='base name of output file (output)')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  if not os.path.exists(args.geotiff):
-    print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-    sys.exit(1)
-  if len(os.path.splitext(args.basename)[1]) != 0:
-    print('Output file (%s) has an extension!' % args.basename)
-    sys.exit(1)
-
-  makeAsfBrowse(args.geotiff, args.basename)
+    main()

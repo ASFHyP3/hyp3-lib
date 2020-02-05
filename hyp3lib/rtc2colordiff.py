@@ -1,14 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Generates pre-event and post-event RTCs to a color difference GeoTIFF"""
 
 import os
 import sys
 import argparse
-from argparse import RawTextHelpFormatter
 import datetime
 from osgeo import gdal, osr
 from hyp3lib.asf_geometry import geotiff2polygon, overlap_indices, geotiff_overlap
 from hyp3lib.rtc2color import rtc2color
 from hyp3lib.execute import execute
+
 
 class FileException(Exception):
   """File does not exist"""
@@ -214,23 +215,29 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
   os.rmdir(tmpDir)
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('preFullpol', help='name of the pre-event full-pol RTC file (input)')
+    parser.add_argument('preCrosspol', help='name of the pre-event cross-pol RTC (input)')
+    parser.add_argument('postFullpol', help='name of the post-event full-pol RTC file (input)')
+    parser.add_argument('postCrosspol', help='name of the post-event cross-pol RTC file (input)')
+    parser.add_argument('threshold', help='threshold value in dB (input)')
+    parser.add_argument('geotiff', help='name of color difference GeoTIFF file (output)')
+    parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
+    parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
+    args = parser.parse_args(cli_args)
+
+    rtc2colordiff(args.preFullpol, args.preCrosspol, args.postFullpol,
+                  args.postCrosspol, args.threshold, args.geotiff, args.teal, args.amp)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='rtc2colordiff',
-    description='Generates pre-event and post-event RTCs to a color difference GeoTIFF',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('preFullpol', help='name of the pre-event full-pol RTC file (input)')
-  parser.add_argument('preCrosspol', help='name of the pre-event cross-pol RTC (input)')
-  parser.add_argument('postFullpol', help='name of the post-event full-pol RTC file (input)')
-  parser.add_argument('postCrosspol', help='name of the post-event cross-pol RTC file (input)')
-  parser.add_argument('threshold', help='threshold value in dB (input)')
-  parser.add_argument('geotiff', help='name of color difference GeoTIFF file (output)')
-  parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
-  parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  rtc2colordiff(args.preFullpol, args.preCrosspol, args.postFullpol,
-    args.postCrosspol, args.threshold, args.geotiff, args.teal, args.amp)
+    main()

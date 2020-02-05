@@ -1,9 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Convert a floating point tiff into a byte tiff using 2-sigma scaling."""
 
+import os
+import sys
 import argparse
 from hyp3lib import saa_func_lib as saa
 import numpy as np
 from osgeo import gdal
+
 
 def get2sigmacutoffs(fi):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
@@ -16,6 +20,7 @@ def get2sigmacutoffs(fi):
     lo = mean - 2*stddev
     hi = mean + 2*stddev
     return lo,hi
+
 
 def byteSigmaScale(infile,outfile):
     lo,hi = get2sigmacutoffs(infile)
@@ -32,11 +37,22 @@ def byteSigmaScale(infile,outfile):
     data[mask3==True] = 1
     saa.write_gdal_file_byte(outfile,trans,proj,data,nodata=0) 
 
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument("infile", help="Geotiff file to convert")
+    parser.add_argument("outfile", help="Name of output file to create")
+    args = parser.parse_args(cli_args)
+    byteSigmaScale(args.infile, args.outfile)
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convert a floating point tiff into a byte tiff using 2-sigma scaling.")
-    parser.add_argument("infile",help="Geotiff file to convert")
-    parser.add_argument("outfile",help="Name of output file to create")
-    args = parser.parse_args()
-    byteSigmaScale(args.infile,args.outfile)
-    
- 
+    main()

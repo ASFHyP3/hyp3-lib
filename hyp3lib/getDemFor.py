@@ -1,39 +1,9 @@
 #!/usr/bin/env python
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
-###############################################################################
-# getDemFor.py
-#
-# Project:  APD general tool
-# Purpose:  Get a DEM for a given Sentinel1 scene
-#          
-# Author:   Tom Logan
-#
-###############################################################################
-# Copyright (c) 2017, Alaska Satellite Facility
-# 
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
-# 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Library General Public License for more details.
-# 
-# You should have received a copy of the GNU Library General Public
-# License along with this library; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
-###############################################################################
+"""Get a DEM file for a given sentinel1 SAFE file"""
 
-#####################
-#
-# Import all needed modules right away
-#
-#####################
 from hyp3lib import get_dem
 import os
+import sys
 import argparse
 from hyp3lib.getSubSwath import get_bounding_box_file
 from hyp3lib.execute import execute
@@ -41,6 +11,7 @@ from osgeo import gdal
 import shutil
 import logging
 from hyp3lib.saa_func_lib import get_utm_proj
+
 
 def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=None):
     lat_max,lat_min,lon_max,lon_min = get_bounding_box_file(infile)
@@ -58,9 +29,18 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=N
             demtype = get_dem.get_ll_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)
             
     return(outfile,demtype)
-    
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Get a DEM file for a given sentinel1 SAFE file")
+
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument("SAFEfile",help="S1 SAFE file")
     parser.add_argument("outfile",help="Name of output geotiff DEM file")
     parser.add_argument("-o","--opentopo",action="store_true",help="Use opentopo instead of get_dem")
@@ -68,7 +48,7 @@ if __name__ == '__main__':
         help="Create DEM in lat,lon space - dangerous option for polar imagery")
     parser.add_argument("-d","--dem",help="Only use the specified DEM type")
     parser.add_argument("-p","--post",help="Posting for creating DEM",type=float)
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
 
     logFile = "getDemFor_{}.log".format(os.getpid())
     logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
@@ -79,3 +59,7 @@ if __name__ == '__main__':
     outfile,demtype = getDemFile(args.SAFEfile,args.outfile,opentopoFlag=args.opentopo,
                                  utmFlag=args.latlon,post=args.post,demName=args.dem)
     logging.info("Wrote DEM file %s" % outfile)
+
+
+if __name__ == '__main__':
+    main()

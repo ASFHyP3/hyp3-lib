@@ -1,41 +1,18 @@
 #!/usr/bin/env python
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
-###############################################################################
-# CutGeotiffs
-#
-# Project:  APD 
-# Purpose:  Cut out a bunch of geotiffs to the same area
-#  
-# Author:   Tom Logan
-#
-# Issues/Caveats:
-#
-###############################################################################
-# Copyright (c) 2017, Alaska Satellite Facility
-# 
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
-# 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Library General Public License for more details.
-# 
-# You should have received a copy of the GNU Library General Public
-# License along with this library; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
-###############################################################################
+"""Clip a bunch of geotiffs to the same area"""
+
 from hyp3lib import saa_func_lib as saa
 import re
+import os
+import sys
 import argparse
 from osgeo import gdal
+
 
 def getPixSize(fi):
     (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
     return (t1[1])
+
 
 def getCorners(fi):
     (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
@@ -44,6 +21,7 @@ def getCorners(fi):
     lrlon1 = t1[0] + x1*t1[1]
     lrlat1 = t1[3] + y1*t1[5]
     return (ullon1,ullat1,lrlon1,lrlat1)
+
 
 def getOverlap(coords,fi):
     (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
@@ -64,6 +42,7 @@ def getOverlap(coords,fi):
     lrlon = min(lrlon1,lrlon2)
 
     return (ullon,ullat,lrlon,lrlat)
+
 
 def cutFiles(arg):
 
@@ -138,9 +117,25 @@ def cutFiles(arg):
         #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
         gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pixSize,yRes=-1*pixSize,creationOptions = ['COMPRESS=LZW'])
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Clip a bunch of geotiffs to the same area.")
-    parser.add_argument("infiles",nargs='+',help="Geotiff files to clip; output will be have _clip appended to the file name")
-    args = parser.parse_args()
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument(
+        "infiles", nargs='+',
+        help="Geotiff files to clip; output will be have _clip appended to the file name"
+    )
+    args = parser.parse_args(cli_args)
+
     cutFiles(args.infiles)
+
+
+if __name__ == "__main__":
+    main()

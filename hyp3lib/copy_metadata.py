@@ -1,8 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Copy metadata from one tif to another"""
 
+import os
+import sys
 import argparse
 from hyp3lib import saa_func_lib as saa
 from osgeo import gdal
+
 
 def copy_metadata(infile, outfile):
     ds = saa.open_gdal_file(infile)
@@ -16,7 +20,6 @@ def copy_metadata(infile, outfile):
     # gdal.Translate(outfile2,outfile, metadataOptions = md)
     # shutil.move(outfile2,outfile)
 
-
     ds = saa.open_gdal_file(outfile)
     for item in md:
         ds1 = gdal.Translate('',ds,format='MEM',metadataOptions = ['{}={}'.format(item,md[item])])
@@ -24,10 +27,22 @@ def copy_metadata(infile, outfile):
     gdal.Translate(outfile,ds1)
  
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="copy_metadata.py",description="Copy metadata from one tif to another")
-    parser.add_argument("infile",help="Input tif filename")
-    parser.add_argument("outfile",help="Output tif filename")
-    args = parser.parse_args()
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument("infile", help="Input tif filename")
+    parser.add_argument("outfile", help="Output tif filename")
+    args = parser.parse_args(cli_args)
 
     copy_metadata(args.infile, args.outfile)
+
+
+if __name__ == "__main__":
+    main()

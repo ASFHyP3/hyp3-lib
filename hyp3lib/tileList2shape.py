@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+"""generates a shapefile from a list of tile files"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 from osgeo import ogr, osr
@@ -35,22 +35,28 @@ def tileList2shape(listFile, shapeFile):
   geometry2shape(fields, values, spatialRef, False, shapeFile)
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('file_list',
+                        help='name of the tiles file list')
+    parser.add_argument('shape_file',
+                        help='name of the shapefile')
+    args = parser.parse_args(cli_args)
+
+    if not os.path.exists(args.file_list):
+        print('GeoTIFF file (%s) does not exist!' % args.file_list)
+        sys.exit(1)
+
+    tileList2shape(args.file_list, args.shape_file)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='tileList2shape',
-    description='generates a shapefile from a list of tile files',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('input', metavar='<file list>',
-    help='name of the tiles file list')
-  parser.add_argument('shape', metavar='<shape file>',
-    help='name of the shapefile')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  if not os.path.exists(args.input):
-    print('GeoTIFF file (%s) does not exist!' % args.input)
-    sys.exit(1)
-
-  tileList2shape(args.input, args.shape)
+    main()

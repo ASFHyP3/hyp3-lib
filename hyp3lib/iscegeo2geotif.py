@@ -1,49 +1,28 @@
 #!/usr/bin/env python
+"""Convert ISCE outputs into geotiff, browse, and kmz files"""
 
-###############################################################################
-# iscegeo2geotiff
-#
-# Project:  APD_INSAR 
-# Purpose:  Convert ISCE .geo files into geotiffs
-#          
-# Author:   Tom Logan, Jeremy Nicoll
-#
-###############################################################################
-# Copyright (c) 2017, Alaska Satellite Facility
-# 
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
-# 
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Library General Public License for more details.
-# 
-# You should have received a copy of the GNU Library General Public
-# License along with this library; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
-###############################################################################
 import os
+import sys
 import zipfile
 import shutil
 from lxml import etree
 from osgeo import gdal
 from hyp3lib.execute import execute
 import argparse
-#
-# The kmlfile created by mdx.py contains the wrong png file name.
-# This won't work.  So, we change the text to be the new name.
-#
+
+
 def fixKmlName(inKML,inName):
+    """
+    The kmlfile created by mdx.py contains the wrong png file name.
+    This won't work.  So, we change the text to be the new name.
+    """
     tree = etree.parse(inKML)
     rt = tree.getroot()
     rt[0][0][3][0].text = inName
     of = open(inKML,'wb')
     of.write(b'<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n')
     tree.write(of,pretty_print=True)
+
 
 def makeKMZ(infile,outfile):
 
@@ -74,9 +53,8 @@ def makeKMZ(infile,outfile):
     shutil.move(pngfile,outpng)
 
 
-# Create a browse image
 def create_browse(oldname,pngname,auxname,gcsname,proj,height):
-
+        """Create a browse image"""
         # Use the gcsfile's aux.xml information
         gdal.Translate(pngname,gcsname,format="PNG",height=height)
         shutil.move(auxname,"gcs.aux.xml")
@@ -89,6 +67,7 @@ def create_browse(oldname,pngname,auxname,gcsname,proj,height):
         gdal.Warp("tmp.vrt",pngname,format="vrt",dstSRS=proj,resampleAlg="cubic",dstNodata=0)
         gdal.Translate(pngname,"tmp.vrt",format="PNG")
         os.remove("tmp.vrt")
+
 
 def convert_files(s1aFlag,proj=None,res=30):
 
@@ -138,9 +117,23 @@ def convert_files(s1aFlag,proj=None,res=30):
         gdal.Warp("coherence.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convert ISCE outputs into geotiff, browse, and kmz files.")
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument("-p","--proj",help="Projection code to convert to")
     parser.add_argument("-r","--res",type=float,help="Resolution for projection")
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
+
     convert_files(True,proj=args.proj,res=args.res)
+
+
+if __name__ == "__main__":
+    main()

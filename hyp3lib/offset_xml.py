@@ -1,7 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+"""Extracts offset information from ISO XML files"""
 
 import argparse
-from argparse import RawTextHelpFormatter
+import os
 import sys
 from lxml import etree as et
 
@@ -79,19 +80,23 @@ def offset_xml(listFile, csvFile):
       coregistration, rangeOffset, azimuthOffset))
   fp.close()
 
-  return None
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('list', help='XML list')
+    parser.add_argument('csv', help='CSV output file')
+    args = parser.parse_args(cli_args)
+
+    offset_xml(args.list, args.csv)
 
 
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='offset_xml',
-    description='Extracts offset information from ISO XML files',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('list', help='XML list')
-  parser.add_argument('csv', help='CSV output file')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  offset_xml(args.list, args.csv)
+    main()

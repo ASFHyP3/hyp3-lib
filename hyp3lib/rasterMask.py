@@ -1,6 +1,8 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+"""Generate an AOI mask and apply it"""
 
 import argparse
+import os
 import sys
 import numpy as np
 from osgeo import gdal
@@ -50,20 +52,27 @@ def rasterMask(inFile, maskFile, aoiFile, maskAoiFile, outFile):
   ### Apply raster mask to image
   applyRasterMask(inFile, maskAoiFile, outFile)
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('inFile', help='name of the file to be masked')
+    parser.add_argument('maskFile', help='name of the external mask file')
+    parser.add_argument('aoiFile', help='name of the AOI polygon file')
+    parser.add_argument('maskAoiFile', help='name of the AOI mask file')
+    parser.add_argument('outFile', help='name of the masked file')
+    args = parser.parse_args(cli_args)
+
+    rasterMask(
+        args.inFile, args.maskFile, args.aoiFile, args.maskAoiFile, args.outFile
+    )
+
 
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='rasterMask',
-    description='Generate an AOI mask and apply it')
-  parser.add_argument('inFile', help='name of the file to be masked')
-  parser.add_argument('maskFile', help='name of the external mask file')
-  parser.add_argument('aoiFile', help='name of the AOI polygon file')
-  parser.add_argument('maskAoiFile', help='name of the AOI mask file')
-  parser.add_argument('outFile', help='name of the masked file')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  rasterMask(args.inFile, args.maskFile, args.aoiFile, args.maskAoiFile,
-    args.outFile)
+    main()

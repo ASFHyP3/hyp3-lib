@@ -1,12 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""generates an XML file for a DEM for ISCE processing"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 import lxml.etree as et
 from osgeo import osr, gdal
-  
+
+
 def dem2isce(demFile, hdrFile, xmlFile):
 
   # Read metadata from the DEM
@@ -104,20 +105,26 @@ def dem2isce(demFile, hdrFile, xmlFile):
   lines = None
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('dem', metavar='<dem>',
+                        help='name of DEM file, assumed to be in ENVI format')
+    parser.add_argument('hdr', metavar='<hdr>',
+                        help='name of the ENVI header file')
+    parser.add_argument('xml', metavar='<xml>',
+                        help='name of XML file')
+    args = parser.parse_args(cli_args)
+
+    dem2isce(args.dem, args.hdr, args.xml)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='dem2isce',
-    description='generates an XML file for a DEM for ISCE processing',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('dem', metavar='<dem>',
-    help='name of DEM file, assumed to be in ENVI format')
-  parser.add_argument('hdr', metavar='<hdr>',
-    help='name of the ENVI header file')
-  parser.add_argument('xml', metavar='<xml>',
-    help='name of XML file')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  dem2isce(args.dem, args.hdr, args.xml)
+    main()

@@ -1,14 +1,10 @@
+#!/usr/bin/env python
+"""Get the lat/lon min/max values given a .SAFE directory"""
+
 import re
 import os
+import sys
 import argparse
-
-parser = argparse.ArgumentParser(
-    description="Get the lat/lon min/max values given a .SAFE directory"
-)
-parser.add_argument(
-    'granule_safe_path',
-    help='relative path to a *.SAFE directory containing the annotation xml files'
-)
 
 
 def get_granule_bounding(granule_path):
@@ -136,10 +132,28 @@ def nice_printout(granule_path, extrema):
     print("  max: {}".format(extrema['lon']['max']))
 
 
-if __name__ == "__main__":
-    args = parser.parse_args()
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument(
+        'granule_safe_path',
+        help='relative path to a *.SAFE directory containing the annotation xml files'
+    )
+    args = parser.parse_args(cli_args)
+
     granule_path = args.granule_safe_path
 
     extrema = get_granule_bounding(granule_path)
 
     nice_printout(granule_path, extrema)
+
+
+if __name__ == "__main__":
+    main()

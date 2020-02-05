@@ -1,14 +1,12 @@
-#!/usr/bin/python
-
-# Generate a thumbnail for inclusion in ArcGIS Item Description metadata
-#
-# Heidi Kristenson, Tom Logan
-# August 2018
+#!/usr/bin/env python
+"""Creates an arcgis compatible thumbnail"""
 
 import argparse
 from PIL import Image
 import base64
 import os
+import sys
+
 
 def pngtothumb(pngfile):
 
@@ -29,15 +27,22 @@ def pngtothumb(pngfile):
     os.remove("tmp_thumb.jpg")
     return(encoded)
 
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('input',help='Name of input PNG file')
+    args = parser.parse_args(cli_args)
+
+    pngtothumb(args.input)
+  
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='make_arc_thumb.py',
-      description='Creates an arcgis compatible thumbnail')
-  parser.add_argument('input',help='Name of input PNG file')
-  args = parser.parse_args()
-  pngtothumb(args.input)
-  
-
-  
-
-  
+    main()

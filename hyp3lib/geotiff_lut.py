@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Applies a LUT to a GeoTIFF"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 import numpy as np
@@ -72,21 +72,27 @@ def geotiff_lut(geotiff, lutFile, outFile):
   outRaster = None
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
+    parser.add_argument('lut', help='name of look up table file to apply (input)')
+    parser.add_argument('output', help='name of output file (output)')
+    args = parser.parse_args(cli_args)
+
+    if not os.path.exists(args.geotiff):
+        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
+        sys.exit(1)
+
+    geotiff_lut(args.geotiff, args.lut, args.output)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='geotiff_lut',
-    description='Applies a LUT to a GeoTIFF',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
-  parser.add_argument('lut', help='name of look up table file to apply (input)')
-  parser.add_argument('output', help='name of output file (output)')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  if not os.path.exists(args.geotiff):
-    print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-    sys.exit(1)
-
-  geotiff_lut(args.geotiff, args.lut, args.output)
+    main()

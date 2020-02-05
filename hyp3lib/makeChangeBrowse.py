@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Creates browse images for classified change detection geotiffs"""
 
 import argparse
 import hyp3lib.saa_func_lib as saa
@@ -9,6 +10,7 @@ from hyp3lib.makeAsfBrowse import makeAsfBrowse
 from osgeo import gdal
 
 MAX_CLASSES = 10
+
 
 def makeChangeBrowse(geotiff,type="MSCD"):
 
@@ -142,21 +144,27 @@ def makeChangeBrowse(geotiff,type="MSCD"):
     makeAsfBrowse(outName,tmpName,use_nn=True)
     os.remove(outName)
 
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
+    parser.add_argument('type', help='type of input file (MSCD or SACD)')
+    args = parser.parse_args(cli_args)
+
+    if not os.path.exists(args.geotiff):
+        print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)
+        sys.exit(1)
+
+    makeChangeBrowse(args.geotiff, type=args.type)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='MakeChangeBrowse',
-    description='Creates browse images for classified change detection geotiffs')
-  parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
-  parser.add_argument('type', help='type of input file (MSCD or SACD)')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  if not os.path.exists(args.geotiff):
-    print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)
-    sys.exit(1)
-
-  makeChangeBrowse(args.geotiff,type=args.type)
-
-
+    main()

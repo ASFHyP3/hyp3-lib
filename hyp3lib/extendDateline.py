@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Extend the coverage next to the dateline"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 from osgeo import ogr
@@ -55,20 +55,26 @@ def extendDateline(inFile, outFile, degrees):
   outData = None
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('inShape', metavar='<inShapefile>',
+                        help='name of the input shapefile')
+    parser.add_argument('outShape', metavar='<outShapefile>',
+                        help='name of the output shapefile')
+    parser.add_argument('degrees', metavar='<degrees>',
+                        help='number of degrees to extend dateline')
+    args = parser.parse_args(cli_args)
+
+    extendDateline(args.inShape, args.outShape, float(args.degrees))
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='extendDateline',
-    description='Extend the coverage next to the dateline',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('inShape', metavar='<inShapefile>',
-    help='name of the input shapefile')
-  parser.add_argument('outShape', metavar='<outShapefile>',
-    help='name of the output shapefile')
-  parser.add_argument('degrees', metavar='<degrees>',
-    help='number of degrees to extend dateline')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  extendDateline(args.inShape, args.outShape, float(args.degrees))
+    main()

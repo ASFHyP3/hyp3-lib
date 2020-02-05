@@ -1,10 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Clip a bunch of geotiffs to the same area"""
 
 import argparse
 import os
+import sys
 from osgeo import gdal
 from hyp3lib import saa_func_lib as saa
 import numpy as np
+
 
 def getOrigins(files):
 
@@ -19,6 +22,7 @@ def getOrigins(files):
         lr[1,i] = trans[3] + y*trans[5]
 
     return ul,lr,trans[1],trans[5]
+
 
 def copyOrigins(files,all_coords,all_pixsize):
     
@@ -37,6 +41,7 @@ def copyOrigins(files,all_coords,all_pixsize):
             yres = all_pixsize[i]
 
     return ul,lr,xres,yres
+
 
 def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
 
@@ -74,11 +79,23 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
 
     return(outfiles)
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Clip a bunch of geotiffs to the same area.")
-    parser.add_argument("infiles",nargs='+',help="Geotiff files to clip; output will be have _clip appended to the file name")
-    args = parser.parse_args()
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument("infiles", nargs='+',
+                        help="Geotiff files to clip; output will be have _clip appended to the file name")
+    args = parser.parse_args(cli_args)
+
     cutGeotiffsByLine(args.infiles)
-    
- 
+
+
+if __name__ == "__main__":
+    main()

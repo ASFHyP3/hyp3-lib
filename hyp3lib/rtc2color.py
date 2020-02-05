@@ -1,7 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Converts a dual-pol RTC to a color GeoTIFF"""
 
 import argparse
-from argparse import RawTextHelpFormatter
+import os
 import sys
 import numpy as np
 from osgeo import gdal, osr
@@ -132,23 +133,29 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   outRaster = None
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('fullpol', help='name of the full-pol RTC file (input)')
+    parser.add_argument('crosspol', help='name of the cross-pol RTC (input)')
+    parser.add_argument('threshold', help='threshold value in dB (input)')
+    parser.add_argument('geotiff', help='name of color GeoTIFF file (output)')
+    parser.add_argument('-cleanup', action='store_true', help='clean up artifacts in powerscale images')
+    parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
+    parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
+    parser.add_argument('-float', action='store_true', help='save as floating point')
+    args = parser.parse_args(cli_args)
+
+    rtc2color(args.fullpol, args.crosspol, args.threshold, args.geotiff,
+              args.cleanup, args.teal, args.amp, args.float)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='rtc2color',
-    description='Converts a dual-pol RTC to a color GeoTIFF',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('fullpol', help='name of the full-pol RTC file (input)')
-  parser.add_argument('crosspol', help='name of the cross-pol RTC (input)')
-  parser.add_argument('threshold', help='threshold value in dB (input)')
-  parser.add_argument('geotiff', help='name of color GeoTIFF file (output)')
-  parser.add_argument('-cleanup', action='store_true', help='clean up artifacts in powerscale images')
-  parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
-  parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
-  parser.add_argument('-float', action='store_true', help='save as floating point')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  rtc2color(args.fullpol, args.crosspol, args.threshold, args.geotiff,
-    args.cleanup, args.teal, args.amp, args.float)
+    main()

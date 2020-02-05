@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Subsets a GeoTIFF file using an AOI from a shapefile"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 import numpy as np
@@ -140,25 +140,32 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
   outBand.FlushCache()
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('inGeoTIFF', help='name of the full size GeoTIFF file (input)')
+    parser.add_argument('shapeFile', help='name of the shapefile (input)')
+    parser.add_argument('outGeoTIFF', help='name of the subsetted GeoTIFF file (output)')
+    args = parser.parse_args(cli_args)
+
+    if not os.path.exists(args.inGeoTIFF):
+        print('GeoTIFF file (%s) does not exist!' % args.inGeoTIFF)
+        sys.exit(1)
+
+    if not os.path.exists(args.shapeFile):
+        print('Shapefile (%s) does not exist!' % args.shapeFile)
+        sys.exit(1)
+
+    subset_geotiff_shape(args.inGeoTIFF, args.shapeFile, args.outGeoTIFF)
+
+
 if __name__ == '__main__':
+    main()
 
-  parser = argparse.ArgumentParser(prog='subset_geotiff_shape',
-    description='Subsets a GeoTIFF file using an AOI from a shapefile',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('inGeoTIFF', help='name of the full size GeoTIFF file (input)')
-  parser.add_argument('shapeFile', help='name of the shapefile (input)')
-  parser.add_argument('outGeoTIFF', help='name of the subsetted GeoTIFF file (output)')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  if not os.path.exists(args.inGeoTIFF):
-    print('GeoTIFF file (%s) does not exist!' % args.inGeoTIFF)
-    sys.exit(1)
-
-  if not os.path.exists(args.shapeFile):
-    print('Shapefile (%s) does not exist!' % args.shapeFile)
-    sys.exit(1)
-
-  subset_geotiff_shape(args.inGeoTIFF, args.shapeFile, args.outGeoTIFF)

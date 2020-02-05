@@ -1,14 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""generates boundary shapefile from GeoTIFF file"""
+
 import os
 import sys
 import argparse
-from argparse import RawTextHelpFormatter
 from scipy import ndimage
 from osgeo import ogr
 from hyp3lib.asf_geometry import raster_meta, geotiff2boundary_mask, data_geometry2shape
 
 # from hyp3lib.asf_time_series import raster_metadata
- 
+
+
 def raster_metadata(input):
 
   # Set up shapefile attributes
@@ -115,10 +117,17 @@ def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fil
     print('Writing boundary to shapefile ...')
     data_geometry2shape(data, fields, values, spatialRef, geoTrans, outShapeFile)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(prog='raster_boundary2shape',
-             description='generates boundary shapefile from GeoTIFF file',
-             formatter_class=RawTextHelpFormatter)
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument('input', metavar='<geotiff file>',
              help='name of the GeoTIFF file')
     parser.add_argument('-threshold', metavar='<code>', action='store',
@@ -130,19 +139,20 @@ if __name__ == '__main__':
     parser.add_argument('--pixel_shift', default=False,
             action="store_true", help='apply pixel shift')
 
-    parser.add_argument('--no_closing', 
+    parser.add_argument('--no_closing',
              default=True,action='store_false',
              help='Switch to turn off closing operation')
 
-
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
 
     if not os.path.exists(args.input):
         print('GeoTIFF file (%s) does not exist!' % args.input)
         sys.exit(1)
 
-    raster_boundary2shape(args.input, args.threshold, args.shape, args.no_closing, 
-        args.fill_holes, args.pixel_shift)
+    raster_boundary2shape(
+        args.input, args.threshold, args.shape, args.no_closing, args.fill_holes, args.pixel_shift
+    )
+
+
+if __name__ == '__main__':
+    main()

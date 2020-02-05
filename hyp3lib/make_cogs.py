@@ -1,12 +1,14 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Creates a Cloud Optimized Geotiff from the input geotiff(s)"""
 
 import shutil
-import os, sys
+import os
+import sys
 import glob
 import logging
 from osgeo import gdal
 import argparse
-from argparse import RawTextHelpFormatter
+
 
 def cogify_dir(dir="PRODUCT",debug=False,res=30):
     back = os.getcwd()
@@ -17,6 +19,7 @@ def cogify_dir(dir="PRODUCT",debug=False,res=30):
         make_cog(myfile,tmpfile,res=res)
         shutil.move(tmpfile,myfile)
     os.chdir(back)
+
 
 def make_cog(inFile,outFile,debug=False,res=30):
     print("Creating COG file {} from input file {}".format(outFile, inFile))
@@ -39,32 +42,39 @@ def make_cog(inFile,outFile,debug=False,res=30):
 
     os.remove(tmpFile)
 
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('geotiff', nargs='+', help='name of GeoTIFF file (input)')
+
+    logFile = "make_cogs_{}.log".format(os.getpid())
+    logging.basicConfig(filename=logFile, format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+    logging.getLogger().addHandler(logging.StreamHandler())
+    logging.info("Starting run")
+
+    args = parser.parse_args(cli_args)
+
+    for myfile in args.geotiff:
+        if not os.path.exists(myfile):
+            print('ERROR: GeoTIFF file (%s) does not exist!' % myfile)
+            sys.exit(1)
+        if not os.path.splitext(myfile)[1] == '.tif':
+            print('ERRORL Input file (%s) is not geotiff!' % myfile)
+            sys.exit(1)
+
+        outfile = myfile.replace(".tif", "_cog.tif")
+        make_cog(myfile, outfile)
+
+
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='make_cog',
-    description='Creates a Cloud Optimized Geotiff from the input geotiff(s)',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('geotiff',nargs='+',help='name of GeoTIFF file (input)')
-
-  logFile = "make_cogs_{}.log".format(os.getpid())
-  logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
-                      datefmt='%m/%d/%Y %I:%M:%S %p',level=logging.DEBUG)
-  logging.getLogger().addHandler(logging.StreamHandler())
-  logging.info("Starting run")
-
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  for myfile in args.geotiff:
-      if not os.path.exists(myfile):
-        print('ERROR: GeoTIFF file (%s) does not exist!' % myfile)
-        sys.exit(1)
-      if not os.path.splitext(myfile)[1] == '.tif':
-        print('ERRORL Input file (%s) is not geotiff!' % myfile)
-        sys.exit(1)
-
-      outfile = myfile.replace(".tif","_cog.tif")
-      make_cog(myfile,outfile)
+    main()
 

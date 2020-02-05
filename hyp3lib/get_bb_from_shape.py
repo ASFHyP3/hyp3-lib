@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from osgeo import ogr
 
 def get_bb_from_shape(shapeFile):

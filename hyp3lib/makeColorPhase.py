@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+"""Create a colorize phase file from a phase geotiff"""
+
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 ###############################################################################
 # makeColorPhase.py
@@ -29,10 +31,10 @@
 # Boston, MA 02111-1307, USA.
 ###############################################################################
 import os
+import sys
 import math
 import numpy as np
 import argparse
-from argparse import RawTextHelpFormatter
 from hyp3lib import saa_func_lib as saa
 import colorsys
 from osgeo import gdal
@@ -411,18 +413,23 @@ def makeCycleColor(samples):
     return R, G, B
 
 
-if __name__ == '__main__':
+def main():
+    """Main entrypoint"""
 
-    parser = argparse.ArgumentParser(prog='makeColorPhase',
-      description='Create a colorize phase file from a phase geotiff',
-      formatter_class=RawTextHelpFormatter)
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument('geotiff', help='name of GeoTIFF phase file (input)')
     parser.add_argument('-a',help='Ampltiude image to use for intensity')
     parser.add_argument('-c',type=float,help='Scale the amplitude by this value (0-1)',default=0.0)
     parser.add_argument('-r',type=float,help='Reduction factor for phase rate',default=1)
     parser.add_argument('-s',type=float,help='Color cycle shift value (0..2pi)',default=0)
     parser.add_argument('-t',choices=['CMY','RYB','RWB'],help='Name of color table to use (default CMY)',default='CMY')
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
 
     if not os.path.exists(args.geotiff):
         print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)
@@ -436,5 +443,5 @@ if __name__ == '__main__':
     makeColorPhase(args.geotiff,ampFile=args.a,rateReduction=args.r,shift=args.s,scale=args.c,table=args.t)
 
 
-
-
+if __name__ == '__main__':
+    main()

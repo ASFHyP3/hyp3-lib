@@ -1,31 +1,6 @@
 #!/usr/bin/env python
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
-###############################################################################
-# get_dem.py
-#
-# Project:  APD general tool
-# Purpose:  Get a DEM for a given bounding box
-#
-# Author:   Kirk Hogenson, Tom Logan
-#
-###############################################################################
-# Copyright (c) 2017, Alaska Satellite Facility
-#
-# This library is free software; you can redistribute it and/or
-# modify it under the terms of the GNU Library General Public
-# License as published by the Free Software Foundation; either
-# version 2 of the License, or (at your option) any later version.
-#
-# This library is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-# Library General Public License for more details.
-#
-# You should have received a copy of the GNU Library General Public
-# License along with this library; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
-###############################################################################
+"""Get a DEM file in .tif format from the ASF DEM heap"""
+
 import ogr
 import os
 import sys
@@ -49,6 +24,7 @@ from pyproj import Proj, transform
 
 import hyp3lib.etc
 
+
 def transform_bounds(inb, inepsg, outepsg):
     ptx = inb[0]
     pty = inb[1]
@@ -57,6 +33,7 @@ def transform_bounds(inb, inepsg, outepsg):
     pty = inb[3]
     ret2 = transform_point(ptx,pty,inepsg,outepsg) 
     return([ret1[0],ret1[1],ret2[0],ret2[1]])
+
 
 def transform_point(ptx,pty,inepsg,outepsg):
     inProj = Proj(init='epsg:{}'.format(inepsg))
@@ -167,6 +144,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
     logging.info("Tile List: {}".format(best_tile_list))
     return(best_name, best_epsg, best_tile_list, best_poly_list)
 
+
 def get_tile_for(args):
     demname, fi = args
     cfgdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
@@ -239,6 +217,7 @@ def handle_anti_meridian(y_min,y_max,x_min,x_max,outfile):
         logging.error("ERROR: Unable to find a DEM")
         sys.exit(1)
 
+
 def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile):
 
     # Get the appropriate file
@@ -294,6 +273,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile
     bounds = [e_min,n_min,e_max,n_max]
     logging.info("Creating output file {} with bounds {}".format(outfile,bounds))
     gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+
 
 def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
 
@@ -371,8 +351,8 @@ def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
         outF.close()
 
 
-# GET DEM file and convert into ISCE format
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):
+    """GET DEM file and convert into ISCE format"""
     # Get the DEM file
     chosen_dem = get_dem(west,south,east,north,"temp_dem.tif")
 
@@ -384,15 +364,16 @@ def get_ISCE_dem(west,south,east,north,demName,demXMLName):
     dem2isce.dem2isce(demName,hdrName,demXMLName)
     return chosen_dem
 
-# GET DEM file and convert into lat,lon format
+
 def get_ll_dem(west,south,east,north,outDem,post=None,processes=1,demName=None,leave=False):
+    """GET DEM file and convert into lat,lon format"""
     demType = get_dem(west,south,east,north,"temp_dem.tif",post=post,processes=processes,demName=demName,leave=leave)
     pixsize = 0.000277777777778
     gdal.Warp(outDem,"temp_dem.tif",dstSRS="EPSG:4326",xRes=pixsize,yRes=pixsize,resampleAlg="cubic",dstNodata=-32767)
     os.remove("temp_dem.tif")
     return(demType)
 
-# Main external entry point
+
 def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,leave=False):
 
     if post is not None:
@@ -452,9 +433,9 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
 
     writeVRT(demproj, nodata, tile_list, poly_list, 'temp.vrt')
  
-#
-#   Set the output projection to either NPS, SPS, or UTM
-#
+    #
+    # Set the output projection to either NPS, SPS, or UTM
+    #
     if demproj == 3413: 	# North Polar Stereo
         outproj = ('EPSG:3413')
         outproj_num = 3413
@@ -572,26 +553,34 @@ def positive_int(value):
         raise argparse.ArgumentTypeError("{} is an invalid positive int value".format(value))
     return ivalue
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="get_dem.py",
-            description="Get a DEM file in .tif format from the ASF DEM heap")
-    parser.add_argument("x_min",help="minimum longitude/easting",type=float)
-    parser.add_argument("y_min",help="minimum latitude/northing",type=float)
-    parser.add_argument("x_max",help="maximum longitude/easting",type=float)
-    parser.add_argument("y_max",help="maximum latitude/northing",type=float)
-    parser.add_argument("outfile",help="output DEM name")
-    parser.add_argument("-p","--posting",type=float,help="Snap DEM to align with grid at given posting")
-    parser.add_argument("-d","--dem",help="Type of DEM to use")
+
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument("x_min", help="minimum longitude/easting", type=float)
+    parser.add_argument("y_min", help="minimum latitude/northing", type=float)
+    parser.add_argument("x_max", help="maximum longitude/easting", type=float)
+    parser.add_argument("y_max", help="maximum latitude/northing", type=float)
+    parser.add_argument("outfile", help="output DEM name")
+    parser.add_argument("-p", "--posting", type=float, help="Snap DEM to align with grid at given posting")
+    parser.add_argument("-d", "--dem", help="Type of DEM to use")
     parser.add_argument("-t", "--threads", type=positive_int, default=1,
-        help="Num of threads to use for downloading DEM tiles")
-    parser.add_argument("-l","--latlon", action='store_true',
-        help="Create output in GCS coordinates (default is native DEM projection)")
-    parser.add_argument("-k","--keep", action='store_true',help="Keep intermediate DEM results")
-    args = parser.parse_args()
+                        help="Num of threads to use for downloading DEM tiles")
+    parser.add_argument("-l", "--latlon", action='store_true',
+                        help="Create output in GCS coordinates (default is native DEM projection)")
+    parser.add_argument("-k", "--keep", action='store_true', help="Keep intermediate DEM results")
+    args = parser.parse_args(cli_args)
 
     logFile = "get_dem_{}.log".format(os.getpid())
-    logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p',level=logging.DEBUG)
+    logging.basicConfig(filename=logFile, format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info("Starting run")
 
@@ -602,10 +591,13 @@ if __name__ == "__main__":
     outfile = args.outfile
 
     if args.latlon:
-        get_ll_dem(x_min,y_min,x_max,y_max,outfile,post=args.posting,
-                   leave=args.keep,processes=args.threads,demName=args.dem)
+        get_ll_dem(x_min, y_min, x_max, y_max, outfile, post=args.posting,
+                   leave=args.keep, processes=args.threads, demName=args.dem)
 
     else:
-        get_dem(x_min,y_min,x_max,y_max,outfile,post=args.posting,
-                   leave=args.keep,processes=args.threads,demName=args.dem)
+        get_dem(x_min, y_min, x_max, y_max, outfile, post=args.posting,
+                leave=args.keep, processes=args.threads, demName=args.dem)
 
+
+if __name__ == "__main__":
+    main()

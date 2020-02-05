@@ -1,6 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Create a water body mask wherein all water is 0 and land is 1"""
 
 import os
+import sys
 # import numpy as np
 import scipy.misc
 import argparse
@@ -10,6 +12,7 @@ from hyp3lib.create_wb_mask import create_wb_mask
 from hyp3lib import saa_func_lib as saa
 
 import hyp3lib.etc
+
 
 def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
 
@@ -57,11 +60,12 @@ def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
 
     return(final_mask)
 
-#
-# Given a tiffile input, create outfile, filling
-# in all water areas with the maskval.  
-#
+
 def apply_wb_mask(tiffile,outfile,maskval=0,gcs=True):
+    """
+    Given a tiffile input, create outfile, filling in all water areas with the
+    maskval.
+    """
 
     logging.info("Using mask value of {}".format(maskval))
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(tiffile))    
@@ -79,14 +83,21 @@ def apply_wb_mask(tiffile,outfile,maskval=0,gcs=True):
     data[mask_arr==0] = maskval
     saa.write_gdal_file_float(outfile,trans,proj,data,nodata=maskval)
 
-if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(prog='make_wb_mask_file.py',
-      description='Create a water body mask wherein all water is 0 and land is 1')
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument('tiffile',help='Name of tif file to mask')
     parser.add_argument('outfile',help='Name of output masked file')
     parser.add_argument('-m','--maskval',help='Mask value to apply; default 0',type=float,default=0)
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
 
     logFile = "apply_wb_mask_{}_log.txt".format(os.getpid())
     logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
@@ -95,3 +106,7 @@ if __name__ == '__main__':
     logging.info("Starting run")
 
     apply_wb_mask(args.tiffile,args.outfile,maskval=args.maskval)
+
+
+if __name__ == '__main__':
+    main()

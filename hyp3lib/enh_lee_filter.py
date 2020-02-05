@@ -1,8 +1,13 @@
-#!/usr//bin/python
+#!/usr//bin/env python
+"""Apply enhanced lee filer to geotiff image"""
+
 from hyp3lib import saa_func_lib as saa
 import numpy as np
+import os
+import sys
 import argparse
 from scipy.ndimage.filters import uniform_filter
+
 
 def enh_lee(looks,size,dampening_factor,img):
 
@@ -53,14 +58,26 @@ def enhanced_lee(infile,outfile,looks,size,dampening):
      img2 = enh_lee(looks,size,dampening,img)
      saa.write_gdal_file_float(outfile,trans,proj,img2)
 
-if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Apply enhanced lee filer to geotiff image")
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument("infile",help="Geotiff file to smooth")
     parser.add_argument("outfile",help="Output smoothed geotiff file")
     parser.add_argument("looks",help="Looks to use",type=float)
     parser.add_argument("size",help="Kernel size to use",type=float)
     parser.add_argument("dampening",help="Dampening factor",type=float)
-    args = parser.parse_args()
+    args = parser.parse_args(cli_args)
+
     enhanced_lee(args.infile,args.outfile,args.looks,args.size,args.dampening)
 
+
+if __name__ == "__main__":
+    main()

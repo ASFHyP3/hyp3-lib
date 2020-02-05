@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Resamples a GeoTIFF file and saves it in a number of formats"""
 
 import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
 import math
@@ -171,25 +171,32 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
       os.remove(myfile)
 
 
+def main():
+    """Main entrypoint"""
+
+    # entrypoint name can differ from module name, so don't pass 0-arg
+    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
+    parser.add_argument('width', help='target width (input)')
+    parser.add_argument('format', help='output format: GeoTIFF, JPEG, PNG, KML')
+    parser.add_argument('output', help='name of output file (output)')
+    args = parser.parse_args(cli_args)
+
+    if not os.path.exists(args.geotiff):
+        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
+        sys.exit(1)
+    if len(os.path.splitext(args.output)[1]) == 0:
+        print('Output file (%s) does not have an extension!' % args.output)
+        sys.exit(1)
+
+    resample_geotiff(args.geotiff, args.width, args.format, args.output)
+
+
 if __name__ == '__main__':
+    main()
 
-  parser = argparse.ArgumentParser(prog='resample_geotiff',
-    description='Resamples a GeoTIFF file and saves it in a number of formats',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
-  parser.add_argument('width', help='target width (input)')
-  parser.add_argument('format', help='output format: GeoTIFF, JPEG, PNG, KML')
-  parser.add_argument('output', help='name of output file (output)')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  if not os.path.exists(args.geotiff):
-    print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-    sys.exit(1)
-  if len(os.path.splitext(args.output)[1]) == 0:
-    print('Output file (%s) does not have an extension!' % args.output)
-    sys.exit(1)
-
-  resample_geotiff(args.geotiff, args.width, args.format, args.output)
