@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 """Get a DEM file in .tif format from the ASF DEM heap"""
 
-import ogr
 import os
 import sys
 import shutil
@@ -209,10 +208,10 @@ def handle_anti_meridian(y_min,y_max,x_min,x_max,outfile):
     logging.info("Handling using anti-meridian special code")
     if (y_min>49 and y_max<54):
         logging.info("DEM will be SRTMUS1")
-        anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",y_min,y_max,x_min,x_max,outfile);
+        anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",y_min,y_max,x_min,x_max,outfile)
     elif (y_min>-52 and y_max<-6):
         logging.info("DEM will be SRTMGL3")
-        anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",y_min,y_max,x_min,x_max,outfile);
+        anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",y_min,y_max,x_min,x_max,outfile)
     else:
         logging.error("ERROR: Unable to find a DEM")
         sys.exit(1)
