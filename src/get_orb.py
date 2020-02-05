@@ -57,29 +57,26 @@ def dateStr2dateTime(string):
     outTime = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
     return(outTime)
    
-def findOrbFile(plat,st,et,lst):
-    d1 = timedelta(seconds=0)
+def findOrbFile(plat,tm,lst):
+    d1 = 0
     best = ''
-
     for item in lst:
         if 'S1' in item:
-#            item = item.replace(' ','')
+            item = item.replace(' ','')
             item1 = item
             this_plat=item[0:3]
             item=item.replace('T','')
             item=item.replace('V','')
             t = re.split('_',item)
-            if plat == this_plat: 
-                if len(t) > 7:
-                    start = dateStr2dateTime(t[6])
-                    end = dateStr2dateTime(t[7].replace('.EOF',''))
-                    if start < st and end > et and plat == this_plat:
-                        d = ((st-start)+(end-et))/2
-                        if d>d1:
-                            best = item1
-                            d1 = d
+            if len(t) > 7:
+                start = t[6]
+                end = t[7].replace('.EOF','')
+                if start < tm and end > tm and plat == this_plat:
+                    d = ((int(tm)-int(start))+(int(end)-int(tm)))/2
+                    if d>d1:
+                        best = item1.replace(' ','')
+                        d1 = d
     return best
-
 
 def getOrbFile(s1Granule):
     url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
@@ -92,15 +89,14 @@ def getOrbFile(s1Granule):
 
     t = re.split('_+',Granule)
     st = t[4].replace('T','')
-    et = t[5].replace('T','')
     url = url1
     files = getPageContents(url, True)
     plat = Granule[0:3]
-    orb = findOrbFile(plat,st,et,files)
+    orb = findOrbFile(plat,st,files)
     if orb == '':
         url = url2
         files = getPageContents(url, True)
-        orb = findOrbFile(plat,st,et,files)
+        orb = findOrbFile(plat,st,files)
     if orb == '':
         error = 'Could not find orbit file on ASF website'
         raise FileException(error)
