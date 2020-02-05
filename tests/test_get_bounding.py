@@ -29,7 +29,7 @@ class TestGetBounding(unittest.TestCase):
             <longitude>-1.121557443533816e+02</longitude>
         """
 
-        self.granule_folder_path = '../testing_files/test.SAFE'
+        self.granule_folder_path = './data/test.SAFE'
         self.test_annotation_path = self.granule_folder_path + \
             "/annotation/test-swath-1.xml"
 
