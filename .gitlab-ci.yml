@@ -3,6 +3,10 @@
 variables:
   GIT_DEPTH: 0
 
+.before_template: &before_defaults
+  - python3 -m pip install --upgrade pip
+  - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+
 default:
   image:
     name: python:3.7-buster
@@ -12,17 +16,29 @@ default:
   # tags:
   #   - kubernetes
   before_script:
-    - python3 -m pip install --upgrade pip
-    - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
+    - *before_defaults
 
 
 stages:
     - tools-bot
+    - test
     - build
-    # - test
     - publish
     - verify
     - trigger
+
+
+pytest:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - pip install -e .[develop]
+  script:
+    - pytest -cov=hyp3lib
+  coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+
 
 build:
   stage: build
@@ -32,6 +48,7 @@ build:
     - echo "Building version $(python3 setup.py --version)"
     - python3 setup.py sdist bdist_wheel
 
+
 deploy S3 PyPI:
   stage: publish
   tags:
@@ -39,6 +56,7 @@ deploy S3 PyPI:
   script:
     - echo "Uploading version $(python3 setup.py --version) to S3-PyPI"
     - s3pypi --bucket hyp3-pypi --verbose
+
 
 test S3 PyPI:
   stage: verify
