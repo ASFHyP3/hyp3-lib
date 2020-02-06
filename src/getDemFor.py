@@ -55,7 +55,6 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=N
             shutil.move(tmpdem,"%s" % outfile)
     else:
         if utmFlag:
-            logging.debug("Calling get_dem with outfile of {}".format(outfile))
             demtype = get_dem.get_dem(lon_min,lat_min,lon_max,lat_max,outfile,post=post,demName=demName)
             if not os.path.isfile(outfile):
                 logging.error("Unable to find output file {}".format(outfile))
