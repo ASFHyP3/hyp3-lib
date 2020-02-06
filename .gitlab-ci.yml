@@ -3,13 +3,15 @@
 variables:
   GIT_DEPTH: 0
 
-.before_template: &before_defaults
+.conda_template: &before_conda_env
   - source $HOME/.bashrc
   - |
     conda create -n hyp3-lib -c conda-forge -y \
       python=3.7 boto3 lxml netCDF4 numpy gdal pillow \
       proj4 requests scipy six statsmodels
   - conda activate hyp3-lib
+
+.before_template: &before_defaults
   - python3 -m pip install --upgrade pip
   - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
@@ -27,6 +29,8 @@ default:
 
 stages:
     - tools-bot
+    # Lots and lots of good testing options in this curated list:
+    #    https://github.com/vintasoftware/python-linters-and-code-analysis
     - test
     - build
     - publish
@@ -34,11 +38,61 @@ stages:
     - trigger
 
 
+bandit SAST:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install bandit
+  script:
+    - bandit -r hyp3lib
+  allow_failure: true
+
+
+trufflehog secrets:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install trufflehog
+  script:
+    - export LAST_TAG_HASH=$(git show-ref --hash -- $(git describe --abbrev=0))
+    - trufflehog --regex --entropy False --since_commit "${LAST_TAG_HASH}" file://"${PWD}"
+  allow_failure: true
+
+
+flake8 full:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
+  script:
+    - flake8 --max-line-length=120
+  allow_failure: true
+
+
+flake8 limted:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install flake8
+  script:
+    - flake8 --max-line-length=120 --ignore=E,W,N8
+  allow_failure: true
+
+
 pytest:
   stage: test
   tags:
     - kubernetes
   before_script:
+    - *before_conda_env
     - *before_defaults
     - pip install -e .[develop]
   script:
