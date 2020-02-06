@@ -4,12 +4,18 @@ variables:
   GIT_DEPTH: 0
 
 .before_template: &before_defaults
+  - source $HOME/.bashrc
+  - |
+    conda create -n hyp3-lib -c conda-forge -y \
+      python=3.7 boto3 lxml netCDF4 numpy gdal pillow \
+      proj4 requests scipy six statsmodels
+  - conda activate hyp3-lib
   - python3 -m pip install --upgrade pip
   - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
 default:
   image:
-    name: python:3.7-buster
+    name: continuumio/miniconda3:latest
     entrypoint: ["/bin/bash"]
   # Tags are not(!) inherited by jobs, contrary to the docs.
   # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
