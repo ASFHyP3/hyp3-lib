@@ -54,6 +54,15 @@ setup(
         'statsmodels',
     ],
 
+    extras_require={
+        'develop': [
+            'pytest',
+            'pytest-cov',
+            'pytest-console-scripts',
+            'tox',
+        ]
+    },
+
     packages=find_packages(),
 
     entry_points={'console_scripts': [
