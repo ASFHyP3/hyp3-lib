@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # NOTE: This script has a couple of weirdnesses to it.  It calls externally to gdal_translate
 #       to convert the DSM and image data to Int16 and Byte, respectively.  This allows for the use
 #       of larger images.  It will do this conversion regardless of input type of the original data.
