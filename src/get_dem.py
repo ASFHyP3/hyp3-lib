@@ -116,7 +116,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             proj_wkt = reproject_wkt(scene_wkt,4326,int(demEPSG))
         else:
             proj_wkt = scene_wkt 
-                
+               
         dataset = driver.Open(os.path.join(shpdir,DEM+'_coverage.shp'), 0)
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
         total_area = poly.GetArea()
@@ -135,7 +135,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             if a > 0:
                 poly_list.append(wkt)
                 tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
-                logging.info("Working on tile {}".format(tile))
+#                logging.info("Working on tile {}".format(tile))
                 coverage += a
                 tiles += "," + tile
                 tile_list.append(tile)
@@ -329,10 +329,6 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     if post is not None:
         logging.info("Snapping to grid at posting of %s meters" % post)
 
-    if x_min < -180 or x_max > 180:
-        logging.error("ERROR: Please using longitude in range (-180,180) %s %s" % (y_min,x_max))
-        sys.exit(1)
-
     if y_min < -90 or y_max > 90:
         loggging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (y_min,y_max))
         sys.exit(1)
@@ -393,6 +389,8 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     else:
         lon = (x_max+x_min)/2
         zone = math.floor((lon+180)/6+1)
+        if zone > 60:
+            zone -= 60
         if (y_min+y_max)/2 > 0:
             outproj = ('EPSG:326%02d' % int(zone))
             outproj_num = int("326%02d"%int(zone))
