@@ -42,7 +42,7 @@ pytest:
     - *before_defaults
     - pip install -e .[develop]
   script:
-    - pytest -cov=hyp3lib
+    - pytest --cov=hyp3lib
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
 
 
