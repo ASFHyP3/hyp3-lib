@@ -5,11 +5,7 @@ variables:
 
 .conda_template: &before_conda_env
   - source $HOME/.bashrc
-  - |
-    conda create -n hyp3-lib -c conda-forge -y \
-      python=3.7 boto3 lxml netCDF4 numpy gdal pillow \
-      proj4 requests scipy six statsmodels
-  - conda activate hyp3-lib
+  - conda install tox tox-conda
 
 .before_template: &before_defaults
   - python3 -m pip install --upgrade pip
@@ -60,7 +56,6 @@ trufflehog secrets:
   script:
     - export LAST_TAG_HASH=$(git show-ref --hash -- $(git describe --abbrev=0))
     - trufflehog --regex --entropy False --since_commit "${LAST_TAG_HASH}" file://"${PWD}"
-  allow_failure: true
 
 
 flake8 full:
@@ -87,17 +82,30 @@ flake8 limted:
   allow_failure: true
 
 
-pytest:
+pytest 37:
   stage: test
   tags:
     - kubernetes
   before_script:
     - *before_conda_env
-    - *before_defaults
-    - pip install -e .[develop]
   script:
-    - pytest --cov=hyp3lib
+    - tox -e py37 -- --cov=hyp3lib
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
+
+
+# NOTE: if this is taking too long, each env could be tested individually
+pytest others:
+  stage: test
+  tags:
+    - kubernetes
+  variables:
+    TOX_SKIP_ENV: "py37.*"
+  before_script:
+    - *before_conda_env
+  script:
+    - tox
+
+
 
 
 build:
