@@ -1,3 +1,7 @@
+# hyp3lib stuff
+make_cogs_*.log
+ps2dem_*_log.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
