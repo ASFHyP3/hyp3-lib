@@ -28,7 +28,7 @@ def create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile=None,mask=1,gcs=True)
     dst_rb.SetNoDataValue(0)
     dst_ds.SetGeoTransform(geotransform)
 
-    err = gdal.RasterizeLayer(dst_ds, [maskvalue], src_lyr)
+    _ = gdal.RasterizeLayer(dst_ds, [maskvalue], src_lyr)
     dst_ds.FlushCache()
     mask_arr=dst_ds.GetRasterBand(1).ReadAsArray()
 

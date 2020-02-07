@@ -19,10 +19,10 @@ def applyRasterMask(inFile, maskFile, outFile):
 
   data = data.astype(np.float32)
   mask = mask.astype(np.float32)
-  (dataRows, dataCols) = data.shape
+  # (dataRows, dataCols) = data.shape
   dataOriginX = dataGeoTrans[0]
   dataOriginY = dataGeoTrans[3]
-  dataPixelSize = dataGeoTrans[1]
+  # dataPixelSize = dataGeoTrans[1]
   (maskRows, maskCols) = mask.shape
   maskOriginX = maskGeoTrans[0]
   maskOriginY = maskGeoTrans[3]

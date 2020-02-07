@@ -98,8 +98,8 @@ def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fil
       if values[0]['pixel']:
           minx = geoTrans[0]
           maxy = geoTrans[3]
-          maxx = geoTrans[0] + cols*geoTrans[1]
-          miny = geoTrans[3] + rows*geoTrans[5]
+          # maxx = geoTrans[0] + cols*geoTrans[1]
+          # miny = geoTrans[3] + rows*geoTrans[5]
 
           # compute the pixel-aligned bounding box (larger than the feature's bbox)
           left = minx -  (geoTrans[1]/2)

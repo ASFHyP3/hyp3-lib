@@ -27,6 +27,7 @@ stages:
     - tools-bot
     # Lots and lots of good testing options in this curated list:
     #    https://github.com/vintasoftware/python-linters-and-code-analysis
+    - static analysis
     - test
     - build
     - publish
@@ -35,7 +36,7 @@ stages:
 
 
 bandit SAST:
-  stage: test
+  stage: static analysis
   tags:
     - kubernetes
   before_script:
@@ -47,7 +48,7 @@ bandit SAST:
 
 
 trufflehog secrets:
-  stage: test
+  stage: static analysis
   tags:
     - kubernetes
   before_script:
@@ -59,7 +60,7 @@ trufflehog secrets:
 
 
 flake8 full:
-  stage: test
+  stage: static analysis
   tags:
     - kubernetes
   before_script:
@@ -71,7 +72,7 @@ flake8 full:
 
 
 flake8 limted:
-  stage: test
+  stage: static analysis
   tags:
     - kubernetes
   before_script:
@@ -79,7 +80,6 @@ flake8 limted:
     - python3 -m pip install flake8
   script:
     - flake8 --max-line-length=120 --ignore=E,W,N8
-  allow_failure: true
 
 
 pytest 37:

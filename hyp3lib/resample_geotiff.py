@@ -42,7 +42,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
   resampleFile2 = None
   gt = raster.GetGeoTransform()
   cols = raster.RasterXSize
-  rows = raster.RasterYSize
+  # rows = raster.RasterYSize
   scale = cols / float(width)
   mult = 2 ** (math.floor(math.log(scale,2))-1)
   

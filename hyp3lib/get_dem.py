@@ -82,8 +82,10 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
     scene_wkt = "POLYGON ((%s %s, %s %s, %s %s, %s %s, %s %s))" % (x_min,y_min,x_max,y_min,x_max,y_max,x_min,y_max,x_min,y_min)
 
     best_pct = 0
-    best_dem = ""
+    best_name = ""
+    best_epsg = ""
     best_tile_list = []
+    best_poly_list = []
 
     for item in dem_list:
         DEM = item[0].lower()
@@ -121,7 +123,6 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
           coverage/total_area))
         pct = coverage/total_area
         if pct >= .99:
-            best_dem = DEM.upper() + tiles
             best_pct = pct
             best_name = DEM.upper()
             best_tile_list = tile_list
@@ -129,7 +130,6 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             best_poly_list = poly_list
             break
         if best_pct == 0 or pct > best_pct+0.05:
-            best_dem = DEM.upper() + tiles
             best_pct = pct
             best_name = DEM.upper()
             best_tile_list = tile_list

@@ -89,8 +89,6 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
 def reproject2grid(inRaster, tsEPSG):
 
   # Read basic metadata
-  cols = inRaster.RasterXSize
-  rows = inRaster.RasterYSize
   geoTrans = inRaster.GetGeoTransform()
   proj = osr.SpatialReference()
   proj.ImportFromEPSG(tsEPSG)
@@ -292,7 +290,6 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
 
   # Save in memory
   (rows, cols) = data.shape
-  maxArea = rows*cols*pixelSize*pixelSize
   data = data.astype(np.byte)
   gdalDriver = gdal.GetDriverByName('Mem')
   outRaster = gdalDriver.Create('value', cols, rows, 1, gdal.GDT_Byte)
@@ -326,7 +323,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
     fieldDefinition = ogr.FieldDefn('size', ogr.OFTString)
     fieldDefinition.SetWidth(25)
     outLayer.CreateField(fieldDefinition)
-  featureDefinition = outLayer.GetLayerDefn()
+  _ = outLayer.GetLayerDefn()
   for outFeature in outLayer:
     for value in values:
       for field in fields:
@@ -497,7 +494,7 @@ def geometry_geo2proj(lat_max,lat_min,lon_max,lon_min):
     x_min = min(x1,x2,x3,x4)
     x_max = max(x1,x2,x3,x4)
 
-    false_easting = outSpatialRef.GetProjParm(osr.SRS_PP_FALSE_EASTING)
+    # false_easting = outSpatialRef.GetProjParm(osr.SRS_PP_FALSE_EASTING)
     false_northing = outSpatialRef.GetProjParm(osr.SRS_PP_FALSE_NORTHING)
 
     return zone, false_northing, y_min, y_max, x_min, x_max
@@ -580,7 +577,7 @@ def overlapMask(meta, maskShape, invert, outFile):
 
   ### Extract metadata
   posting = meta['pixelSize']
-  proj = meta['proj']
+  # proj = meta['proj']
   imageEPSG = meta['epsg']
   multiBoundary = meta['boundary']
   dataRows = meta['rows']
@@ -665,7 +662,7 @@ def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):
   (dataRows, dataCols) = data.shape
   dataOriginX = dataGeoTrans[0]
   dataOriginY = dataGeoTrans[3]
-  dataPixelSize = dataGeoTrans[1]
+  # dataPixelSize = dataGeoTrans[1]
   (maskRows, maskCols) = mask.shape
   maskOriginX = maskGeoTrans[0]
   maskOriginY = maskGeoTrans[3]
@@ -704,8 +701,6 @@ def geotiff2boundary_ext(inGeotiff, maskFile, geographic):
   outRaster.SetProjection(proj.ExportToWkt())
   outBand = outRaster.GetRasterBand(1)
   outBand.WriteArray(data)
-  inBand = None
-  inRaster = None
   data = None
 
   # Polygonize the raster image

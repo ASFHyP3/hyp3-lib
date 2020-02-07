@@ -51,8 +51,7 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
         ul,lr,xres,yres = copyOrigins(files,all_coords,all_pixsize)
 
     diff_ul = np.zeros((2,len(files)))
-    diff_lr = np.zeros((2,len(files)))
-   
+
     diff_ul[0] = (max(ul[0])-ul[0])/xres    
     diff_ul[1] = -1*(min(ul[1])-ul[1])/(-1*yres)
 

@@ -35,7 +35,7 @@ def makeColorPhase(inFile,rateReduction=1,shift=0,ampFile=None,scale=0,table='CM
 
     pinf = float('+inf')
     ninf = float('-inf')
-    fnan = float('nan')
+    # fnan = float('nan')
 
     mod2pi = False 
     if table=='CMY':

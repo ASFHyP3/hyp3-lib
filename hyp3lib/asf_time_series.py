@@ -313,7 +313,6 @@ def netcdf2boundary_mask(ncFile, geographic):
   meta = nc2meta(ncFile)
   cols = meta['cols']
   rows = meta['rows']
-  ntimes = meta['timeCount']
   proj = osr.SpatialReference()
   proj.ImportFromEPSG(meta['epsg'])
   geoTrans = \
@@ -334,7 +333,6 @@ def netcdf2boundary_mask(ncFile, geographic):
   outBand = outRaster.GetRasterBand(1)
   outBand.WriteArray(data)
   inBand = None
-  inRaster = None
   data = None
 
   ### Polygonize the raster image
@@ -381,13 +379,13 @@ def time_series_slice(ncFile, x, y, typeXY):
   granules = timeSeries.variables['granule']
   granule = nc.chartostring(granules[:])
   data = timeSeries.variables['image']
-  numGranules = len(time)
+  # numGranules = len(time)
 
   ### Define geo transformation and map proejction
-  originX = xGrid[0]
-  originY = yGrid[0]
+  # originX = xGrid[0]
+  # originY = yGrid[0]
   pixelSize = xGrid[1] - xGrid[0]
-  gt = (originX, pixelSize, 0, originY, 0, -pixelSize)
+  # gt = (originX, pixelSize, 0, originY, 0, -pixelSize)
   var = timeSeries.variables.keys()
   if 'Transverse_Mercator' in var:
     wkt = timeSeries.variables['Transverse_Mercator'].getncattr('crs_wkt')

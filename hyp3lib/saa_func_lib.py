@@ -30,7 +30,7 @@ def read_gdal_file(filehandle, band=1, gcps=False):
     geotransform = filehandle.GetGeoTransform()
     geoproj = filehandle.GetProjection()
     banddata = filehandle.GetRasterBand(band)
-    type = gdal.GetDataTypeName(banddata.DataType).lower()
+    # type = gdal.GetDataTypeName(banddata.DataType).lower()
     min = banddata.GetMinimum()
     max = banddata.GetMaximum()
     if min is None or max is None:
@@ -249,7 +249,7 @@ def boxcar_y(image, bsize):
     # outimage = np.zeros([y,x],dtype=float32)
     outimage = image
     w = np.ones(bsize)
-    edge = int((bsize - 1) / 2)
+    # edge = int((bsize - 1) / 2)
     for i in range(0, y):
         gdal.TermProgress_nocb(float(i) / float(y))
         outimage[i, :] = np.convolve(w / w.sum(), image[i, :], mode='same')
@@ -262,7 +262,7 @@ def boxcar_x(image, bsize):
     # outimage = np.zeros([y,x],dtype=float32)
     outimage = image
     w = np.ones(bsize)
-    edge = int((bsize - 1) / 2)
+    # edge = int((bsize - 1) / 2)
     for j in range(0, x):
         gdal.TermProgress_nocb(float(j) / float(x))
         outimage[:, j] = np.convolve(w / w.sum(), image[:, j], mode='same')
@@ -288,7 +288,7 @@ def calcTranslation(master, slave):
 
     realshift = abs(shift)
     shiftmax = realshift.max()
-    shiftmin = realshift.min()
+    # shiftmin = realshift.min()
     shiftmean = realshift.mean()
     shiftsnr = shiftmax / shiftmean
 

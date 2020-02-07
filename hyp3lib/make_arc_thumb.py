@@ -21,8 +21,8 @@ def pngtothumb(pngfile):
         width = 200 * x/y
 
     size = length,width
-    thumb = rgb_im.thumbnail(size)
-    thumbfile = rgb_im.save('tmp_thumb.jpg')
+    _ = rgb_im.thumbnail(size)
+    _ = rgb_im.save('tmp_thumb.jpg')
     encoded = base64.b64encode(open(r'tmp_thumb.jpg', "rb").read())
     os.remove("tmp_thumb.jpg")
     return(encoded)
