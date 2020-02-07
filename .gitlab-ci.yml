@@ -5,7 +5,7 @@ variables:
 
 .conda_template: &before_conda_env
   - source $HOME/.bashrc
-  - conda install tox tox-conda
+  - conda install -c conda-forge tox tox-conda
 
 .before_template: &before_defaults
   - python3 -m pip install --upgrade pip
