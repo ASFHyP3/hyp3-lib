@@ -2,7 +2,6 @@
 #    https://docs.gitlab.com/ee/ci/yaml/#shallow-cloning
 variables:
   GIT_DEPTH: 0
-  PRIMARY_PY_ENV: "py37"
 
 .conda_template: &before_conda_env
   - source $HOME/.bashrc
@@ -83,28 +82,45 @@ flake8 limted:
   allow_failure: true
 
 
-pytest primary:
+pytest 37:
   stage: test
   tags:
     - kubernetes
   before_script:
     - *before_conda_env
   script:
-    - tox -e "${PRIMARY_PY_ENV}" -- --cov=hyp3lib
+    - tox --develop -e py37 -- --cov=hyp3lib
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
 
 
-# NOTE: if this is taking too long, each env could be tested individually
-pytest others:
+pytest 38:
   stage: test
   tags:
     - kubernetes
-  variables:
-    TOX_SKIP_ENV: "${PRIMARY_PY_ENV}.*"
   before_script:
     - *before_conda_env
   script:
-    - tox
+    - tox -e py38
+
+
+pytest 36:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_conda_env
+  script:
+    - tox -e py36
+
+
+pytest 27:
+  stage: test
+  tags:
+    - kubernetes
+  before_script:
+    - *before_conda_env
+  script:
+    - tox -e py27
 
 
 build:
