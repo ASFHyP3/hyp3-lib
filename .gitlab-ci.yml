@@ -77,9 +77,9 @@ flake8 limted:
     - kubernetes
   before_script:
     - *before_defaults
-    - python3 -m pip install flake8
+    - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
   script:
-    - flake8 --max-line-length=120 --ignore=E,W,N8
+    - flake8 --max-line-length=120  --ignore=A,B,E,I,W,N8
 
 
 pytest 37:
