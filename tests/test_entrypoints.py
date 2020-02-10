@@ -30,6 +30,11 @@ def test_cutGeotiffs(script_runner):
     assert ret.success
 
 
+def test_draw_polygon_on_raster(script_runner):
+    ret = script_runner.run('draw_polygon_on_raster.py', '-h')
+    assert ret.success
+
+
 def test_dem2isce(script_runner):
     ret = script_runner.run('dem2isce.py', '-h')
     assert ret.success

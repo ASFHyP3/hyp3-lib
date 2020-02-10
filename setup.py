@@ -39,8 +39,10 @@ setup(
     install_requires=[
         'boto3',
         'botocore',  # FIXME: here because we import it directly... do we need too?
+        'imageio',
         'importlib_metadata',
         'lxml',
+        'matplotlib',
         'netCDF4',
         'numpy',
         'gdal',  # FIXME: Need to verify if GDAL v2 or v3 is being used
@@ -72,6 +74,7 @@ setup(
         'createAmp.py = hyp3lib.createAmp:main',
         'cutGeotiffsByLine.py = hyp3lib.cutGeotiffsByLine:main',
         'cutGeotiffs.py = hyp3lib.cutGeotiffs:main',
+        'draw_polygon_on_raster.py = hyp3lib.draw_polygon_on_raster:main',
         'dem2isce.py = hyp3lib.dem2isce:main',
         'enh_lee_filter.py = hyp3lib.enh_lee_filter:main',
         'extendDateline.py = hyp3lib.extendDateline:main',
