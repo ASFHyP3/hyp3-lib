@@ -19,7 +19,7 @@ setup(
     author='ASF APD/Tools Team',
     author_email='uaf-asf-apd@alaska.edu',
 
-    license='GPLv3',
+    license='BSD',
     include_package_data=True,
 
     classifiers=[
