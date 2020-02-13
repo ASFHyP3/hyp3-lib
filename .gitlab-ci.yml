@@ -5,6 +5,7 @@ variables:
 
 .conda_template: &before_conda_env
   - source $HOME/.bashrc
+  - conda update -n base -c defaults conda
   - conda install -c conda-forge -y tox tox-conda
 
 .before_template: &before_defaults
@@ -29,6 +30,7 @@ stages:
     #    https://github.com/vintasoftware/python-linters-and-code-analysis
     - static analysis
     - test
+    - dependancy analysis
     - build
     - publish
     - verify
@@ -92,6 +94,20 @@ pytest 37:
     - tox --develop -e py37 -- --cov=hyp3lib
   coverage: '/TOTAL\s+\d+\s+\d+\s+(\d+%)/'
 
+safety 37:
+  stage: dependancy analysis
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install safety
+  script:
+    - safety check --full-report --stdin < pip_freeze_py37.txt
+    - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py37.txt | safety check --full-report --stdin
+  needs:
+    - job: "pytest 37"
+      artifacts: true
+
 
 pytest 38:
   stage: test
@@ -101,6 +117,20 @@ pytest 38:
     - *before_conda_env
   script:
     - tox -e py38
+
+safety 38:
+  stage: dependancy analysis
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install safety
+  script:
+    - safety check --full-report --stdin < pip_freeze_py38.txt
+    - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py38.txt | safety check --full-report --stdin
+  needs:
+    - job: "pytest 38"
+      artifacts: true
 
 
 pytest 36:
@@ -112,6 +142,20 @@ pytest 36:
   script:
     - tox -e py36
 
+safety 36:
+  stage: dependancy analysis
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install safety
+  script:
+    - safety check --full-report --stdin < pip_freeze_py36.txt
+    - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py36.txt | safety check --full-report --stdin
+  needs:
+    - job: "pytest 36"
+      artifacts: true
+
 
 pytest 27:
   stage: test
@@ -121,6 +165,24 @@ pytest 27:
     - *before_conda_env
   script:
     - tox -e py27
+  artifacts:
+    paths:
+      - pip_freeze_*.txt
+      - conda_export_*.txt
+
+safety 27:
+  stage: dependancy analysis
+  tags:
+    - kubernetes
+  before_script:
+    - *before_defaults
+    - python3 -m pip install safety
+  script:
+    - safety check --full-report --stdin < pip_freeze_py27.txt
+    - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py27.txt | safety check --full-report --stdin
+  needs:
+    - job: "pytest 27"
+      artifacts: true
 
 
 build:
