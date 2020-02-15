@@ -103,29 +103,42 @@ def initializeNetcdf(ncFile, meta):
 
   dataset.close()
 
-
-def extractNetcdfTime(ncFile, csvFile):
-
-  outF = open(csvFile, 'w')
+# Lets other tools use this without reading from directory:
+def getNetcdfTime(ncFile):
   timeSeries = nc.Dataset(ncFile, 'r')
-  timeRef = timeSeries.variables['time'].getncattr('units')[14:]
+  timeRef = ncFile.variables['time'][:].getncattr('units')[14:]
   timeRef = datetime.strptime(timeRef, '%Y-%m-%d %H:%M:%S')
-  time = timeSeries.variables['time'][:].tolist()
+  time = ncFile.variables['time'][:].tolist()
+  timestamps = []
   for t in time:
     timestamp = timeRef + timedelta(seconds=t)
-    outF.write('%s\n' % timestamp.isoformat())
-  outF.close()
+    timestamps.append(timestamp.isoformat())
+  return timestamps
 
-
-def extractNetcdfGranule(ncFile, csvFile):
-
+def extractNetcdfTime(ncFilePath, csvFile):
   outF = open(csvFile, 'w')
-  timeSeries = nc.Dataset(ncFile, 'r')
-  granules = timeSeries.variables['granule']
-  granule = nc.chartostring(granules[:])
-  for g in granule:
+  ncFile = nc.Dataset(ncFilePath, 'r')
+
+  timestamps = getNetcdfTime(ncFile)
+  for t in timestamps:
+    outF.write('%s\n' % t)
+  outF.close()
+  ncFile.close()
+
+def getNetcdfGranule(ncFile):
+  granules = ncFile.variables['granule']
+  granules = nc.chartostring(granules[:])
+  return list(granules)
+
+def extractNetcdfGranule(ncFilePath, csvFile):
+  outF = open(csvFile, 'w')
+  ncFile = nc.Dataset(ncFilePath, 'r')
+
+  granules = getNetcdfGranule(ncFile)
+  for g in granules:
     outF.write('%s\n' % g)
   outF.close()
+  ncFile.close()
 
 
 def nc2meta(ncFile):
