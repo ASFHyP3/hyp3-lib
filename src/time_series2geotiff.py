@@ -7,28 +7,44 @@ import sys
 from osgeo import gdal, ogr, osr
 import netCDF4 as nc
 from asf_geometry import data2geotiff
-from asf_time_series import nc2meta
+from asf_time_series import nc2meta, getNetcdfGranule
 
 
-def time_series2geotiff(ncFile, listFile, outDir):
-
+def time_series2data(ncFile, granuleList=None):
+  if granuleList == None:
+    granuleList = getNetcdfGranule(ncFile)
   ### Read granule list
-  lines = [line.rstrip() for line in open(listFile)]
+  image = ncFile.variables['image'][:]
+  granules = ncFile.variables['granule'][:]
+  granules = list(nc.chartostring(granules, encoding='utf-8'))
+
+  geotiff_list = []
+  for granule in granuleList:
+    t = granules.index(granule)
+    data = image[t]
+    geotiff_list.append(data)
+  print("geotiff_list")
+  print(geotiff_list)
+  return geotiff_list
+
+
+
+
+def time_series2geotiff(ncFilePath, listFile, outDir):
+  ### Read granule list
+  granuleList = [line.rstrip() for line in open(listFile)]
 
   ### Read time series data
   print('Reading time series file ({0}) ...'.format(ncFile))
-  dataset = nc.Dataset(ncFile, 'r')
-  image = dataset.variables['image'][:]
-  granules = dataset.variables['granule'][:]
+  dataset = nc.Dataset(ncFilePath, 'r')
+  SOMETHING = time_series2data(dataset, granuleList=granuleList)
   dataset.close()
-  granules = list(nc.chartostring(granules, encoding='utf-8'))
 
   ### Read time series metadata and
-  meta = nc2meta(ncFile)
+  meta = nc2meta(ncFilePath)
   spatialRef = osr.SpatialReference()
   spatialRef.ImportFromEPSG(meta['epsg'])
-  geoTrans = ( meta['minX'], meta['pixelSize'], 0, meta['maxY'], 0,
-    -meta['pixelSize'])
+  geoTrans = ( meta['minX'], meta['pixelSize'], 0, meta['maxY'], 0, -meta['pixelSize'])
 
   ### Go through granules
   if not os.path.exists(outDir):
@@ -64,4 +80,5 @@ if __name__ == '__main__':
     print('netCDF file (%s) does not exist!' % args.inFile)
     sys.exit(1)
 
-  time_series2geotiff(args.inFile, args.listFile, args.outDir)
+  # time_series2geotiff(args.inFile, args.listFile, args.outDir)
+  time_series2data(args.inFile)
