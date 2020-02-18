@@ -402,7 +402,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     tmpdem2 = "aabbcc_img.tif"
     tmpproj = "lmnopqr_img.tif"
     if os.path.isfile(tmpdem):
-        logging.info("Removing old file {}")
+        logging.info("Removing old file {}".format(tmpdem))
         os.remove(tmpdem)
     if os.path.isfile(tmpproj):
         logging.info("Removing old file projected dem file")
@@ -461,22 +461,29 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         if not leave:
             os.remove("temp_dem_wgs84.tif")
 
+    clean_dem(tmpdem,tmpdem2)
+    shutil.move(tmpdem2,tmpdem)
     gdal.Translate(tmpdem2,tmpdem,metadataOptions = ['AREA_OR_POINT=Point'])
     shutil.move(tmpdem2,tmpdem)
 
     # Reproject the DEM file into UTM space
     if demproj != outproj_num:
         logging.info("Translating raster file to projected coordinates ({p})".format(p=outproj))
-        gdal.Warp(tmpproj,tmpdem,dstSRS=outproj,xRes=pixsize,yRes=pixsize,resampleAlg="cubic",dstNodata=-32767)
+        gdal.Warp(tmpproj,tmpdem,dstSRS=outproj,xRes=pixsize,yRes=pixsize,resampleAlg="cubic",
+                  srcNodata=-32767,dstNodata=-32767)
         infile = tmpproj
     else:
         infile = tmpdem
+
+    report_min(infile)
 
     # Snap to posting grid
     if  post:
         snap_to_grid(post,pixsize,infile,outfile)
     else:
         shutil.copy(infile,outfile)
+
+    report_min(outfile)
 
     # Clean up intermediate files           
     if not leave:
@@ -489,6 +496,27 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
 
     logging.info("Successful Completion!")
     return(demname)
+
+def report_min(inDem):
+    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(inDem))
+    logging.debug("DEM file {} minimum is {}".format(inDem,np.min(data)))
+
+
+
+def clean_dem(inDem,outDem):
+    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(inDem))
+    logging.info("Replacing values less than -1000 with zero")
+    data[data<=-1000] = -32767 
+    logging.info("DEM Maximum value: {}".format(np.max(data)))
+    logging.info("DEM minimum value: {}".format(np.min(data)))
+ 
+    if data.dtype == np.float32:
+        saa.write_gdal_file_float(outDem,trans,proj,data.astype(np.float32))
+    elif data.dtype == np.uint16:
+        saa.write_gdal_file(outDem,trans,proj,data)
+    else: 
+        logging.error("ERROR: Unknown DEM data type {}".format(dataType))
+        exit(1)
 
 def snap_to_grid(post, pixsize, infile, outfile):
     if post:
