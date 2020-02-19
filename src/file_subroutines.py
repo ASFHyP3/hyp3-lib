@@ -3,21 +3,29 @@ from execute import execute
 import zipfile
 
 #
-#  Given a CSV file, download granules and unzip them,
-#  removing zip files as we go.  Note, this will unzip
-#  and REMOVE ALL ZIP FILES in the current directory.
+#  Given a CSV file, download granules and unzip them
 #
 def prepare_files(csvFile):
-
     cmd = "get_asf.py %s" % csvFile
     execute(cmd)
     os.rmdir("download")
     for myfile in os.listdir("."):
-        if ".zip" in myfile:
+        unzip_file(myfile)
+
+#
+# Given a zipfile, unzip it
+#
+def unzip_file(myfile):
+    if ".zip" in myfile:
+        try:
             zip_ref = zipfile.ZipFile(myfile, 'r')
             zip_ref.extractall(".")
             zip_ref.close()    
-            os.remove(myfile)
+        except:
+            print("Unable to unzip file {}".format(myfile))
+    else:
+        print("WARNING: {} not recognized as a zip file".format(myfile))
+
 
 #
 # Return lists of file names and file dates, sorted by date.

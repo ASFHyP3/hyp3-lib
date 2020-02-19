@@ -1,20 +1,38 @@
 #!/usr/bin/env python
 
 import re
-import requests
 from lxml import html
 import os
 from datetime import datetime, timedelta
 import sys
 import argparse
+from verify_opod import verify_opod
 import requests
+import json
 from requests.adapters import HTTPAdapter
-from six.moves.urllib import parse as urlparse
+from six.moves.urllib.parse import urlparse
 
 
 class FileException(Exception):
   """Could not download orbit file"""
 
+
+def getPageContentsESA(url, verify):
+    print("Getting result of {}".format(url))
+    hostname = urlparse(url).hostname
+    session = requests.Session()
+    session.mount(hostname, HTTPAdapter(max_retries=10))
+    page = session.get(url, timeout=60, verify=verify)
+    results = json.loads(page.text)
+    print("results : {}".format(results))
+    if results['count'] > 0:
+        print results['results'][0]['physical_name']
+        fileName = results['results'][0]['physical_name']
+        url = results['results'][0]['remote_url']
+        return(fileName,url)
+    else:
+        print("WARNING: No results returned from ESA query")
+    return(None,None)
 
 def getPageContents(url, verify):
     hostname = urlparse(url).hostname
@@ -22,13 +40,23 @@ def getPageContents(url, verify):
     session.mount(hostname, HTTPAdapter(max_retries=10))
     page = session.get(url, timeout=60, verify=verify)
     tree = html.fromstring(page.content)
-    l = tree.xpath('//a[@href]/text()')
+    l = tree.xpath('//a[@href]//@href')
     ret = []
     for item in l:
         if 'EOF' in item:
             ret.append(item)
     return ret
 
+def dateStr2dateTime(string):
+    year = string[0:4]
+    month = string[4:6]
+    day = string[6:8]
+    hour = string[8:10]
+    minute = string[10:12]
+    second = string[12:14]
+    outTime = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
+    return(outTime)
+   
 def findOrbFile(plat,tm,lst):
     d1 = 0
     best = ''
@@ -47,12 +75,18 @@ def findOrbFile(plat,tm,lst):
                     d = ((int(tm)-int(start))+(int(end)-int(tm)))/2
                     if d>d1:
                         best = item1.replace(' ','')
+                        d1 = d
     return best
 
 def getOrbFile(s1Granule):
     url1 = 'https://s1qc.asf.alaska.edu/aux_poeorb/'
     url2 = 'https://s1qc.asf.alaska.edu/aux_resorb/'
     Granule = os.path.basename(s1Granule)
+
+    # get rid of ending "/" 
+    if Granule.endswith("/"):
+        Granule = Granule[0:len(granule)-1]
+
     t = re.split('_+',Granule)
     st = t[4].replace('T','')
     url = url1
@@ -68,45 +102,56 @@ def getOrbFile(s1Granule):
         raise FileException(error)
     return url+orb,orb
 
+
 def getOrbitFileESA(dataFile):
 
-  precise = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
-  restituted = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
-
-  year = os.path.basename(dataFile)[17:21]
-  month = os.path.basename(dataFile)[21:23]
-  day = os.path.basename(dataFile)[23:25]
-  date = datetime.strptime(year+'-'+month+'-'+day, '%Y-%m-%d')
-
+  prec_url = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
+  rest_url = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
+  precise    = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_POEORB&ordering=-creation_date&page_size=1&'
+  restituted = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_RESORB&ordering=-creation_date&page_size=1&'
+  sec60 = timedelta(seconds=60)
+  plat = dataFile[0:3]
+  precise += 'sentinel1__mission={}&'.format(plat)
+  restituted += 'sentinel1__mission={}&'.format(plat)
   t = re.split('_+',dataFile)
   st = t[4].replace('T','')
-  plat = dataFile[0:3]
+  et = t[5].replace('T','')
 
-  start_time = date - timedelta(days=1)
-  url = precise+'?validity_start_time='+start_time.strftime('%Y-%m-%d')
-  files = getPageContents(url, False)
-  if len(files) > 0:
-    orbitFile = findOrbFile(plat, st, files)
-    url = precise+orbitFile
+  start_time = dateStr2dateTime(st)
+  end_time = dateStr2dateTime(et)
+
+  start_time = start_time - sec60
+  end_time = end_time + sec60
+
+  q = precise+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+  orbitFile,url = getPageContentsESA(q, False)
+  if url:
+    print("Using url {}".format(url))
   else:
-    start_time = date
-    for page in range(1, 5):
-      url = ('{0}?page={1}&validity_start_time={2}'.format(restituted, page,
-        start_time.strftime('%Y-%m-%d')))
-      files = getPageContents(url, False)
-      if len(files) > 0:
-        orbitFile = findOrbFile(plat, st, files)
-        if len(orbitFile) > 0:
-          url = restituted+orbitFile
-          break;
-  if len(orbitFile) == 0:
-    error = 'Could not find orbit file on ESA website'
-    raise FileException(error)
+    print("Unable to find POEORB - Looking for RESORB")
+    q=restituted+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+    orbitFile,url = getPageContentsESA(q, False)
+    if url:
+      print("Using url {}".format(url))
+    else:
+      error = 'Could not find orbit file on ESA website'
+      raise FileException(error)
 
   return url, orbitFile
 
 
-def downloadSentinelOrbitFile(granule, provider, directory):
+def fetchOrbitFile(urlOrb,stateVecFile,verify):
+  hostname = urlparse(urlOrb).hostname
+  session = requests.Session()
+  session.mount(hostname, HTTPAdapter(max_retries=10))
+  request = session.get(urlOrb, timeout=60, verify=verify)
+  f = open(stateVecFile, 'w')
+  f.write(request.text)
+  f.close()
+
+
+# Specify provider 
+def downloadSentinelOrbitFileProvider(granule, provider, directory):
 
   if provider.upper() == 'ASF':
     urlOrb, fileNameOrb = getOrbFile(granule)
@@ -115,32 +160,59 @@ def downloadSentinelOrbitFile(granule, provider, directory):
     urlOrb, fileNameOrb = getOrbitFileESA(granule)
     verify = False
 
-  if len(fileNameOrb) > 0:
-    hostname = urlparse(urlOrb).hostname
-    session = requests.Session()
-    session.mount(hostname, HTTPAdapter(max_retries=10))
-    request = session.get(urlOrb, timeout=60, verify=verify)
+  if directory:
     stateVecFile = os.path.join(directory, fileNameOrb)
-    f = open(stateVecFile, 'w')
-    f.write(request.text)
-    f.close()
-    return stateVecFile
   else:
-    return None
+    stateVecFile = fileNameOrb
+
+  if not os.path.isfile(stateVecFile):
+    if len(stateVecFile) > 0:
+      fetchOrbitFile(urlOrb,stateVecFile,verify)
+      return stateVecFile
+    else:
+      return None
+  else:
+    print("Using existing orbit file; provider unknown")
+    provider = "UNKNOWN"
+    return stateVecFile
+
+
+# Main entry point - prefer ASF; failover to ESA
+def downloadSentinelOrbitFile(granule,directory=None):
+    try:
+        stateVecFile=downloadSentinelOrbitFileProvider(granule,'ASF',directory)
+        provider = "ASF"
+        print("Found state vector file at ASF")
+    except:
+        print("Unable to find statevector at ASF; trying ESA")
+        try:
+            stateVecFile = downloadSentinelOrbitFileProvider(granule,'ESA',directory) 
+            if stateVecFile:
+                provider = "ESA"
+                print("Found state vector file at ESA")
+        except:
+            print("Unable to find requested state vector file")
+            provider = "NA"
+            return None,provider
+    verify_opod(stateVecFile)
+    return(stateVecFile,provider)
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(prog="get_orb.py",description="Get a Sentinel-1 orbit file from ASF website")
-    parser.add_argument("safeFile",help="Sentinel-1 SAFE file name",nargs="*")
+    parser = argparse.ArgumentParser(prog="get_orb.py",description="Get Sentinel-1 orbit file(s) from ASF or ESA website")
+    parser.add_argument("safeFiles",help="Sentinel-1 SAFE file name(s)",nargs="*")
+    parser.add_argument("-p","--provider",choices=['asf','esa'],help="Name of orbit file server organization")
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
     args = parser.parse_args()
 
-    for g in sys.argv[1:]:
-        print("Getting: " + g)
-        (orburl,f1) = getOrbFile(g)
-        print(orburl)
-        cmd = 'wget ' + orburl
-        os.system(cmd)
+    provider = args.provider
+    for g in args.safeFiles: 
+        if provider:
+            stVecFile = downloadSentinelOrbitFileProvider(g,provider,None)         
+        else:
+            stVecFile,provider = downloadSentinelOrbitFile(g)
+        print("Downloaded orbit file {} from {}".format(stVecFile,provider.upper()))

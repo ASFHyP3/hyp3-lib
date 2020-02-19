@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 import argparse
-import os, sys
+import sys
 import numpy as np
-from osgeo import gdal, ogr, osr
-from asf_geometry import geotiff2data, data2geotiff, raster_meta
+from osgeo import gdal
+from asf_geometry import geotiff2data, data2geotiff
 from asf_time_series import vector_meta
 
 

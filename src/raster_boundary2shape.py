@@ -1,10 +1,11 @@
 #!/usr/bin/python
+import os
+import sys
 import argparse
 from argparse import RawTextHelpFormatter
-import os
-from osgeo import gdal, ogr, osr
-import sys
-from asf_geometry import *
+from scipy import ndimage
+from osgeo import ogr
+from asf_geometry import raster_meta, geotiff2boundary_mask, data_geometry2shape
 
 # from asf_time_series import raster_metadata
  
@@ -122,17 +123,16 @@ if __name__ == '__main__':
              help='name of the GeoTIFF file')
     parser.add_argument('-threshold', metavar='<code>', action='store',
              default=None, help='threshold value what is considered blackfill')
-    parser.add_argument('shape', metavar='<shape file>',
-             help='name of the shapefile')
+    parser.add_argument('shape', metavar='<shape file>',help='name of the shapefile')
 
-    parser.add_argument('--no_closing', metavar="<don't use closing>",default=True,action='store_false',
-             help='Switch to turn off closing operation')
+    parser.add_argument('--fill_holes', default=False, action="store_true", help='Turn on hole filling')
 
-    parser.add_argument('--fill_holes', metavar="<fill holes>",default=False,
-            action="store_true", help='Turn on hole filling')
-
-    parser.add_argument('--pixel_shift', metavar="<apply pixel shift>",default=False,
+    parser.add_argument('--pixel_shift', default=False,
             action="store_true", help='apply pixel shift')
+
+    parser.add_argument('--no_closing', 
+             default=True,action='store_false',
+             help='Switch to turn off closing operation')
 
 
     if len(sys.argv) == 1:
