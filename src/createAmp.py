@@ -2,7 +2,6 @@
 
 import saa_func_lib as saa
 import numpy as np
-import sys, os, re
 import argparse
 
 def createAmp(fi,nodata=None):

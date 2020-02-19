@@ -1,14 +1,12 @@
 #!/usr/bin/python
 
-import argparse
-from argparse import RawTextHelpFormatter
 import os
 import sys
-import time
+import argparse
+from argparse import RawTextHelpFormatter
 import datetime
-import shutil
-from osgeo import gdal, ogr, osr
-from asf_geometry import *
+from osgeo import gdal, osr
+from asf_geometry import geotiff2polygon, overlap_indices, geotiff_overlap
 from rtc2color import rtc2color
 from execute import execute
 
@@ -153,11 +151,9 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
 
   # Calculating pre- and post-event RGB images
   colorPreFile = os.path.join(tmpDir, 'preColor.tif')
-  rtc2color(preFullpol, preCrosspol, threshold, colorPreFile, amp=amp,
-    float=True)
+  rtc2color(preFullpol, preCrosspol, threshold, colorPreFile, amp=amp, real=True)
   colorPostFile = os.path.join(tmpDir, 'postColor.tif')
-  rtc2color(postFullpol, postCrosspol, threshold, colorPostFile, amp=amp,
-    float=True)
+  rtc2color(postFullpol, postCrosspol, threshold, colorPostFile, amp=amp, real=True)
 
   # Read input parameter
   colorPreImg = gdal.Open(colorPreFile)
@@ -188,10 +184,10 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
   postGreen = postGreen[yPostOff:yPostEnd, xPostOff:xPostEnd]
   preMask = (preGreen > 0).astype(int)
   postMask = (postGreen > 0).astype(int)
-  mask = preMask*postMask;
-  red = postRed*255*mask;
-  green = postGreen*255*mask;
-  blue = 5.0*(postGreen - preGreen)*255*mask;
+  mask = preMask*postMask
+  red = postRed*255*mask
+  green = postGreen*255*mask
+  blue = 5.0*(postGreen - preGreen)*255*mask
 
   # Write output GeoTIFF
   print('Writing color difference image to GeoTIFF (%s)' % geotiff)

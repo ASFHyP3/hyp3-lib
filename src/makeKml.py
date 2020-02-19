@@ -5,8 +5,7 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 import lxml.etree as et
-from osgeo import gdal, ogr, osr
-from osgeo.gdalconst import *
+from osgeo import gdal
 import zipfile
 
 

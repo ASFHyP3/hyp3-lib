@@ -3,7 +3,6 @@
 import os
 import sys
 import csv
-import math
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
 import numpy as np
@@ -72,7 +71,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
     rowFirst = 0
   else:
     data[np.isnan(data)==True] = noDataValue
-    if threshold != None:
+    if threshold is not None:
       print('Applying threshold ({0}) ...'.format(threshold))
       data[data<np.float(threshold)] = noDataValue
     if noDataValue == np.nan or noDataValue == -np.nan:
@@ -132,7 +131,7 @@ def cut_blackfill(data, geoTrans):
   return (data, colFirst, rowFirst, geoTrans)
 
 
-def geotiff_overlap(firstFile, secondFile, type):
+def geotiff_overlap(firstFile, secondFile, method):
 
   # Check map projections
   raster = gdal.Open(firstFile)
@@ -145,9 +144,9 @@ def geotiff_overlap(firstFile, secondFile, type):
   firstPolygon = geotiff2polygon(firstFile)
   secondPolygon = geotiff2polygon(secondFile)
 
-  if type == 'intersection':
+  if method == 'intersection':
     overlap = firstPolygon.Intersection(secondPolygon)
-  elif type == 'union':
+  elif method == 'union':
     overlap = firstPolygon.Union(secondPolygon)
 
   return (firstPolygon, secondPolygon, overlap, proj, pixelSize)
@@ -288,9 +287,9 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
   classes, threshold, background, shapeFile):
 
   # Check input
-  if threshold != None:
+  if threshold is not None:
     threshold = float(threshold)
-  if background != None:
+  if background is not None:
     background = int(background)
 
   # Buffer data
@@ -349,7 +348,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
     fill = False
     if cValue == 0:
       fill = True
-    if background != None and cValue == background:
+    if background is not None and cValue == background:
       fill = True
     geometry = outFeature.GetGeometryRef()
     area = float(geometry.GetArea())
@@ -701,7 +700,7 @@ def geotiff2boundary_ext(inGeotiff, maskFile, geographic):
   (rows, cols) = data.shape
 
   # Save in mask file (if defined)
-  if maskFile != None:
+  if maskFile is not None:
     gdalDriver = gdal.GetDriverByName('GTiff')
     outRaster = gdalDriver.Create(maskFile, rows, cols, 1, gdal.GDT_Byte)
     outRaster.SetGeoTransform(geoTrans)
