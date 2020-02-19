@@ -386,6 +386,10 @@ def geotiff2data(inGeotiff):
   data = inBand.ReadAsArray()
   if data.dtype == np.uint8:
     dtype = 'BYTE'
+  elif data.dtype == np.int16:
+    dtype = 'INT16'
+  elif data.dtype == np.int32:
+    dtype = 'INT32'
   elif data.dtype == np.float32:
     dtype = 'FLOAT'
   elif data.dtype == np.float64:
@@ -400,13 +404,13 @@ def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
   gdalDriver = gdal.GetDriverByName('GTiff')
   if dtype == 'BYTE':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
-      ['COMPRESS=DEFLATE'])
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   elif dtype == 'INT32':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int32,
-      ['COMPRESS=DEFLATE'])
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   elif dtype == 'FLOAT':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Float32,
-      ['COMPRESS=DEFLATE'])
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   outRaster.SetGeoTransform(geoTrans)
   outRaster.SetProjection(proj.ExportToWkt())
   outBand = outRaster.GetRasterBand(1)
