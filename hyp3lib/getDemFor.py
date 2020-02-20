@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Get a DEM file for a given sentinel1 SAFE file"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 from hyp3lib import get_dem
 import os
 import sys

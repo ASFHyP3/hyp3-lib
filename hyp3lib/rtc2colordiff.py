@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Generates pre-event and post-event RTCs to a color difference GeoTIFF"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import os
 import sys
 import argparse

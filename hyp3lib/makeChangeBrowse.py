@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Creates browse images for classified change detection geotiffs"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import argparse
 import hyp3lib.saa_func_lib as saa
 import numpy as np

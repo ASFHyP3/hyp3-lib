@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Generate an AOI mask and apply it"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import argparse
 import os
 import sys

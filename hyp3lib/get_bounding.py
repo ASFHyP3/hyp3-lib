@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Get the lat/lon min/max values given a .SAFE directory"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import re
 import os
 import sys

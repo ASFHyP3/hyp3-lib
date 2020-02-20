@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """generates boundary shapefile from GeoTIFF file"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import os
 import sys
 import argparse

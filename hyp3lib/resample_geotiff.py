@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Resamples a GeoTIFF file and saves it in a number of formats"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import argparse
 import os
 import sys

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Clip a bunch of geotiffs to the same area"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import argparse
 import os
 import sys

@@ -1,6 +1,7 @@
 """
 HyP3 common library plugin
 """
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 # FIXME: Python 3.8+ this should be `from importlib.metadata...`
 from importlib_metadata import version, PackageNotFoundError

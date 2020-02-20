@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Convert a floating point tiff into a byte tiff using 2-sigma scaling."""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import os
 import sys
 import argparse

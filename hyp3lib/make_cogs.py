@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """Creates a Cloud Optimized Geotiff from the input geotiff(s)"""
 
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import shutil
 import os
 import sys

@@ -1,3 +1,5 @@
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import os
 import subprocess
 import logging
@@ -11,8 +13,8 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
         print('Running command: ' + cmd)
     rcmd = cmd + ' 2>&1'
 
-    pipe = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE)
-    output = pipe.communicate()[0]
+    pipe = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+    output = pipe.communicate()[0].decode('utf-8')
     return_val = pipe.returncode
     if uselogging:
         logging.info('subprocess return value was ' + str(return_val))
@@ -45,13 +47,13 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
             last = line
             if next_line:
                 raise Exception(tool + ': ' + line)
-            elif '** Error: *****' in line: # MapReady style error
+            elif '** Error: *****' in line:  # MapReady style error
                 next_line = True
-            elif 'Error per GCP' in line: # MapReady message that is NOT an error
+            elif 'Error per GCP' in line:  # MapReady message that is NOT an error
                 pass
-            elif 'Setting maximum error to be' in line: # RTC message that is NOT an error
+            elif 'Setting maximum error to be' in line:  # RTC message that is NOT an error
                 pass
-            elif 'Root mean squared error' in line: # RTC message that is NOT an error
+            elif 'Root mean squared error' in line:  # RTC message that is NOT an error
                 pass
             elif 'ERROR' in line.upper():
                 raise Exception(tool + ': ' + line)
@@ -76,4 +78,3 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
             raise Exception("Expected output file not found: " + expected)
 
     return output
- 

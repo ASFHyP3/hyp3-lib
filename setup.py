@@ -1,3 +1,5 @@
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import os
 
 from setuptools import setup, find_packages
@@ -62,6 +64,7 @@ setup(
             'pytest-cov',
             'pytest-console-scripts',
             'tox',
+            'tox-conda',
         ]
     },
 
