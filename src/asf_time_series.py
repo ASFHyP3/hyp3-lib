@@ -104,11 +104,10 @@ def initializeNetcdf(ncFile, meta):
   dataset.close()
 
 # Lets other tools use this without reading from directory:
-def getNetcdfTime(ncFile):
-  timeSeries = nc.Dataset(ncFile, 'r')
-  timeRef = ncFile.variables['time'][:].getncattr('units')[14:]
+def getNetcdfTime(ncFileStream):
+  timeRef = ncFileStream.variables['time'][:].getncattr('units')[14:]
   timeRef = datetime.strptime(timeRef, '%Y-%m-%d %H:%M:%S')
-  time = ncFile.variables['time'][:].tolist()
+  time = ncFileStream.variables['time'][:].tolist()
   timestamps = []
   for t in time:
     timestamp = timeRef + timedelta(seconds=t)
@@ -125,9 +124,9 @@ def extractNetcdfTime(ncFilePath, csvFile):
   outF.close()
   ncFile.close()
 
-def getNetcdfGranule(ncFile):
-  granules = ncFile.variables['granule']
-  granules = nc.chartostring(granules[:])
+def getNetcdfGranule(ncFileStream):
+  granules = ncFileStream.variables['granule']
+  granules = nc.chartostring(granules[:], encoding="utf-8")
   return list(granules)
 
 def extractNetcdfGranule(ncFilePath, csvFile):
@@ -140,13 +139,8 @@ def extractNetcdfGranule(ncFilePath, csvFile):
   outF.close()
   ncFile.close()
 
-
-def nc2meta(ncFile):
-
-  dataset = nc.Dataset(ncFile, 'r')
-
+def ncStream2meta(dataset):
   meta = {}
-
   ### Global attributes
   meta['conventions'] = dataset.Conventions
   meta['institution'] = dataset.institution
@@ -183,9 +177,12 @@ def nc2meta(ncFile):
   meta['imgLongName'] = image.long_name
   meta['imgUnits'] = image.units
   meta['imgNoData'] = image.fill_value
+  return meta
 
+def nc2meta(ncFile):
+  dataset = nc.Dataset(ncFile, 'r')
+  meta = ncStream2meta(dataset)
   dataset.close()
-
   return meta
 
 
