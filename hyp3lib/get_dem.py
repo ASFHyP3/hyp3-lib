@@ -180,7 +180,7 @@ def parseString(string):
 def get_cc(tmpproj,post,pixsize):
 
     shift = 0
-    string = subprocess.check_output('gdalinfo %s' % tmpproj, shell=True, universal_newlines=True).decode('utf-8')
+    string = subprocess.check_output('gdalinfo %s' % tmpproj, shell=True, universal_newlines=True)
     lst = string.split("\n")
     for item in lst:
         if "Upper Left" in item:
@@ -256,7 +256,7 @@ def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile
     string = subprocess.check_output(
         "cat coords.txt | cs2cs +proj=longlat +datum=WGS84 +to +proj=utm +zone=1 %s +datum=WGS84" % south,
         shell=True, universal_newlines=True
-    ).decode('utf-8')
+    )
 
     lst = string.split("\n")
     x = []

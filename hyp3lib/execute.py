@@ -14,7 +14,7 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
     rcmd = cmd + ' 2>&1'
 
     pipe = subprocess.Popen(rcmd, shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-    output = pipe.communicate()[0].decode('utf-8')
+    output = pipe.communicate()[0]
     return_val = pipe.returncode
     if uselogging:
         logging.info('subprocess return value was ' + str(return_val))
