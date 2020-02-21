@@ -84,6 +84,7 @@ setup(
         'geotiff_lut.py = hyp3lib.geotiff_lut:main',
         'get_bounding.py = hyp3lib.get_bounding:main',
         'getDemFor.py = hyp3lib.getDemFor:main',
+        'get_asf.py = hyp3lib.get_asf:main',
         'get_dem.py = hyp3lib.get_dem:main',
         'get_orb.py = hyp3lib.get_orb:main',
         'iscegeo2geotif.py = hyp3lib.iscegeo2geotif:main',

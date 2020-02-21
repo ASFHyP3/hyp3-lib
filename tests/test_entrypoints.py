@@ -66,6 +66,11 @@ def test_getDemFor(script_runner):
     assert ret.success
 
 
+def test_get_asf(script_runner):
+    ret = script_runner.run('get_asf.py', '-h')
+    assert ret.success
+
+
 def test_get_dem(script_runner):
     ret = script_runner.run('get_dem.py', '-h')
     assert ret.success

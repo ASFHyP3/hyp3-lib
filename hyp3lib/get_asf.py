@@ -36,7 +36,7 @@ lock = multiprocessing.Lock()
 
 
 def get_cla():
-    parser = OptionParser()
+    parser = OptionParser(prog='get_asf.py')
     parser.add_option(
         "--debug", action="store_true", dest="debug", help="Print out debug messages"
     )
@@ -164,6 +164,8 @@ def get_config(cfg):
         cfg_file = os.path.join(cfg_path, 'get_asf.cfg')
     elif os.path.isfile(os.path.join(os.path.expanduser("~"), ".get_asf.cfg")):
         cfg_file = os.path.join(os.path.expanduser("~"), ".get_asf.cfg")
+    elif os.path.isfile(os.path.join(os.path.expanduser("~"), ".hyp3", "get_asf.cfg")):
+        cfg_file = os.path.join(os.path.expanduser("~"), ".hyp3", "get_asf.cfg")
     elif os.path.isfile(os.path.join(os.path.expanduser("~"), "get_asf.cfg")):
         cfg_file = os.path.join(os.path.expanduser("~"), "get_asf.cfg")
     elif os.path.isfile(os.path.join(os.path.abspath(os.path.dirname(__file__)), "get_asf.cfg")):
@@ -194,6 +196,7 @@ def get_config(cfg):
             cfg.get_orb = bool(config.get('general', 'get_orb'))
         if cfg.dry_run:
             cfg.threads_num = 1
+    return cfg
 
 def get_already_fetched(filename):
     if filename is not None:
@@ -476,7 +479,8 @@ def find_granules_list(i, granules, level):
     return g
 
 
-def find_granules_search(platforms, beammodes, starttime, endtime, wkt, point, max_results, level):
+def find_granules_search(platforms, beammodes, starttime, endtime, wkt, point, max_results, level,
+                         wget_options=None):
     s = "param?"
     if platforms is not None:
         if platforms == "Sentinel":
@@ -497,16 +501,16 @@ def find_granules_search(platforms, beammodes, starttime, endtime, wkt, point, m
         s += ("maxResults={0}&".format(max_results * 6))
     s += "output=CSV"
 
-    return do_granule_search(s, level, max_results)
+    return do_granule_search(s, level, max_results, wget_options=wget_options)
 
 
-def do_granule_search(search_str, level, max_results):
+def do_granule_search(search_str, level, max_results, wget_options=None):
     if 'granule_list' in search_str:
         i = search_str.find('granule_list')+13
         g = search_str[i:search_str.find('&',i)]
         log.info('Searching for ' + g)
 
-    cmd = ('wget -O- %s "https://api.daac.asf.alaska.edu/services/search/' + search_str + '"') % cfg.wget_options
+    cmd = ('wget -O- %s "https://api.daac.asf.alaska.edu/services/search/' + search_str + '"') % wget_options
     output, ok = execute(cmd, raise_on_error=True)
 
     granules = dict()
@@ -543,8 +547,8 @@ def do_granule_search(search_str, level, max_results):
     return granules
 
 
-def get_url(granule, level):
-    cmd = ('wget -O- %s "https://api.daac.asf.alaska.edu/services/search/param?granule_list=%s&output=CSV"' % (cfg.wget_options, granule))
+def get_url(granule, level, wget_options=None):
+    cmd = ('wget -O- %s "https://api.daac.asf.alaska.edu/services/search/param?granule_list=%s&output=CSV"' % (wget_options, granule))
     output, ok = execute(cmd)
     if not ok:
         return None
@@ -978,9 +982,9 @@ def do_unzip(zipFilePath, destDir):
     return retdir
 
 
-if __name__ == "__main__":
+def main():
     (cfg, args) = get_cla()
-    get_config(cfg)
+    cfg = get_config(cfg)
 
     setup_logger(cfg.debug)
 
@@ -1114,7 +1118,8 @@ if __name__ == "__main__":
             log.debug("Level: " + str(cfg.level))
             log.debug("Dry Run: " + str(cfg.dry_run))
 
-            cfg.new = find_granules_search(cfg.platforms, cfg.beammodes, start, end, cfg.wkt, cfg.point, cfg.max, cfg.level)
+            cfg.new = find_granules_search(cfg.platforms, cfg.beammodes, start, end, cfg.wkt, cfg.point, cfg.max,
+                                           cfg.level, wget_options=cfg.wget_options)
 
             #g = find_granules('ALOS', 'FBS', datetime.datetime.strptime("2008-12-01T00:00:00", "%Y-%m-%dT%H:%M:%S"),
             #                  datetime.datetime.strptime("2008-12-31T00:00:00", "%Y-%m-%dT%H:%M:%S"),
@@ -1135,3 +1140,7 @@ if __name__ == "__main__":
         for tbline in tb:
             log.info(tbline)
         log.critical("Aborting due to uncaught exception.")
+
+
+if __name__ == '__main__':
+    main()
