@@ -6,7 +6,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import argparse
 import os
 import shutil
-import sys
 
 import lxml.etree as et
 from imageio import imread

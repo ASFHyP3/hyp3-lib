@@ -5,7 +5,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import argparse
 import os
-import sys
 from osgeo import gdal
 from hyp3lib import saa_func_lib as saa
 import numpy as np

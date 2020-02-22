@@ -5,7 +5,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 from hyp3lib import get_dem
 import os
-import sys
 import argparse
 from hyp3lib.getSubSwath import get_bounding_box_file
 from hyp3lib.execute import execute

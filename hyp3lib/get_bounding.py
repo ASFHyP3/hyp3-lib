@@ -5,7 +5,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import re
 import os
-import sys
 import argparse
 
 

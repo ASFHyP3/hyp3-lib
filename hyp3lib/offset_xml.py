@@ -5,7 +5,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import argparse
 import os
-import sys
 from lxml import etree as et
 
 ns_gmd = {'gmd' : 'http://www.isotc211.org/2005/gmd'}

@@ -7,7 +7,6 @@ from hyp3lib import saa_func_lib as saa
 import numpy as np
 import argparse
 import os
-import sys
 
 
 def createAmp(fi,nodata=None):

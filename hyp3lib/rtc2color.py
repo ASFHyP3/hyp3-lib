@@ -5,7 +5,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import argparse
 import os
-import sys
 import numpy as np
 from osgeo import gdal, osr
 

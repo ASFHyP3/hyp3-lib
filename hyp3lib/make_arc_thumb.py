@@ -7,7 +7,6 @@ import argparse
 from PIL import Image
 import base64
 import os
-import sys
 
 
 def pngtothumb(pngfile):

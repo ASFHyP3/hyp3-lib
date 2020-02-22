@@ -7,7 +7,6 @@ from lxml import etree
 import argparse
 import logging
 import os
-import sys
 
 def verify_opod(fi):
     logging.info("Verifying state vector file")

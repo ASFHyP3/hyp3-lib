@@ -6,7 +6,6 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 from hyp3lib import saa_func_lib as saa
 import numpy as np
 import os
-import sys
 import argparse
 from scipy.ndimage.filters import uniform_filter
 

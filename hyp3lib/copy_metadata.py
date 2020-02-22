@@ -4,7 +4,6 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import os
-import sys
 import argparse
 from hyp3lib import saa_func_lib as saa
 from osgeo import gdal

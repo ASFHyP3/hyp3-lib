@@ -4,7 +4,6 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import os
-import sys
 import zipfile
 import shutil
 from lxml import etree

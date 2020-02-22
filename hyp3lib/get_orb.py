@@ -7,7 +7,6 @@ import re
 from lxml import html
 import os
 from datetime import datetime, timedelta
-import sys
 import argparse
 from hyp3lib.verify_opod import verify_opod
 import requests
