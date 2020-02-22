@@ -32,16 +32,13 @@ def copy_metadata(infile, outfile):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
     )
     parser.add_argument("infile", help="Input tif filename")
     parser.add_argument("outfile", help="Output tif filename")
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     copy_metadata(args.infile, args.outfile)
 

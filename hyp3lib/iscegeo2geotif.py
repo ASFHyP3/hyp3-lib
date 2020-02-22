@@ -123,16 +123,13 @@ def convert_files(s1aFlag,proj=None,res=30):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
     )
     parser.add_argument("-p","--proj",help="Projection code to convert to")
     parser.add_argument("-r","--res",type=float,help="Resolution for projection")
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     convert_files(True,proj=args.proj,res=args.res)
 

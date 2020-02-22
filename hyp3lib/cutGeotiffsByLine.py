@@ -84,16 +84,13 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
     )
     parser.add_argument("infiles", nargs='+',
                         help="Geotiff files to clip; output will be have _clip appended to the file name")
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     cutGeotiffsByLine(args.infiles)
 

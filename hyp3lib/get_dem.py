@@ -562,9 +562,6 @@ def positive_int(value):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -581,7 +578,7 @@ def main():
     parser.add_argument("-l", "--latlon", action='store_true',
                         help="Create output in GCS coordinates (default is native DEM projection)")
     parser.add_argument("-k", "--keep", action='store_true', help="Keep intermediate DEM results")
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     logFile = "get_dem_{}.log".format(os.getpid())
     logging.basicConfig(filename=logFile, format='%(asctime)s - %(levelname)s - %(message)s',

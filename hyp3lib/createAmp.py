@@ -21,16 +21,13 @@ def createAmp(fi,nodata=None):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
     )
     parser.add_argument("infile", nargs="+", help="Input tif filename(s)")
     parser.add_argument("-n", "--nodata", type=float, help="Set nodata value")
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     infiles = args.infile
     for fi in infiles:

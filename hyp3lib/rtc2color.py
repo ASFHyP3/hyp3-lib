@@ -138,9 +138,6 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -153,7 +150,7 @@ def main():
     parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
     parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
     parser.add_argument('-float', action='store_true', help='save as floating point')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     rtc2color(args.fullpol, args.crosspol, args.threshold, args.geotiff,
               args.cleanup, args.teal, args.amp, args.float)

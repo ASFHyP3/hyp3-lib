@@ -57,9 +57,6 @@ def rasterMask(inFile, maskFile, aoiFile, maskAoiFile, outFile):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -69,7 +66,7 @@ def main():
     parser.add_argument('aoiFile', help='name of the AOI polygon file')
     parser.add_argument('maskAoiFile', help='name of the AOI mask file')
     parser.add_argument('outFile', help='name of the masked file')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     rasterMask(
         args.inFile, args.maskFile, args.aoiFile, args.maskAoiFile, args.outFile

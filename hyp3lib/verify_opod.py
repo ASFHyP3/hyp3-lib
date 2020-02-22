@@ -30,15 +30,12 @@ def verify_opod(fi):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
     )
     parser.add_argument("OPODfile",help="S1 OPOD file")
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     logFile = "OPOD_{}.log".format(os.getpid())
     logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',

@@ -32,16 +32,13 @@ def makeAsfBrowse(geotiff, baseName, use_nn=False):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
     )
     parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
     parser.add_argument('basename', help='base name of output file (output)')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
         print('GeoTIFF file (%s) does not exist!' % args.geotiff)

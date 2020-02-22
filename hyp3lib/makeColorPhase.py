@@ -389,9 +389,6 @@ def makeCycleColor(samples):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -402,7 +399,7 @@ def main():
     parser.add_argument('-r',type=float,help='Reduction factor for phase rate',default=1)
     parser.add_argument('-s',type=float,help='Color cycle shift value (0..2pi)',default=0)
     parser.add_argument('-t',choices=['CMY','RYB','RWB'],help='Name of color table to use (default CMY)',default='CMY')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
         print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)

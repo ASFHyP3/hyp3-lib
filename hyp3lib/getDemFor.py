@@ -36,9 +36,6 @@ def getDemFile(infile,outfile,opentopoFlag=None,utmFlag=True,post=None,demName=N
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -50,7 +47,7 @@ def main():
         help="Create DEM in lat,lon space - dangerous option for polar imagery")
     parser.add_argument("-d","--dem",help="Only use the specified DEM type")
     parser.add_argument("-p","--post",help="Posting for creating DEM",type=float)
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     logFile = "getDemFor_{}.log".format(os.getpid())
     logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',

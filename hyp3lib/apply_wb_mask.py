@@ -89,9 +89,6 @@ def apply_wb_mask(tiffile,outfile,maskval=0,gcs=True):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -99,7 +96,7 @@ def main():
     parser.add_argument('tiffile',help='Name of tif file to mask')
     parser.add_argument('outfile',help='Name of output masked file')
     parser.add_argument('-m','--maskval',help='Mask value to apply; default 0',type=float,default=0)
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     logFile = "apply_wb_mask_{}_log.txt".format(os.getpid())
     logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',

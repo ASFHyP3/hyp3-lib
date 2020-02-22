@@ -145,9 +145,6 @@ def subset_geotiff_shape(inGeoTIFF, shapeFile, outGeoTIFF):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -155,7 +152,7 @@ def main():
     parser.add_argument('inGeoTIFF', help='name of the full size GeoTIFF file (input)')
     parser.add_argument('shapeFile', help='name of the shapefile (input)')
     parser.add_argument('outGeoTIFF', help='name of the subsetted GeoTIFF file (output)')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     if not os.path.exists(args.inGeoTIFF):
         print('GeoTIFF file (%s) does not exist!' % args.inGeoTIFF)

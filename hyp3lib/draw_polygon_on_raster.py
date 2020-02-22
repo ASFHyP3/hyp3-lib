@@ -189,9 +189,6 @@ def draw_polygon_from_shape_on_raster(inRaster, shapeFile, polyColor, outRaster)
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -200,7 +197,7 @@ def main():
     parser.add_argument('shape', help='name of the polygon shapefile to be drawn')
     parser.add_argument('color', help='color of the polygon')
     parser.add_argument('outRaster', help='name of the output raster file')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     draw_polygon_from_shape_on_raster(args.inRaster, args.shape, args.color,
                                       args.outRaster)

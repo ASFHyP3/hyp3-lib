@@ -64,9 +64,6 @@ def enhanced_lee(infile,outfile,looks,size,dampening):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -76,7 +73,7 @@ def main():
     parser.add_argument("looks",help="Looks to use",type=float)
     parser.add_argument("size",help="Kernel size to use",type=float)
     parser.add_argument("dampening",help="Dampening factor",type=float)
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     enhanced_lee(args.infile,args.outfile,args.looks,args.size,args.dampening)
 

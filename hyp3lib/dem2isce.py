@@ -110,9 +110,6 @@ def dem2isce(demFile, hdrFile, xmlFile):
 def main():
     """Main entrypoint"""
 
-    # entrypoint name can differ from module name, so don't pass 0-arg
-    cli_args = sys.argv[1:] if len(sys.argv) > 1 else None
-
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
@@ -123,7 +120,7 @@ def main():
                         help='name of the ENVI header file')
     parser.add_argument('xml', metavar='<xml>',
                         help='name of XML file')
-    args = parser.parse_args(cli_args)
+    args = parser.parse_args()
 
     dem2isce(args.dem, args.hdr, args.xml)
 
