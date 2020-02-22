@@ -698,7 +698,7 @@ def download(cfg, keys_queue):
                 resume_opt = "--continue"
 
         if get_it:
-            cmd = ('wget %s %s --http-user=%s --http-password=%s -O %s %s' % (cfg.wget_options, resume_opt, cfg.user, re.escape(cfg.password), dataStr, url))
+            cmd = ("wget %s %s --http-user='%s' --http-password='%s' -O %s %s" % (cfg.wget_options, resume_opt, cfg.user, cfg.password, dataStr, url))
 
             start_time = time.time()
             o,ok = execute(cmd, dataStr, quiet=True)
