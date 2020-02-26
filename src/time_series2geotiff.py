@@ -11,18 +11,6 @@ from asf_geometry import data2geotiff
 from asf_time_series import ncStream2meta, getNetcdfGranule
 from argparse_helpers import file_exists, dir_exists_create
 
-# data = individual dataset.variables['image'][:]
-# Assumes 0 < scaleFrom, 0 < scaleTo
-def scaleImageZeroCenter(data, scaleFromMax, scaleToMax=255, theType=np.uint8):
-  (rows, cols) = data.shape
-  for x in range(rows):
-    for y in range(cols):
-      # Don't try to scale nan:
-      if np.isnan(data[x][y]):
-        continue
-      data[x][y] = theType(data[x][y]*scaleToMax/scaleFromMax)
-  print(data)
-  return data
 
 # ncFilePath = str path to nc.Dataset, or Dataset itself
 # outDir = str path
@@ -58,10 +46,6 @@ def time_series2geotiff(ncFile, outDir, granuleList=None):
     data = images[t,:,:]
     outFile = os.path.join(outDir, granule+'_time_series.tif')
     geotiff_paths.append(outFile)
-
-    # Convert the range of the tiff data:
-    maxVal = np.nanmax(data)
-    data = scaleImageZeroCenter(data, maxVal)
 
     ## Save time series layers into GeoTIFF files
     print('Saving result to GeoTIFF file ({0})'.format(outFile))
