@@ -397,11 +397,14 @@ def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
 
   (rows, cols) = data.shape
   gdalDriver = gdal.GetDriverByName('GTiff')
-  if dtype == 'BYTE':
+  if dtype.upper() == 'BYTE': # aka GDT_UInt8:
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
       ['COMPRESS=DEFLATE'])
-  elif dtype == 'FLOAT':
+  elif dtype.upper() == 'FLOAT':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Float32,
+      ['COMPRESS=DEFLATE'])
+  elif dtype.upper() == 'INT':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_UInt16,
       ['COMPRESS=DEFLATE'])
   outRaster.SetGeoTransform(geoTrans)
   outRaster.SetProjection(proj.ExportToWkt())
