@@ -3,6 +3,7 @@
 import argparse
 from argparse import RawTextHelpFormatter
 import os
+import io # To remove that BOM bit from some csv's
 import sys
 from osgeo import gdal, ogr, osr
 from datetime import datetime, timedelta
@@ -15,7 +16,8 @@ from asf_time_series import addImage2netcdf, initializeNetcdf
 def csv2time_series_netcdf(csvFile, netcdfFile):
 
   ### Read CSV files
-  lines = [line.rstrip() for line in open(csvFile)]
+  csv_file = io.open(csvFile, "r", encoding='utf-8-sig') # utf-8-sig handles BOM
+  lines = [line.rstrip() for line in csv_file]
   timeCount = len(lines)
   width = len(lines[0].split(','))
   height = 1
