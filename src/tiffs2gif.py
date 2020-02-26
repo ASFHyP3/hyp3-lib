@@ -2,7 +2,7 @@ import argparse
 import os
 import imageio
 import shutil, glob
-
+import subprocess
 from skimage import img_as_ubyte
 
 from argparse_helpers import file_exists, dir_exists_create
@@ -10,6 +10,16 @@ from asf_time_series import getNetcdfGranule
 from time_series2geotiff import time_series2geotiff
 # https://stackoverflow.com/questions/41228209/making-gif-from-images-using-imageio-in-python
 
+def tiffListToNcFile(tiff_list, output, fps=2):
+	tiff_stream_list = []
+	for tiff in tiff_list:
+		tiff = imageio.imread(tiff)
+		tiff_stream_list.append(tiff)
+
+	# Create the GIF:
+	imageio.mimsave(output, tiff_stream_list, fps=fps)
+	#Normalize the new GIF:
+	subprocess.run(["convert", output,"-normalize", output])
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description="Creates a GIF, from a netCDF")
@@ -43,16 +53,7 @@ if __name__ == '__main__':
 			print("No tiff's found! Looked for files matching: '{0}'.".format(pattern))
 			exit(-1)
 
-	tiff_stream_list = []
-	for tiff in tiff_list:
-		tiff = imageio.imread(tiff)
-		tiff_stream_list.append(tiff)
-
-	# Create the GIF:
-	imageio.mimsave(args.output, tiff_stream_list, fps=args.fps)
-
-	# tiffs values are currently 0-5. Look to scaling 0-255, and get around nan:
-	# https://machinelearningmastery.com/how-to-manually-scale-image-pixel-data-for-deep-learning/
+	tiffListToNcFile(tiff_list, args.output, fps=args.fps)
 
 	if created_tiffs:
 		shutil.rmtree(tmp_dir)
