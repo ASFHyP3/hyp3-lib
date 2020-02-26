@@ -105,7 +105,7 @@ def initializeNetcdf(ncFile, meta):
 
 # Lets other tools use this without reading from directory:
 def getNetcdfTime(ncFileStream):
-  timeRef = ncFileStream.variables['time'][:].getncattr('units')[14:]
+  timeRef = ncFileStream.variables['time'].getncattr('units')[14:]
   timeRef = datetime.strptime(timeRef, '%Y-%m-%d %H:%M:%S')
   time = ncFileStream.variables['time'][:].tolist()
   timestamps = []
