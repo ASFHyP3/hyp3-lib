@@ -20,7 +20,7 @@ def initializeNetcdf(ncFile, meta):
   dataset = nc.Dataset(ncFile, 'w', format='NETCDF4')
 
   ### Define global attributes
-  dataset.Conventions = ('CF-1.7')
+  dataset.Conventions = ('CF-1.8')
   dataset.institution = meta['institution']
   dataset.title = meta['title']
   dataset.source = meta['source']
@@ -121,6 +121,7 @@ def extractNetcdfTime(ncFilePath, csvFile):
   timestamps = getNetcdfTime(ncFile)
   for t in timestamps:
     outF.write('%s\n' % t)
+
   outF.close()
   ncFile.close()
 
@@ -270,6 +271,13 @@ def vector_meta(vectorFile):
 
 def raster_metadata(input):
 
+  # Extract other raster image metadata
+  (outSpatialRef, outGt, outShape, outPixel) = raster_meta(input)
+  if outSpatialRef.GetAttrValue('AUTHORITY', 0) == 'EPSG':
+    epsg = int(outSpatialRef.GetAttrValue('AUTHORITY', 1))
+  else:
+    epsg = 4326
+
   # Set up shapefile attributes
   fields = []
   field = {}
@@ -290,10 +298,21 @@ def raster_metadata(input):
   field['name'] = 'originY'
   field['type'] = ogr.OFTReal
   fields.append(field)
-  field = {}
-  field['name'] = 'pixSize'
-  field['type'] = ogr.OFTReal
-  fields.append(field)
+  if epsg == 4326:
+    ## Geographic case: Potentially non-square pixels
+    field = {}
+    field['name'] = 'pixSizeX'
+    field['type'] = ogr.OFTReal
+    fields.append(field)
+    field = {}
+    field['name'] = 'pixSizeY'
+    field['type'] = ogr.OFTReal
+    fields.append(field)
+  else:
+    field = {}
+    field['name'] = 'pixSize'
+    field['type'] = ogr.OFTReal
+    fields.append(field)
   field = {}
   field['name'] = 'cols'
   field['type'] = ogr.OFTInteger
@@ -308,11 +327,6 @@ def raster_metadata(input):
   field['width'] = 8
   fields.append(field)
 
-  # Extract other raster image metadata
-  (outSpatialRef, outGt, outShape, outPixel) = raster_meta(input)
-  if outSpatialRef.GetAttrValue('AUTHORITY', 0) == 'EPSG':
-    epsg = int(outSpatialRef.GetAttrValue('AUTHORITY', 1))
-
   # Add granule name and geometry
   base = os.path.basename(input)
   granule = os.path.splitext(base)[0]
@@ -321,7 +335,11 @@ def raster_metadata(input):
   value['epsg'] = epsg
   value['originX'] = outGt[0]
   value['originY'] = outGt[3]
-  value['pixSize'] = outGt[1]
+  if epsg == 4326:
+    value['pixSizeX'] = outGt[1]
+    value['pixSizeY'] = -outGt[5]
+  else:
+    value['pixSize'] = outGt[1]
   value['cols'] = outShape[1]
   value['rows'] = outShape[0]
   value['pixel'] = outPixel
