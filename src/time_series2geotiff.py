@@ -76,5 +76,5 @@ if __name__ == '__main__':
   if args.listFile != None:
     listFile = [line.rstrip() for line in open(args.listFile)]
 
-  time_series2geotiff(args.inFile, args.outDir, granuleList=args.listFile)
+  time_series2geotiff(args.inFile, args.outDir, granuleList=listFile)
 
