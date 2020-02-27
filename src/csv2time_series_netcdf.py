@@ -11,9 +11,9 @@ import netCDF4 as nc
 import numpy as np
 import configparser
 from asf_time_series import addImage2netcdf, initializeNetcdf
+from argparse_helpers import file_exists
 
-
-def csv2time_series_netcdf(csvFile, netcdfFile):
+def csv2time_series_netcdf(csvFile, netcdfFile, days_apart=1):
 
   ### Read CSV files
   csv_file = io.open(csvFile, "r", encoding='utf-8-sig') # utf-8-sig handles BOM
@@ -55,7 +55,7 @@ def csv2time_series_netcdf(csvFile, netcdfFile):
   for ii in range(timeCount):
     layerName = ('test_layer_%03d' % (ii+1))
     granule.append(layerName)
-    days = timedelta(days=ii)
+    days = timedelta(days=ii*days_apart)
     date = refTime + days
     #timestamp.append(datetime.strptime(date, '%Y%m%dT%H%M%S'))
     timestamp.append(date)
@@ -79,17 +79,15 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(prog='csv2time_series_file',
     description='generates a time series stack from a CSV file',
     formatter_class=RawTextHelpFormatter)
-  parser.add_argument('csv', metavar='<csvfile>',
+  parser.add_argument('csv', metavar='<csvfile>', action="store", type=file_exists,
     help='name of the CSV input file')
-  parser.add_argument('netcdf', metavar='<netCDF file>',
-    help='name of the netCDF test time series file')
+  parser.add_argument('netcdf', metavar='<netCDF file>', action="store",
+    help='name of the netCDF test time series output file')
+  parser.add_argument('--days','-d', action="store", type=int, default=1,
+    help='Number of days apart to save each granule. (Default=1)')
   if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
   args = parser.parse_args()
 
-  if not os.path.exists(args.csv):
-    print('Configuration file (%s) does not exist!' % args.config)
-    sys.exit(1)
-
-  csv2time_series_netcdf(args.csv, args.netcdf)
+  csv2time_series_netcdf(args.csv, args.netcdf, days_apart=args.days)
