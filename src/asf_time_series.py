@@ -405,36 +405,35 @@ def netcdf2boundary_mask(ncFile, geographic):
   else:
     return (multipolygon, inSpatialRef)
 
-
-def time_series_slice(ncFile, sample, line):
-
-  timeSeries = nc.Dataset(ncFile, 'r')
-
+def time_series_slice_data(ncFileStream, sample, line):
   ### Extract information for variables: image, time, granule
-  timeRef = timeSeries.variables['time'].getncattr('units')[14:]
-  timeRef = datetime.strptime(timeRef, '%Y-%m-%d %H:%M:%S')
-  time = timeSeries.variables['time'][:].tolist()
-  timestamp = []
-  for t in time:
-    timestamp.append(timeRef + timedelta(seconds=t))
-  xGrid = timeSeries.variables['xgrid'][:]
-  yGrid = timeSeries.variables['ygrid'][:]
-  granules = timeSeries.variables['granule']
-  granule = nc.chartostring(granules[:])
-  data = timeSeries.variables['image']
-  numGranules = len(time)
+  timestamps = getNetcdfTime(ncFileStream)
+  granules = getNetcdfGranule(ncFileStream)
+
+  xGrid = ncFileStream.variables['xgrid'][:]
+  yGrid = ncFileStream.variables['ygrid'][:]
+
+  data = ncFileStream.variables['image']
+  numGranules = len(timestamps)
 
   ### Define geo transformation and map proejction
   originX = xGrid[0]
   originY = yGrid[0]
   pixelSize = xGrid[1] - xGrid[0]
   gt = (originX, pixelSize, 0, originY, 0, -pixelSize)
-  var = timeSeries.variables.keys()
+  var = ncFileStream.variables.keys()
   if 'Transverse_Mercator' in var:
-    wkt = timeSeries.variables['Transverse_Mercator'].getncattr('crs_wkt')
+    wkt = ncFileStream.variables['Transverse_Mercator'].getncattr('crs_wkt')
   else:
     print('Could not find map projection information!')
     sys.exit(1)
   value = data[:,sample,line]
 
-  return (granule, timestamp, value)
+  return (granules, timestamps, value)
+
+def time_series_slice(ncFile, sample, line):
+  timeSeries = nc.Dataset(ncFile, 'r')
+  (granules, timestamps, value) = time_series_slice_data(timeSeries, sample, line)
+  timeSeries.close()
+  return (granules, timestamps, value)
+  
