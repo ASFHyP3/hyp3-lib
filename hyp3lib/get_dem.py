@@ -423,6 +423,8 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         get_tile_for,
         [(demname, fi) for fi in tile_list]
     )
+    p.close()
+    p.join()
 
     #os.system("gdalbuildvrt temp.vrt DEM/*.tif")
     if "EU_DEM" in demname:
