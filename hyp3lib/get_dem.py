@@ -350,7 +350,7 @@ def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
         et.SubElement(source, 'NODATA').text = "{}".format(nodata)
 
     # Write VRT file
-    with open(outFile, 'w') as outF:
+    with open(outFile, 'wb') as outF:
         outF.write(et.tostring(vrt, xml_declaration=False, encoding='utf-8',
             pretty_print=True))
         outF.close()

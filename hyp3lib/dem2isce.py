@@ -100,7 +100,7 @@ def dem2isce(demFile, hdrFile, xmlFile):
   et.SubElement(element_property, 'doc').text = 'Coordinate size.'
   
   # Write the tree structure to file
-  with open(xmlFile, 'w') as outF:
+  with open(xmlFile, 'wb') as outF:
     outF.write(et.tostring(isce, encoding='UTF-8', xml_declaration=True, 
       pretty_print=True))
   outF.close()

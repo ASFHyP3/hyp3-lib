@@ -42,7 +42,7 @@ def makeKML(geotiff,pngFile):
     et.SubElement(icon, 'viewBoundScale').text = '0.75'
     latLonQuad = et.SubElement(overlay, '{0}LatLonQuad'.format(gx))
     et.SubElement(latLonQuad, 'coordinates').text = coordStr
-    with open(kmlFile, 'w') as outF:
+    with open(kmlFile, 'wb') as outF:
       outF.write(et.tostring(kml, xml_declaration=True, encoding='utf-8',
         pretty_print=True))
     outF.close()

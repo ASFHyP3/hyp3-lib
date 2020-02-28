@@ -42,7 +42,7 @@ def write_aux_file(spatialRef, auxFile):
     et.SubElement(band, 'NoDataValue').text = '0.00000000000000E+00'
     domain = et.SubElement(band, 'Metadata', {'domain': 'IMAGE_STRUCTURE'})
     et.SubElement(domain, 'MDI', {'key': 'COMPRESSION'}).text = 'JPEG'
-    with open(auxFile, 'w') as outF:
+    with open(auxFile, 'wb') as outF:
         outF.write(et.tostring(aux, pretty_print=True))
     outF.close()
 
