@@ -35,8 +35,6 @@ stages:
 
 bandit SAST:
   stage: static analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install bandit
@@ -51,15 +49,14 @@ bandit SAST:
 
 trufflehog secrets:
   stage: static analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install trufflehog gitdb2=="2.*"
   script:
     - export LAST_TAG_HASH=$(git show-ref --hash -- $(git describe --abbrev=0))
     - echo "config/.*.shp.xml" > exclude-patterns.txt
-    - trufflehog --regex --entropy True -x exclude-patterns.txt --since_commit "${LAST_TAG_HASH}" file://"${PWD}" > trufflehog_report.txt
+    - trufflehog --regex --entropy True -x exclude-patterns.txt \
+      --since_commit "${LAST_TAG_HASH}" file://"${PWD}" > trufflehog_report.txt
   artifacts:
     when: on_failure
     paths:
@@ -67,8 +64,6 @@ trufflehog secrets:
 
 gitleaks:
   stage: static analysis
-  tags:
-    - kubernetes
   image:
     name: "zricethezav/gitleaks"
     entrypoint: ["/bin/bash"]
@@ -84,8 +79,6 @@ gitleaks:
 
 flake8 full:
   stage: static analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
@@ -99,8 +92,6 @@ flake8 full:
 
 flake8 limted:
   stage: static analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
@@ -109,8 +100,6 @@ flake8 limted:
 
 pylint:
   stage: static analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install pylint
@@ -124,8 +113,6 @@ pylint:
 
 xenon:
   stage: static analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install xenon radon
@@ -145,8 +132,6 @@ xenon:
 
 pytest 37:
   stage: test
-  tags:
-    - kubernetes
   before_script:
     - *before_conda_env
   script:
@@ -159,8 +144,6 @@ pytest 37:
 
 safety 37:
   stage: dependancy analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install safety
@@ -174,8 +157,6 @@ safety 37:
 
 pytest 38:
   stage: test
-  tags:
-    - kubernetes
   before_script:
     - *before_conda_env
   script:
@@ -187,8 +168,6 @@ pytest 38:
 
 safety 38:
   stage: dependancy analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install safety
@@ -202,8 +181,6 @@ safety 38:
 
 pytest 36:
   stage: test
-  tags:
-    - kubernetes
   before_script:
     - *before_conda_env
   script:
@@ -215,8 +192,6 @@ pytest 36:
 
 safety 36:
   stage: dependancy analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install safety
@@ -230,8 +205,6 @@ safety 36:
 
 pytest 27:
   stage: test
-  tags:
-    - kubernetes
   before_script:
     - *before_conda_env
   script:
@@ -243,8 +216,6 @@ pytest 27:
 
 safety 27:
   stage: dependancy analysis
-  tags:
-    - kubernetes
   before_script:
     - *before_defaults
     - python3 -m pip install safety
@@ -258,8 +229,6 @@ safety 27:
 
 package S3 PyPI:
   stage: package
-  tags:
-    - kubernetes
   script:
     - echo "Building version $(python3 setup.py --version)"
     - python3 setup.py sdist bdist_wheel
@@ -269,8 +238,6 @@ package S3 PyPI:
 
 test S3 PyPI:
   stage: verify
-  tags:
-    - kubernetes
   before_script:
     - *before_conda_env
     - *before_defaults
