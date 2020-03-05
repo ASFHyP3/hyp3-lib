@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 ###############################################################################
 # get_dem.py
@@ -59,7 +59,7 @@ def transform_bounds(inb, inepsg, outepsg):
     ret1 = transform_point(ptx,pty,inepsg,outepsg)
     ptx = inb[2]
     pty = inb[3]
-    ret2 = transform_point(ptx,pty,inepsg,outepsg) 
+    ret2 = transform_point(ptx,pty,inepsg,outepsg)
     return([ret1[0],ret1[1],ret2[0],ret2[1]])
 
 def transform_point(ptx,pty,inepsg,outepsg):
@@ -91,7 +91,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
     with open(myfile) as f:
         content = f.readlines()
         for item in content:
-            dem_list.append([item.split()[0],item.split()[2]]) 
+            dem_list.append([item.split()[0],item.split()[2]])
     logging.info("dem_list {}".format(dem_list))
 
     # If a dem is specified, use it instead of the list
@@ -115,8 +115,8 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             logging.info("Reprojecting corners into projection {}".format(demEPSG))
             proj_wkt = reproject_wkt(scene_wkt,4326,int(demEPSG))
         else:
-            proj_wkt = scene_wkt 
-               
+            proj_wkt = scene_wkt
+
         dataset = driver.Open(os.path.join(shpdir,DEM+'_coverage.shp'), 0)
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
         total_area = poly.GetArea()
@@ -326,6 +326,11 @@ def get_ll_dem(west,south,east,north,outDem,post=None,processes=1,demName=None,l
 # Main external entry point
 def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,leave=False):
 
+    if demName == 'VISNAV':
+      resampleAlg = 'near'
+    else:
+      resampleAlg = 'cubic'
+
     if post is not None:
         logging.info("Snapping to grid at posting of %s meters" % post)
 
@@ -373,10 +378,12 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     elif "REMA" in demname:
         nodata = 0
     elif "NED" in demname or "EU_DEM_V11" in demname:
-        nodata = -3.4028234663852886e+38 
+        nodata = -3.4028234663852886e+38
+    elif 'VISNAV' in demname:
+      nodata = 255
 
     writeVRT(demproj, nodata, tile_list, poly_list, 'temp.vrt')
- 
+
 #
 #   Set the output projection to either NPS, SPS, or UTM
 #
@@ -397,7 +404,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         else:
             outproj = ('EPSG:327%02d' % int(zone))
             outproj_num = int("327%02d"%int(zone))
-     
+
     tmpdem = "xxyyzz_img.tif"
     tmpdem2 = "aabbcc_img.tif"
     tmpproj = "lmnopqr_img.tif"
@@ -435,9 +442,9 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
             (bounds[1], bounds[3]) = (bounds[3], bounds[1])
 
     if demproj == 4269 or demproj == 4326:
-        gdal.Warp(tmpdem,"temp.vrt",xRes=gcssize,yRes=gcssize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        gdal.Warp(tmpdem,"temp.vrt",xRes=gcssize,yRes=gcssize,outputBounds=bounds,resampleAlg=resampleAlg,dstNodata=-32767)
     else:
-        gdal.Warp(tmpdem,"temp.vrt",xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        gdal.Warp(tmpdem,"temp.vrt",xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg=resampleAlg,dstNodata=-32767)
 
     # If DEM is from NED collection, then it will have a NAD83 ellipse -
     # need to convert to WGS84
@@ -469,7 +476,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     # Reproject the DEM file into UTM space
     if demproj != outproj_num:
         logging.info("Translating raster file to projected coordinates ({p})".format(p=outproj))
-        gdal.Warp(tmpproj,tmpdem,dstSRS=outproj,xRes=pixsize,yRes=pixsize,resampleAlg="cubic",
+        gdal.Warp(tmpproj,tmpdem,dstSRS=outproj,xRes=pixsize,yRes=pixsize,resampleAlg=resampleAlg,
                   srcNodata=-32767,dstNodata=-32767)
         infile = tmpproj
     else:
@@ -479,13 +486,13 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
 
     # Snap to posting grid
     if  post:
-        snap_to_grid(post,pixsize,infile,outfile)
+        snap_to_grid(post,pixsize,resampleAlg,infile,outfile)
     else:
         shutil.copy(infile,outfile)
 
     report_min(outfile)
 
-    # Clean up intermediate files           
+    # Clean up intermediate files
     if not leave:
         if os.path.isfile(tmpdem):
             logging.info("Removing temp file {}".format(tmpdem))
@@ -506,24 +513,24 @@ def report_min(inDem):
 def clean_dem(inDem,outDem):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(inDem))
     logging.info("Replacing values less than -1000 with zero")
-    data[data<=-1000] = -32767 
+    data[data<=-1000] = -32767
     logging.info("DEM Maximum value: {}".format(np.max(data)))
     logging.info("DEM minimum value: {}".format(np.min(data)))
- 
+
     if data.dtype == np.float32:
         saa.write_gdal_file_float(outDem,trans,proj,data.astype(np.float32))
     elif data.dtype == np.uint16:
         saa.write_gdal_file(outDem,trans,proj,data)
-    else: 
+    else:
         logging.error("ERROR: Unknown DEM data type {}".format(dataType))
         exit(1)
 
-def snap_to_grid(post, pixsize, infile, outfile):
+def snap_to_grid(post, pixsize, resampleAlg, infile, outfile):
     if post:
         logging.info("Snapping file to grid at %s meters" % post)
         (e_min,e_max,n_min,n_max) = get_cc(infile,post,pixsize)
         bounds = [e_min,n_min,e_max,n_max]
-        gdal.Warp(outfile,infile,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        gdal.Warp(outfile,infile,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg=resampleAlg,dstNodata=-32767)
     else:
         logging.info("Copying DEM to output file name")
         shutil.copy(infile,outfile)
