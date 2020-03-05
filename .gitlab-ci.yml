@@ -55,7 +55,7 @@ trufflehog secrets:
   script:
     - export LAST_TAG_HASH=$(git show-ref --hash -- $(git describe --abbrev=0))
     - echo "config/.*.shp.xml" > exclude-patterns.txt
-    - trufflehog --regex --entropy True -x exclude-patterns.txt \
+    - trufflehog --regex --entropy True -x exclude-patterns.txt
       --since_commit "${LAST_TAG_HASH}" file://"${PWD}" > trufflehog_report.txt
   artifacts:
     when: on_failure
