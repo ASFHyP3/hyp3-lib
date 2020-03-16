@@ -404,6 +404,9 @@ def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
   if dtype == 'BYTE':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
       ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
+  elif dtype == 'INT16':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int16,
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   elif dtype == 'INT32':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int32,
       ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
