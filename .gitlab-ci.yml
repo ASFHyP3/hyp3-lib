@@ -12,25 +12,73 @@ variables:
   - python3 -m pip install --upgrade pip
   - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
+
+# NOTE: the templates below are so that we can add additional jobs to the CI
+#       pipeline for merge requests (MR). Ideally, anytime someone pushes to *any*
+#       branch, we would just run basic static analysis, and then, when a MR is
+#       opened, we'd add in building and deploying the python package to S3 and
+#       the docker container to ECR so that reviewers can easily test the MR.
+#       HOWEVER, gitlab's merge requests pipelines work differently than other
+#       pipelines meaning we need to specify `only: [branches, merge_requests]`
+#       for jobs we want to always run:
+#           https://stackoverflow.com/questions/52746338/in-gitlab-ci-is-there-a-variable-for-a-merge-requests-target-branch/52944197#52944197
+#       But doing so creates both a "push" pipeline and a "MR" pipeline, so the
+#       `always_run` jobs are run in duplicate. There doesn't seem to be any
+#       easy way around this currently:
+#           https://gitlab.com/gitlab-org/gitlab-foss/issues/56632
+#      So, our team we'll have to live with duplicates for a bit, and follow
+#      "only open a MR when you're ready for review!" best practice.
+.always_run_template: &always_run
+  only:
+    - branches
+    - merge_requests
+
+.mr_protected_template: &only_mr_protected
+  only:
+    - merge_requests
+    - master
+    - develop
+
+
 default:
   image:
     name: continuumio/miniconda3:latest
     entrypoint: ["/bin/bash"]
-  # Tags are not(!) inherited by jobs, contrary to the docs.
-  # See: https://gitlab.com/gitlab-org/gitlab/issues/194312
-  # tags:
-  #   - kubernetes
   before_script:
     - *before_defaults
 
 stages:
-    # TODO: - tools-bot
+    - tools-bot
     - static analysis
     - test
     - dependancy analysis
     - package
     - verify
     # TODO: - trigger
+
+
+Tag version:
+  stage: tools-bot
+  before_script:
+    - chmod 600 ${GITLAB_TOOLS_BOT_SSH}
+    - git config core.sshCommand "ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${GITLAB_TOOLS_BOT_SSH} -F /dev/null"
+    - git config --global user.email "UAF-asf-apd@alaska.edu"
+    - git config --global user.name "Tools-bot"
+    - git remote set-url origin git@scm.asf.alaska.edu:hyp3/hyp3-lib.git
+    - git fetch --all
+    - apt-get install -y jq curl
+    - 'export MERGE_REQUEST_PARENT=$(git log --pretty=%P -n 1 "${CI_COMMIT_SHA}" | awk -F '' '' ''{print $2}'')'
+    - 'export BUMP_PART=$(curl -LsS -H "PRIVATE-TOKEN: ${GITLAB_TOOLS_BOT_PAK}" "https://scm.asf.alaska.edu/api/v4/projects/${CI_PROJECT_ID}/repository/commits/${MERGE_REQUEST_PARENT}/merge_requests" | jq -c --raw-output ''.[0].labels[] | select(. == "major" or . == "minor" or . == "patch")'' | sort | head -1)'
+    - *before_defaults
+    - python3 -m pip install bump2version
+  script:
+    - 'bump2version --current-version $(git describe --abbrev=0) --tag --tag-message "$(printf "%q" "${CI_COMMIT_MESSAGE}")" "${BUMP_PART}"'
+    - git push --tags
+    - git checkout develop && git pull --ff-only
+    - git merge --ff-only origin/master
+    - git push -o ci.skip
+  only:
+    - master
 
 
 bandit SAST:
@@ -46,6 +94,7 @@ bandit SAST:
     when: on_failure
     paths:
       - bandit_report.html
+  <<: *always_run
 
 trufflehog secrets:
   stage: static analysis
@@ -61,6 +110,7 @@ trufflehog secrets:
     when: on_failure
     paths:
       - trufflehog_report.txt
+  <<: *always_run
 
 gitleaks:
   stage: static analysis
@@ -76,6 +126,7 @@ gitleaks:
     when: on_failure
     paths:
       - gitleaks_report.json
+  <<: *always_run
 
 flake8 full:
   stage: static analysis
@@ -89,6 +140,7 @@ flake8 full:
     when: on_failure
     paths:
       - flake8_report.txt
+  <<: *always_run
 
 flake8 limted:
   stage: static analysis
@@ -97,6 +149,7 @@ flake8 limted:
     - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
   script:
     - flake8 --max-line-length=120  --ignore=A,B,E,I,W,N8
+  <<: *always_run
 
 pylint:
   stage: static analysis
@@ -110,6 +163,7 @@ pylint:
     when: on_failure
     paths:
       - pylint_report.txt
+  <<: *always_run
 
 xenon:
   stage: static analysis
@@ -128,6 +182,7 @@ xenon:
     when: on_failure
     paths:
       - radon_*_report.txt
+  <<: *always_run
 
 
 pytest 37:
@@ -141,6 +196,7 @@ pytest 37:
     paths:
       - pip_freeze_*.txt
       - conda_export_*.txt
+  <<: *always_run
 
 safety 37:
   stage: dependancy analysis
@@ -153,7 +209,7 @@ safety 37:
   needs:
     - job: "pytest 37"
       artifacts: true
-
+  <<: *always_run
 
 pytest 38:
   stage: test
@@ -165,6 +221,7 @@ pytest 38:
     paths:
       - pip_freeze_*.txt
       - conda_export_*.txt
+  <<: *only_mr_protected
 
 safety 38:
   stage: dependancy analysis
@@ -177,6 +234,7 @@ safety 38:
   needs:
     - job: "pytest 38"
       artifacts: true
+  <<: *only_mr_protected
 
 
 pytest 36:
@@ -189,6 +247,7 @@ pytest 36:
     paths:
       - pip_freeze_*.txt
       - conda_export_*.txt
+  <<: *only_mr_protected
 
 safety 36:
   stage: dependancy analysis
@@ -201,6 +260,7 @@ safety 36:
   needs:
     - job: "pytest 36"
       artifacts: true
+  <<: *only_mr_protected
 
 
 pytest 27:
@@ -213,6 +273,7 @@ pytest 27:
     paths:
       - pip_freeze_*.txt
       - conda_export_*.txt
+  <<: *only_mr_protected
 
 safety 27:
   stage: dependancy analysis
@@ -225,6 +286,7 @@ safety 27:
   needs:
     - job: "pytest 27"
       artifacts: true
+  <<: *only_mr_protected
 
 
 package S3 PyPI:
@@ -234,6 +296,7 @@ package S3 PyPI:
     - python3 setup.py sdist bdist_wheel
     - echo "Uploading version $(python3 setup.py --version) to S3-PyPI"
     - s3pypi --bucket hyp3-pypi --verbose
+  <<: *only_mr_protected
 
 
 test S3 PyPI:
@@ -244,3 +307,4 @@ test S3 PyPI:
     - export SDIST_VERSION=$(python3 setup.py --version)
   script:
     - tox -e py37-verify
+  <<: *only_mr_protected
