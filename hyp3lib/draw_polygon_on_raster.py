@@ -2,7 +2,6 @@
 
 import argparse
 from argparse import RawTextHelpFormatter
-import os
 import shutil
 import sys
 from osgeo import gdal, ogr, osr
@@ -226,7 +225,7 @@ def draw_polygon_from_gcs_polygon_on_raster(inRaster, gcsPolygon, polyColor,
 
   # Extracting intersection of raster image and shapefile geometry
   rasterSpatialRef = get_raster_spatial_reference(inRaster)
-  vectorPolygon = gcs2proj_geometry(gcsPolygon, rasterSpatialRef)
+  vectorPolygon = gcs2poly_geometry(gcsPolygon, rasterSpatialRef)
   polygon = intersect_raster_with_polygon(inRaster, vectorPolygon)
 
   # Draw polygon on geocoded image
