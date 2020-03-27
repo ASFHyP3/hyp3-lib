@@ -103,6 +103,7 @@ setup(
         'resample_geotiff.py = hyp3lib.resample_geotiff:main',
         'rtc2colordiff.py = hyp3lib.rtc2colordiff:main',
         'rtc2color.py = hyp3lib.rtc2color:main',
+        'simplify_shapefile.py = hyp3lib.simplify_shapefile:main',
         'SLC_copy_S1_fullSW.py = hyp3lib.SLC_copy_S1_fullSW:main',
         'subset_geotiff_shape.py = hyp3lib.subset_geotiff_shape:main',
         'tileList2shape.py = hyp3lib.tileList2shape:main',

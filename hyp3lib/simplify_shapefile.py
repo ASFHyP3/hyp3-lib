@@ -1,4 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Simplify complicated shapefiles"""
+
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import glob
 import shutil
@@ -73,7 +76,7 @@ def simplify_shapefile(inshp,outshp):
                 logging.info("        {}: {}".format(x,results['repairs'][x]['report']))
     
         if "wkt" in results.keys():
-#            logging.info("{}".format(results['wkt']['wrapped']))
+            # logging.info("{}".format(results['wkt']['wrapped']))
             wkt = ("{}".format(results['wkt']['wrapped']))
             logging.info("Creating new shape file {}".format(outshp))
             wkt2shape(wkt,outshp)
@@ -86,19 +89,26 @@ def simplify_shapefile(inshp,outshp):
             newName = outbase + newExt
             shutil.copy(myfile,newName)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="simplify_shapefile.py",
-            description="Simplify complicated shapefiles")
+
+def main():
+    """Main entrypoint"""
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
     parser.add_argument("infile",help="input shapefile")
     parser.add_argument("outfile",help="output shapefile")
     args = parser.parse_args()
 
     logFile = "simplify_shapefile.log".format(os.getpid())
-    logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p',level=logging.DEBUG)
+    logging.basicConfig(filename=logFile, format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info("Starting run")
 
     simplify_shapefile(args.infile, args.outfile)
 
 
+if __name__ == '__main__':
+    main()

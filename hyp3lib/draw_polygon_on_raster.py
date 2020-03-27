@@ -1,9 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+"""Draws a polygon from a shapefile onto a raster image"""
+
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
-from argparse import RawTextHelpFormatter
 import shutil
-import sys
+import os
 from osgeo import gdal, ogr, osr
 import matplotlib as mpl
 mpl.use('Agg')
@@ -232,20 +234,23 @@ def draw_polygon_from_gcs_polygon_on_raster(inRaster, gcsPolygon, polyColor,
   draw_polygon_on_raster(inRaster, polygon, color[polyColor], outRaster)
 
 
+def main():
+    """Main entrypoint"""
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(__file__),
+        description=__doc__,
+    )
+    parser.add_argument('inRaster', help='name of the input raster file')
+    parser.add_argument('shape', help='name of the polygon shapefile to be drawn')
+    parser.add_argument('color', help='color of the polygon')
+    parser.add_argument('outRaster', help='name of the output raster file')
+    args = parser.parse_args()
+
+    draw_polygon_from_shape_on_raster(
+        args.inRaster, args.shape, args.color, args.outRaster
+    )
+
 
 if __name__ == '__main__':
-
-  parser = argparse.ArgumentParser(prog='draw_polygon_on_raster',
-    description='Draws a polygon from a shapefile onto a raster image',
-    formatter_class=RawTextHelpFormatter)
-  parser.add_argument('inRaster', help='name of the input raster file')
-  parser.add_argument('shape', help='name of the polygon shapefile to be drawn')
-  parser.add_argument('color', help='color of the polygon')
-  parser.add_argument('outRaster', help='name of the output raster file')
-  if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-  args = parser.parse_args()
-
-  draw_polygon_from_shape_on_raster(args.inRaster, args.shape, args.color,
-    args.outRaster)
+    main()

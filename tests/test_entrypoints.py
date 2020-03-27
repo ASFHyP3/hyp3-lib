@@ -156,6 +156,11 @@ def test_rtc2color(script_runner):
     assert ret.success
 
 
+def test_simplify_shapefile(script_runner):
+    ret = script_runner.run('simplify_shapefile.py', '-h')
+    assert ret.success
+
+
 def test_SLC_copy_S1_fullSW(script_runner):
     ret = script_runner.run('SLC_copy_S1_fullSW.py', '-h')
     assert ret.success
