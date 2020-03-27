@@ -26,6 +26,12 @@ from pyproj import Proj, transform
 import hyp3lib.etc
 
 
+def positive_int(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("{} is an invalid positive int value".format(value))
+    return ivalue
+
 def transform_bounds(inb, inepsg, outepsg):
     ptx = inb[0]
     pty = inb[1]
@@ -97,7 +103,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             proj_wkt = reproject_wkt(scene_wkt,4326,int(demEPSG))
         else:
             proj_wkt = scene_wkt 
-                
+
         dataset = driver.Open(os.path.join(shpdir,DEM+'_coverage.shp'), 0)
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
         total_area = poly.GetArea()
@@ -116,7 +122,7 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             if a > 0:
                 poly_list.append(wkt)
                 tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
-                logging.info("Working on tile {}".format(tile))
+                # logging.info("Working on tile {}".format(tile))
                 coverage += a
                 tiles += "," + tile
                 tile_list.append(tile)
@@ -204,80 +210,6 @@ def get_cc(tmpproj,post,pixsize):
 
     logging.info("New coordinates: %f %f %f %f" % (e_max,e_min,n_max,n_min))
     return(e_min,e_max,n_min,n_max)
-
-
-def handle_anti_meridian(y_min,y_max,x_min,x_max,outfile):
-    logging.info("Handling using anti-meridian special code")
-    if (y_min>49 and y_max<54):
-        logging.info("DEM will be SRTMUS1")
-        anti_meridian_kludge("SRTMUS1_zone1.tif","SRTMUS1","",y_min,y_max,x_min,x_max,outfile)
-    elif (y_min>-52 and y_max<-6):
-        logging.info("DEM will be SRTMGL3")
-        anti_meridian_kludge("SRTMGL3_zone1.tif","SRTMGL3","+south",y_min,y_max,x_min,x_max,outfile)
-    else:
-        logging.error("ERROR: Unable to find a DEM")
-        sys.exit(1)
-
-
-def anti_meridian_kludge(dem_file,dem_name,south,y_min,y_max,x_min,x_max,outfile):
-
-    # Get the appropriate file
-    cfgdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
-    myfile = os.path.join(cfgdir,"get_dem.py.cfg")
-    with open(myfile) as f:
-        content = f.readlines()
-        for item in content:
-            if dem_name in item:
-                (mydir,myfile) = os.path.split(item)
-                mydir = mydir.split()[1]
-                if "s3" in mydir:
-                    myfile = os.path.join(dem_name,dem_file)
-                    s3 = boto3.resource('s3')
-                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-                    mybucket = mydir.split("/")[-1]
-                    s3.Bucket(mybucket).download_file(myfile,"DEM/{}".format(dem_file))
-                else:
-                    myfile = os.path.join(mydir,dem_file)
-                    logging.info("Tile: {}".format(myfile))
-                    shutil.copy(myfile,".")
-
-    if not os.path.isfile(dem_file):
-        logging.error("ERROR: unable to copy DEM file")
-        sys.exit(1)
-
-    # Now project lat/lon extents into UTM
-    f = open("coords.txt","w")
-    f.write("%f %f\n" % (x_min,y_min))
-    f.write("%f %f\n" % (x_min,y_max))
-    f.write("%f %f\n" % (x_max,y_min))
-    f.write("%f %f\n" % (x_max,y_max))
-    f.close()
-
-    string = subprocess.check_output(
-        "cat coords.txt | cs2cs +proj=longlat +datum=WGS84 +to +proj=utm +zone=1 %s +datum=WGS84" % south,
-        shell=True, universal_newlines=True
-    )
-
-    lst = string.split("\n")
-    x = []
-    y = []
-    for i in range(len(lst)):
-        l = lst[i].split("\t")
-        x.append(l[0])
-        y.append(l[1].split()[0])
-
-    e_min = float(min(x))
-    e_max = float(max(x))
-    n_min = float(min(y))
-    n_max = float(max(y))
-
-    if len(south) > 0:
-        n_min = n_min - 10000000.0
-        n_max = n_max - 10000000.0
-
-    bounds = [e_min,n_min,e_max,n_max]
-    logging.info("Creating output file {} with bounds {}".format(outfile,bounds))
-    gdal.Warp(outfile,dem_file,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
 
 
 def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
@@ -384,10 +316,6 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     if post is not None:
         logging.info("Snapping to grid at posting of %s meters" % post)
 
-    if x_min < -180 or x_max > 180:
-        logging.error("ERROR: Please using longitude in range (-180,180) %s %s" % (y_min,x_max))
-        sys.exit(1)
-
     if y_min < -90 or y_max > 90:
         logging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (y_min,y_max))
         sys.exit(1)
@@ -406,7 +334,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     logging.info("demproj is {}".format(demproj))
 
     # Add buffer for REMA
-    if 'REMA' in demname or 'GIMP' in demname:
+    if 'REMA' in demname or 'GIMP' in demname or 'EU_DEM' in demname:
         y_min -= 2
         y_max += 2
         x_min -= 2
@@ -427,15 +355,13 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     p.join()
 
     #os.system("gdalbuildvrt temp.vrt DEM/*.tif")
-    if "EU_DEM" in demname:
-        nodata = -32767
-    elif "SRTMGL1" in demname:
+    if "SRTMGL1" in demname:
         nodata = -32768
     elif "GIMP" in demname:
         nodata = None
     elif "REMA" in demname:
         nodata = 0
-    elif "NED" in demname:
+    elif "NED" in demname or "EU_DEM_V11" in demname:
         nodata = -3.4028234663852886e+38 
 
     writeVRT(demproj, nodata, tile_list, poly_list, 'temp.vrt')
@@ -452,6 +378,8 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     else:
         lon = (x_max+x_min)/2
         zone = math.floor((lon+180)/6+1)
+        if zone > 60:
+            zone -= 60
         if (y_min+y_max)/2 > 0:
             outproj = ('EPSG:326%02d' % int(zone))
             outproj_num = int("326%02d"%int(zone))
@@ -459,11 +387,11 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
             outproj = ('EPSG:327%02d' % int(zone))
             outproj_num = int("327%02d"%int(zone))
      
-    tmpdem = "tempdem.tif"
-    tmpdem2 = "tempdem2.tif"
-    tmpproj = "tmpproj.tif"
+    tmpdem = "xxyyzz_img.tif"
+    tmpdem2 = "aabbcc_img.tif"
+    tmpproj = "lmnopqr_img.tif"
     if os.path.isfile(tmpdem):
-        logging.info("Removing old file tmpdem")
+        logging.info("Removing old file {}".format(tmpdem))
         os.remove(tmpdem)
     if os.path.isfile(tmpproj):
         logging.info("Removing old file projected dem file")
@@ -522,43 +450,73 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         if not leave:
             os.remove("temp_dem_wgs84.tif")
 
+    clean_dem(tmpdem,tmpdem2)
+    shutil.move(tmpdem2,tmpdem)
     gdal.Translate(tmpdem2,tmpdem,metadataOptions = ['AREA_OR_POINT=Point'])
     shutil.move(tmpdem2,tmpdem)
 
-    # Need to reproject the DEM file into UTM space
+    # Reproject the DEM file into UTM space
     if demproj != outproj_num:
         logging.info("Translating raster file to projected coordinates ({p})".format(p=outproj))
-        gdal.Warp(tmpproj,tmpdem,dstSRS=outproj,xRes=pixsize,yRes=pixsize,resampleAlg="cubic",dstNodata=-32767)
-        if post is not None:
-            logging.info("Snapping file to grid at %s meters" % post)
-            (e_min,e_max,n_min,n_max) = get_cc(tmpproj,post,pixsize)
-            bounds = [e_min,n_min,e_max,n_max]
-            gdal.Warp(outfile,tmpproj,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
-        else:
-            logging.info("Copying projected DEM to output file name")
-            shutil.copy(tmpproj,outfile)
+        gdal.Warp(tmpproj,tmpdem,dstSRS=outproj,xRes=pixsize,yRes=pixsize,resampleAlg="cubic",
+                  srcNodata=-32767,dstNodata=-32767)
+        infile = tmpproj
     else:
-        logging.info("Copying DEM to output file name")
-        shutil.copy(tmpdem,outfile)
+        infile = tmpdem
 
+    report_min(infile)
+
+    # Snap to posting grid
+    if  post:
+        snap_to_grid(post,pixsize,infile,outfile)
+    else:
+        shutil.copy(infile,outfile)
+
+    report_min(outfile)
+
+    # Clean up intermediate files
     if not leave:
         if os.path.isfile(tmpdem):
-            logging.info("Removing old file tmpdem")
+            logging.info("Removing temp file {}".format(tmpdem))
             os.remove(tmpdem)
         if os.path.isfile(tmpproj):
-            logging.info("Removing old file projected dem file")
+            logging.info("Removing temp file {}".format(tmpproj))
             os.remove(tmpproj)
 
     logging.info("Successful Completion!")
-
     return(demname)
 
+def report_min(inDem):
+    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(inDem))
+    logging.debug("DEM file {} minimum is {}".format(inDem,np.min(data)))
 
-def positive_int(value):
-    ivalue = int(value)
-    if ivalue <= 0:
-        raise argparse.ArgumentTypeError("{} is an invalid positive int value".format(value))
-    return ivalue
+
+
+def clean_dem(inDem,outDem):
+    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(inDem))
+    logging.info("Replacing values less than -1000 with zero")
+    data[data<=-1000] = -32767
+    logging.info("DEM Maximum value: {}".format(np.max(data)))
+    logging.info("DEM minimum value: {}".format(np.min(data)))
+
+    if data.dtype == np.float32:
+        saa.write_gdal_file_float(outDem,trans,proj,data.astype(np.float32))
+    elif data.dtype == np.uint16:
+        saa.write_gdal_file(outDem,trans,proj,data)
+    else:
+        logging.error("ERROR: Unknown DEM data type {}".format(data.dtype))
+        exit(1)
+
+def snap_to_grid(post, pixsize, infile, outfile):
+    if post:
+        logging.info("Snapping file to grid at %s meters" % post)
+        (e_min,e_max,n_min,n_max) = get_cc(infile,post,pixsize)
+        bounds = [e_min,n_min,e_max,n_max]
+        gdal.Warp(outfile,infile,xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+    else:
+        logging.info("Copying DEM to output file name")
+        shutil.copy(infile,outfile)
+
 
 
 def main():

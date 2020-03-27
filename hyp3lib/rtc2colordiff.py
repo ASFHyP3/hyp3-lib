@@ -153,11 +153,9 @@ def rtc2colordiff(preFullpol, preCrosspol, postFullpol, postCrosspol, threshold,
 
   # Calculating pre- and post-event RGB images
   colorPreFile = os.path.join(tmpDir, 'preColor.tif')
-  rtc2color(preFullpol, preCrosspol, threshold, colorPreFile, amp=amp,
-    float=True)
+  rtc2color(preFullpol, preCrosspol, threshold, colorPreFile, amp=amp, real=True)
   colorPostFile = os.path.join(tmpDir, 'postColor.tif')
-  rtc2color(postFullpol, postCrosspol, threshold, colorPostFile, amp=amp,
-    float=True)
+  rtc2color(postFullpol, postCrosspol, threshold, colorPostFile, amp=amp, real=True)
 
   # Read input parameter
   colorPreImg = gdal.Open(colorPreFile)

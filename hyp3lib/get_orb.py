@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import re
 from lxml import html
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 from hyp3lib.verify_opod import verify_opod
 import requests
@@ -20,21 +20,22 @@ class FileException(Exception):
 
 
 def getPageContentsESA(url, verify):
+    print("Getting result of {}".format(url))
     hostname = urlparse(url).hostname
     session = requests.Session()
     session.mount(hostname, HTTPAdapter(max_retries=10))
     page = session.get(url, timeout=60, verify=verify)
     print(page)
     results = json.loads(page.text)
-    print(results)
-    print("Count is {}".format(results['count']))
-    files = []
-    for x in range(0,results['count']):
-        print(results['results'][x])
-        print(results['results'][x]['physical_name'])
-        files.append(results['results'][x]['physical_name'])
-    return files
-
+    print("results : {}".format(results))
+    if results['count'] > 0:
+        print(results['results'][0]['physical_name'])
+        fileName = results['results'][0]['physical_name']
+        url = results['results'][0]['remote_url']
+        return(fileName,url)
+    else:
+        print("WARNING: No results returned from ESA query")
+    return(None,None)
 
 def getPageContents(url, verify):
     hostname = urlparse(url).hostname
@@ -49,6 +50,15 @@ def getPageContents(url, verify):
             ret.append(item)
     return ret
 
+def dateStr2dateTime(string):
+    year = string[0:4]
+    month = string[4:6]
+    day = string[6:8]
+    hour = string[8:10]
+    minute = string[10:12]
+    second = string[12:14]
+    outTime = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
+    return(outTime)
 
 def findOrbFile(plat,tm,lst):
     d1 = 0
@@ -68,6 +78,7 @@ def findOrbFile(plat,tm,lst):
                     d = ((int(tm)-int(start))+(int(end)-int(tm)))/2
                     if d>d1:
                         best = item1.replace(' ','')
+                        d1 = d
     return best
 
 
@@ -100,54 +111,35 @@ def getOrbitFileESA(dataFile):
 
   prec_url = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
   rest_url = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
-  precise    = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_POEORB&'
-  restituted = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_RESORB&'
-
-  t = re.split('_+',dataFile)
+  precise    = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_POEORB&ordering=-creation_date&page_size=1&'
+  restituted = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_RESORB&ordering=-creation_date&page_size=1&'
+  sec60 = timedelta(seconds=60)
   plat = dataFile[0:3]
+  precise += 'sentinel1__mission={}&'.format(plat)
+  restituted += 'sentinel1__mission={}&'.format(plat)
+  t = re.split('_+',dataFile)
   st = t[4].replace('T','')
   et = t[5].replace('T','')
 
-  year = st[0:4]
-  month = st[4:6]
-  day = st[6:8]
-  hour = st[8:10]
-  minute = st[10:12]
-  second = st[12:14]
+  start_time = dateStr2dateTime(st)
+  end_time = dateStr2dateTime(et)
 
-  start_time = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
-  print("Looking for validity stop of {}".format(start_time))
+  start_time = start_time - sec60
+  end_time = end_time + sec60
 
-  year = et[0:4]
-  month = et[4:6]
-  day = et[6:8]
-  hour = et[8:10]
-  minute = et[10:12]
-  second = et[12:14]
-
-  end_time = datetime.strptime("{}-{}-{}T{}:{}:{}".format(year,month,day,hour,minute,second),'%Y-%m-%dT%H:%M:%S')
-  print("Looking for validity start of {}".format(end_time))
-
-  url = precise+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
-  print("Using url {}".format(url))
-  files = getPageContentsESA(url, False)
-  print("Files found: {}".format(files))
-  if len(files) > 0:
-    orbitFile = findOrbFile(plat, st, files)
-    if len(orbitFile)>0:
-      url = prec_url+orbitFile
-  else:
-    url = restituted+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+  q = precise+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+  orbitFile,url = getPageContentsESA(q, False)
+  if url:
     print("Using url {}".format(url))
-    files = getPageContentsESA(url, False)
-    print("Files found: {}".format(files))
-    if len(files) > 0:
-      orbitFile = findOrbFile(plat, st, files)
-      if len(orbitFile) > 0:
-        url = rest_url+orbitFile
-  if len(orbitFile) == 0:
-    error = 'Could not find orbit file on ESA website'
-    raise FileException(error)
+  else:
+    print("Unable to find POEORB - Looking for RESORB")
+    q=restituted+'validity_stop__gt='+start_time.strftime('%Y-%m-%dT%H:%M:%S')+'&validity_start__lt='+end_time.strftime('%Y-%m-%dT%H:%M:%S')
+    orbitFile,url = getPageContentsESA(q, False)
+    if url:
+      print("Using url {}".format(url))
+    else:
+      error = 'Could not find orbit file on ESA website'
+      raise FileException(error)
 
   return url, orbitFile
 
@@ -195,14 +187,14 @@ def downloadSentinelOrbitFile(granule,directory=None):
     except:
         print("Unable to find statevector at ASF; trying ESA")
         try:
-            stateVecFile = downloadSentinelOrbitFileProvider(granule,'ESA',directory)
-            provider = "ESA"
-            print("Found state vector file at ESA")
+            stateVecFile = downloadSentinelOrbitFileProvider(granule,'ESA',directory) 
+            if stateVecFile:
+                provider = "ESA"
+                print("Found state vector file at ESA")
         except:
             print("Unable to find requested state vector file")
             provider = "NA"
             return None,provider
-    
     verify_opod(stateVecFile)
     return stateVecFile, provider
 
