@@ -7,7 +7,7 @@ alternatives you considered
 -->
 
 <!--
-If applicable, indicate any upstream packages/projects this is relevant too, and the associated issues
+If applicable, indicate any downstream packages/projects this is relevant too, and the associated issues
 or merge requests
 -->
 
@@ -26,7 +26,7 @@ or merge requests
   
   See: [Hyp3 Development Guidelines](https://wiki.asf.alaska.edu/x/WwBOB) for a detailed discussion of these levels
 
-- [ ] (If applicable) Updated the dependencies and indicated any downstream changes that are required 
+- [ ] (If applicable) Updated the dependencies and indicated any upstream changes that are required 
 
 - [ ] Updated the CHANGELOG
 - [ ] Added/updated documentation for these changes
@@ -35,7 +35,7 @@ or merge requests
 ### Reviewer checklist
 
 - [ ] Is the CI/CD pipeline passing?
-- [ ] Have all dependencies been updated and required changes merged downstream?
+- [ ] Have all dependencies been updated and required changes merged upstream?
 - [ ] Is the level of changes labeled appropriately?
 - [ ] Are all the changes described appropriately in the changelog?
 - [ ] Has the documentation been adequately updated?
