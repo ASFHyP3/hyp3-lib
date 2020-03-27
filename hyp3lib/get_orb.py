@@ -108,9 +108,6 @@ def getOrbFile(s1Granule):
 
 
 def getOrbitFileESA(dataFile):
-
-  prec_url = 'https://qc.sentinel1.eo.esa.int/aux_poeorb/'
-  rest_url = 'https://qc.sentinel1.eo.esa.int/aux_resorb/'
   precise    = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_POEORB&ordering=-creation_date&page_size=1&'
   restituted = 'https://qc.sentinel1.eo.esa.int/api/v1/?product_type=AUX_RESORB&ordering=-creation_date&page_size=1&'
   sec60 = timedelta(seconds=60)

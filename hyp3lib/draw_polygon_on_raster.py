@@ -112,13 +112,8 @@ def intersect_raster_with_polygon(rasterFile, vectorPolygon):
   gt = inRaster.GetGeoTransform()
   originX = gt[0]
   originY = gt[3]
-  pixelWidth = gt[1]
-  pixelHeight = gt[5]
   cols = inRaster.RasterXSize
   rows = inRaster.RasterYSize
-  dataType = inRaster.GetRasterBand(1).DataType
-  rasterProj = inRaster.GetProjection()
-  rasterSpatialRef = osr.SpatialReference(wkt = rasterProj)
   ulX = originX
   ulY = originY
   urX = originX + gt[1]*cols
