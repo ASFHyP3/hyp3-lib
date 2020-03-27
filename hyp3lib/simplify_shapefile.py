@@ -7,16 +7,9 @@ import json
 import argparse
 import logging
 import os
-import ogr
-import osr
-import sys
+from osgeo import osr, ogr
 import shapefile
- 
-def getFeatureCount(lyrfile):
-    result = arcpy.GetCount_management(lyrfile)
-    count = int(result.getOutput(0))
-    logging.info("Number of features in {} is {}".format(lyrfile,count))
-    return count
+
 
 def wkt2shape(wkt,output_file):
 
