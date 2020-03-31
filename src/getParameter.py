@@ -13,7 +13,7 @@ def getParameter(parFile,parameter,uselogging=False):
         if (uselogging):
             logging.error("ERROR: Unable to find file {}".format(parFile))
         else:
-            print("ERROR: Unable to file file {}".format(parFile))
+            print("ERROR: Unable to find file {}".format(parFile))
         exit(1)
 
     value = None

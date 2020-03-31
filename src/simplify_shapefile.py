@@ -46,11 +46,13 @@ def wkt2shape(wkt,output_file):
 
 
 def simplify_shapefile(inshp,outshp):
-
+    if not os.path.isfile(inshp):
+        logging.error("ERROR: File {} does not exist".format(inshp))
+        exit(1)
     sf = shapefile.Reader(inshp)
     shapes = sf.shapes() 
     scnt = len(shapes)
-    print("Found {} shapes".format(scnt))
+    print("Found {} shapes in input file".format(scnt))
     pcnt = 0
     for x in range(scnt):
         pcnt += len(shapes[x].points) 
@@ -62,10 +64,13 @@ def simplify_shapefile(inshp,outshp):
         files = {'files': open('{}'.format(inshp), 'rb')}
  
         # post a request for simplification service
-        response = requests.post('https://api.daac.asf.alaska.edu/services/utils/files_to_wkt', files=files)
-
+        try:
+            response = requests.post('https://api.daac.asf.alaska.edu/services/utils/files_to_wkt', files=files)
+        except:
+            logging.error("ERROR: service unavaible - it may be that your shapefile is too large.  Reduce to under 300 points") 
+          
         if not response.status_code == requests.codes.ok:
-            response.raise_for_status()
+            response.raise_for_status("Response error: it may be that your shapefile is too large.  Reduce to under 300 points")
         
         results = json.loads(response.text)
 #       logging.info(json.dumps(results, sort_keys=True, indent=4))
@@ -107,5 +112,3 @@ if __name__ == "__main__":
     logging.info("Starting run")
 
     simplify_shapefile(args.infile, args.outfile)
-
-
