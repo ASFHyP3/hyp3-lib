@@ -348,8 +348,8 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
 
     # Add buffer for REMA
     if 'REMA' in demname or 'GIMP' in demname or 'EU_DEM' in demname:
-        y_min -= 2
-        y_max += 2
+#        y_min -= 4
+#        y_max += 4
         x_min -= 4
         x_max += 4
 
