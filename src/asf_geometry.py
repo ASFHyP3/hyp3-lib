@@ -88,7 +88,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
   return (data, colFirst, rowFirst, geoTrans, proj)
 
 
-def reproject2grid(inRaster, tsEPSG):
+def reproject2grid(inRaster, tsEPSG, xRes = None ):
 
   # Read basic metadata
   cols = inRaster.RasterXSize
@@ -99,7 +99,8 @@ def reproject2grid(inRaster, tsEPSG):
 
   # Define warping options
   rasterFormat = 'VRT'
-  xRes = geoTrans[1]
+  if xRes is None:
+      xRes = geoTrans[1]
   yRes = xRes
   resampleAlg = gdal.GRA_Bilinear
   options = ['COMPRESS=DEFLATE']
