@@ -12,7 +12,7 @@ def getParameter(parFile,parameter,uselogging=False):
     except IOError: 
         if (uselogging):
             logging.error("Unable to find file {}".format(parFile))
-        raise("ERROR: Unable to find file {}".format(parFile))
+        raise Exception("ERROR: Unable to find file {}".format(parFile))
 
     parameter = parameter.lower()
     for line in myfile:
@@ -27,4 +27,4 @@ def getParameter(parFile,parameter,uselogging=False):
     except:    
         if uselogging:
             logging.error("Unable to find parameter {} in file {}".format(parameter,parFile))
-        raise("ERROR: Unable to find parameter {} in file {}".format(parameter, parFile))
+        raise Exception ("ERROR: Unable to find parameter {} in file {}".format(parameter, parFile))
