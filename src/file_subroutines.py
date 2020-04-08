@@ -1,6 +1,7 @@
 import os, re
 from execute import execute
 import zipfile
+import glob
 
 #
 #  Given a CSV file, download granules and unzip them
@@ -55,3 +56,23 @@ def get_file_list():
         filedates.append(files[i][1])
 
     return(filenames,filedates)
+
+
+def get_dem_tile_list():
+
+    tile_list = None
+    for myfile in glob.glob("DEM/*.tif"):
+        tile = os.path.basename(myfile)
+        if tile_list:
+            tile_list = tile_list + ", " + tile
+        else:
+            tile_list = tile
+
+    if tile_list:
+        print("Found DEM tile list of {}".format(tile_list))
+        return tile_list
+    else:
+        print("Warning: no DEM tile list created")
+        return(None)
+
+
