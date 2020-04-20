@@ -282,6 +282,46 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
   outShape.Destroy()
 
 
+# Save geometry with fields to GeoJSON file
+def geometry2geojson(fields, values, spatialRef, merge, geojsonFile):
+
+  driver = ogr.GetDriverByName('GeoJSON')
+  if os.path.exists(geojsonFile):
+    driver.DeleteDataSource(geojsonFile)
+  outDataSource = driver.CreateDataSource(geojsonFile)
+  outLayer = outDataSource.CreateLayer('layer', srs=spatialRef)
+  for field in fields:
+    fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
+    if field['type'] == ogr.OFTString:
+      fieldDefinition.SetWidth(field['width'])
+    elif field['type'] == ogr.OFTReal:
+      fieldDefinition.SetWidth(24)
+      fieldDefinition.SetPrecision(8)
+    outLayer.CreateField(fieldDefinition)
+  featureDefinition = outLayer.GetLayerDefn()
+  if merge == True:
+    combine = ogr.Geometry(ogr.wkbMultiPolygon)
+    for value in values:
+      combine = combine.Union(value['geometry'])
+    outFeature = ogr.Feature(featureDefinition)
+    for field in fields:
+      name = field['name']
+      outFeature.SetField(name, 'multipolygon')
+    outFeature.SetGeometry(combine)
+    outLayer.CreateFeature(outFeature)
+    outFeature.Destroy()
+  else:
+    for value in values:
+      outFeature = ogr.Feature(featureDefinition)
+      for field in fields:
+        name = field['name']
+        outFeature.SetField(name, value[name])
+      outFeature.SetGeometry(value['geometry'])
+      outLayer.CreateFeature(outFeature)
+      outFeature.Destroy()
+  outDataSource.Destroy()
+
+
 # Save data with fields to shapefile
 def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
   classes, threshold, background, shapeFile):
