@@ -352,11 +352,12 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     logging.info("demproj is {}".format(demproj))
 
     # Add buffer for REMA
-    if 'REMA' in demname or 'GIMP' in demname or 'EU_DEM' in demname:
+    if 'REMA' in demname or 'GIMP' in demname:
+        x_min -= 4
+        x_max += 4
+    if 'EU_DEM' in demname:
         y_min -= 2
         y_max += 2
-        x_min -= 2
-        x_max += 2
 
     # Copy the files into a dem directory
     if not os.path.isdir("DEM"):
