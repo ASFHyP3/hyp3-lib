@@ -1,10 +1,12 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import errno
+import glob
 import os
 import re
-from hyp3lib.execute import execute
 import zipfile
+
+from hyp3lib.execute import execute
 
 
 def prepare_files(csv_file):
@@ -19,10 +21,14 @@ def prepare_files(csv_file):
     os.rmdir("download")
     for myfile in os.listdir("."):
         if ".zip" in myfile:
-            zip_ref = zipfile.ZipFile(myfile, 'r')
-            zip_ref.extractall(".")
-            zip_ref.close()    
-            os.remove(myfile)
+            try:
+                zip_ref = zipfile.ZipFile(myfile, 'r')
+                zip_ref.extractall(".")
+                zip_ref.close()
+            except:
+                print("Unable to unzip file {}".format(myfile))
+        else:
+            print("WARNING: {} not recognized as a zip file".format(myfile))
 
 
 def get_file_list():
@@ -52,6 +58,24 @@ def get_file_list():
         filedates.append(files[i][1])
 
     return filenames, filedates
+
+
+def get_dem_tile_list():
+
+    tile_list = None
+    for myfile in glob.glob("DEM/*.tif"):
+        tile = os.path.basename(myfile)
+        if tile_list:
+            tile_list = tile_list + ", " + tile
+        else:
+            tile_list = tile
+
+    if tile_list:
+        print("Found DEM tile list of {}".format(tile_list))
+        return tile_list
+    else:
+        print("Warning: no DEM tile list created")
+        return None
 
 
 def mkdir_p(path):
