@@ -283,6 +283,7 @@ safety 27:
   script:
     - safety check --full-report --stdin < pip_freeze_py27.txt
     - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py27.txt | safety check --full-report --stdin
+  allow_failure: true
   needs:
     - job: "pytest 27"
       artifacts: true
