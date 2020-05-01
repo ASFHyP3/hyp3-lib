@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Subsets a GeoTIFF file using an AOI from a shapefile"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

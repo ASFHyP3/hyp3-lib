@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Create a water body mask wherein all water is 0 and land is 1"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Convert ISCE outputs into geotiff, browse, and kmz files"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

@@ -121,7 +121,7 @@ gitleaks:
   script:
     - export LAST_TAG_HASH=$(git show-ref --hash -- $(git describe --abbrev=0))
     # NOTE: commit range goes back into history; commit-from == HEAD by default
-    - gitleaks -v --repo-path=./ --commit-to="${LAST_TAG_HASH}" --report=gitleaks_report.json
+    - gitleaks -v --repo-path=./ --config=./.gitlab/gitleaks.toml --commit-to="${LAST_TAG_HASH}" --report=gitleaks_report.json
   artifacts:
     when: on_failure
     paths:
@@ -134,7 +134,7 @@ flake8 full:
     - *before_defaults
     - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
   script:
-    - flake8 --max-line-length=120 --statistics --tee --output-file flake8_report.txt
+    - flake8 --max-line-length=120 --import-order-style=pycharm --application-import-names hyp3lib --statistics --tee --output-file flake8_report.txt
   allow_failure: true
   artifacts:
     when: on_failure
@@ -283,6 +283,7 @@ safety 27:
   script:
     - safety check --full-report --stdin < pip_freeze_py27.txt
     - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py27.txt | safety check --full-report --stdin
+  allow_failure: true
   needs:
     - job: "pytest 27"
       artifacts: true

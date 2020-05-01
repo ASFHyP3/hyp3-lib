@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Convert a floating point tiff into a byte tiff using 2-sigma scaling."""
 
 from __future__ import print_function, absolute_import, division, unicode_literals
@@ -13,9 +12,9 @@ from osgeo import gdal
 def get2sigmacutoffs(fi):
     (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(fi))
     data = data.astype(float)
-    top = np.percentile(data,99)
-    data[data>top]=top
     data[data==0]=np.nan
+    top = np.nanpercentile(data,99)
+    data[data>top]=top
     stddev = np.nanstd(data)
     mean = np.nanmean(data)
     lo = mean - 2*stddev

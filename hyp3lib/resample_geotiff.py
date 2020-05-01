@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Resamples a GeoTIFF file and saves it in a number of formats"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals
@@ -98,7 +97,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
       else:
         rgbExt = ('_rgb{0}.tif'.format(os.getpid()))
         rgbFile = outFile.replace(orgExt, rgbExt)
-        gdal.Translate(rgbFile, raster, rgbExpand='RGB')
+        gdal.Translate(rgbFile, raster, rgbExpand='RGBA')
         raster = gdal.Open(rgbFile)
         gdal.Warp(tmpFile, raster, resampleAlg=GRIORA_Cubic, width=width,
           srcNodata='0', dstSRS='EPSG:4326', dstAlpha=True)
