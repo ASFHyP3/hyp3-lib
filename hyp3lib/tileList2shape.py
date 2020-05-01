@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """generates a shapefile from a list of tile files"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

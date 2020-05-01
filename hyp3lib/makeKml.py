@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Create a KML file from a geotiff and a png"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

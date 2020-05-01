@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Applies a LUT to a GeoTIFF"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

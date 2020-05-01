@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Draws a polygon from a shapefile onto a raster image"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

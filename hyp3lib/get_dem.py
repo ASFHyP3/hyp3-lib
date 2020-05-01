@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Get a DEM file in .tif format from the ASF DEM heap"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals

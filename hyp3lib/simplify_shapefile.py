@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Simplify complicated shapefiles"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals
