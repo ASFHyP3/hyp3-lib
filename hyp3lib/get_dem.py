@@ -284,7 +284,6 @@ def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
     with open(outFile, 'wb') as outF:
         outF.write(et.tostring(vrt, xml_declaration=False, encoding='utf-8',
             pretty_print=True))
-        outF.close()
 
 
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):

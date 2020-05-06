@@ -5,13 +5,14 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import argparse
 import shutil
 import os
+
+import lxml.etree as et
+from imageio import imread
 from osgeo import gdal, ogr, osr
 import matplotlib as mpl
 mpl.use('Agg')
-import matplotlib.image as mimg
 import matplotlib.pyplot as mplt
 import matplotlib.lines as mlines
-import lxml.etree as et
 
 
 def write_worldfile(gt, worldFile):
@@ -40,9 +41,8 @@ def write_aux_file(spatialRef, auxFile):
   et.SubElement(band, 'NoDataValue').text = '0.00000000000000E+00'
   domain = et.SubElement(band, 'Metadata', {'domain':'IMAGE_STRUCTURE'})
   et.SubElement(domain, 'MDI', {'key':'COMPRESSION'}).text = 'JPEG'
-  with open(auxFile, 'w') as outF:
+  with open(auxFile, 'wb') as outF:
     outF.write(et.tostring(aux, pretty_print=True))
-  outF.close()
 
 
 def get_projected_vector_geometry(shapeFile, rasterSpatialRef):
@@ -165,7 +165,7 @@ def draw_polygon_on_raster(inRasterFile, polygon, color, outRasterFile):
   figRows = float(rows)/100.0
   figCols = float(cols)/100.0
   fig = mplt.figure(figsize=(figCols, figRows), dpi=100, frameon=False)
-  image = mimg.imread(inRasterFile)
+  image = imread(inRasterFile)
   mplt.imshow(image, interpolation='none')
   mplt.axis('off')
   mplt.subplots_adjust(left=0, bottom=0, right=1, top=1, hspace=0, wspace=0)

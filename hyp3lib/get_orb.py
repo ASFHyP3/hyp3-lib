@@ -171,7 +171,6 @@ def downloadSentinelOrbitFileProvider(granule, provider, directory):
       return None
   else:
     print("Using existing orbit file; provider unknown")
-    provider = "UNKNOWN"
     return stateVecFile
 
 

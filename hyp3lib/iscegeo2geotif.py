@@ -19,9 +19,9 @@ def fixKmlName(inKML,inName):
     tree = etree.parse(inKML)
     rt = tree.getroot()
     rt[0][0][3][0].text = inName
-    of = open(inKML,'wb')
-    of.write(b'<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n')
-    tree.write(of,pretty_print=True)
+    with open(inKML, 'wb') as of:
+        of.write(b'<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n')
+        tree.write(of,pretty_print=True)
 
 
 def makeKMZ(infile,outfile):
