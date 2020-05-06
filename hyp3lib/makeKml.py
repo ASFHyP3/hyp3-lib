@@ -44,7 +44,6 @@ def makeKML(geotiff,pngFile):
     with open(kmlFile, 'wb') as outF:
       outF.write(et.tostring(kml, xml_declaration=True, encoding='utf-8',
         pretty_print=True))
-    outF.close()
 
     # Zip PNG and KML together
     zipFile = kmlFile.replace('.kml', '.kmz')

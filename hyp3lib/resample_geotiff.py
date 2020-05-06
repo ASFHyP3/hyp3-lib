@@ -140,7 +140,6 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
     with open(kmlFile, 'wb') as outF:
       outF.write(et.tostring(kml, xml_declaration=True, encoding='utf-8',
         pretty_print=True))
-    outF.close()
 
     # Zip PNG and KML together - need to be in the directory where the files are
     # in order to remove any path issues...
