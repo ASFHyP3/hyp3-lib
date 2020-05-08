@@ -12,6 +12,16 @@ variables:
   - python3 -m pip install --upgrade pip
   - python3 -m pip install --upgrade setuptools wheel twine s3pypi "setuptools-scm[toml]" importlib_metadata
 
+workflow:
+  rules:
+    # Don't run pipelines for tags because they will be created in the tools-bot stage
+    - if: $CI_COMMIT_TAG
+      when: never
+    # Don't run pipelines from merge requests out of master (should always be redundant)
+    - if: $CI_COMMIT_REF_NAME == "master" && $CI_MERGE_REQUEST_ID
+      when: never
+    # Otherwise, run the pipelines as defined below
+    - when: always
 
 # NOTE: the templates below are so that we can add additional jobs to the CI
 #       pipeline for merge requests (MR). Ideally, anytime someone pushes to *any*
@@ -19,9 +29,8 @@ variables:
 #       opened, we'd add in building and deploying the python package to S3 and
 #       the docker container to ECR so that reviewers can easily test the MR.
 #       HOWEVER, gitlab's merge requests pipelines work differently than other
-#       pipelines meaning we need to specify `only: [branches, merge_requests]`
-#       for jobs we want to always run:
-#           https://stackoverflow.com/questions/52746338/in-gitlab-ci-is-there-a-variable-for-a-merge-requests-target-branch/52944197#52944197
+#       pipelines meaning we need to specify enable them for jobs we want to run:
+#           https://docs.gitlab.com/12.10/ee/ci/merge_request_pipelines/index.html
 #       But doing so creates both a "push" pipeline and a "MR" pipeline, so the
 #       `always_run` jobs are run in duplicate. There doesn't seem to be any
 #       easy way around this currently:
@@ -29,56 +38,61 @@ variables:
 #      So, our team we'll have to live with duplicates for a bit, and follow
 #      "only open a MR when you're ready for review!" best practice.
 .always_run_template: &always_run
-  only:
-    - branches
-    - merge_requests
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+      when: on_success
+    - when: on_success
 
 .mr_protected_template: &only_mr_protected
-  only:
-    - merge_requests
-    - master
-    - develop
+  rules:
+    - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "master" || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "develop"
+      when: on_success
+    - if: $CI_COMMIT_REF_PROTECTED == "true"
+      when: on_success
+    - when: never
 
 
 default:
   image:
-    name: continuumio/miniconda3:latest
+    name: continuumio/miniconda3:4.7.12
     entrypoint: ["/bin/bash"]
   before_script:
     - *before_defaults
 
 stages:
     - tools-bot
+    - trigger merge-back
     - static analysis
     - test
     - dependancy analysis
     - package
     - verify
-    # TODO: - trigger
 
 
-Tag version:
+tag version:
   stage: tools-bot
   before_script:
     - chmod 600 ${GITLAB_TOOLS_BOT_SSH}
-    - git config core.sshCommand "ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ${GITLAB_TOOLS_BOT_SSH} -F /dev/null"
+    - git config core.sshCommand "ssh -o IdentitiesOnly=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+      -i ${GITLAB_TOOLS_BOT_SSH} -F /dev/null"
     - git config --global user.email "UAF-asf-apd@alaska.edu"
     - git config --global user.name "Tools-bot"
     - git remote set-url origin git@scm.asf.alaska.edu:hyp3/hyp3-lib.git
     - git fetch --all
     - apt-get install -y jq curl
-    - 'export MERGE_REQUEST_PARENT=$(git log --pretty=%P -n 1 "${CI_COMMIT_SHA}" | awk -F '' '' ''{print $2}'')'
-    - 'export BUMP_PART=$(curl -LsS -H "PRIVATE-TOKEN: ${GITLAB_TOOLS_BOT_PAK}" "https://scm.asf.alaska.edu/api/v4/projects/${CI_PROJECT_ID}/repository/commits/${MERGE_REQUEST_PARENT}/merge_requests" | jq -c --raw-output ''.[0].labels[] | select(. == "major" or . == "minor" or . == "patch")'' | sort | head -1)'
     - *before_defaults
     - python3 -m pip install bump2version
   script:
-    - 'bump2version --current-version $(git describe --abbrev=0) --tag --tag-message "$(printf "%q" "${CI_COMMIT_MESSAGE}")" "${BUMP_PART}"'
-    - git push --tags
-    - git checkout develop && git pull --ff-only
-    - git merge --ff-only origin/master
-    - git push -o ci.skip
-  only:
-    - master
+    - source .gitlab/tag_version.sh
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "master" && $CI_MERGE_REQUEST_ID == null
+
+master to develop:
+  stage: trigger merge-back
+  trigger:
+    include: .gitlab/merge_back.gitlab-ci.yaml
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "master" && $CI_MERGE_REQUEST_ID == null
 
 
 bandit SAST:
@@ -121,7 +135,8 @@ gitleaks:
   script:
     - export LAST_TAG_HASH=$(git show-ref --hash -- $(git describe --abbrev=0))
     # NOTE: commit range goes back into history; commit-from == HEAD by default
-    - gitleaks -v --repo-path=./ --config=./.gitlab/gitleaks.toml --commit-to="${LAST_TAG_HASH}" --report=gitleaks_report.json
+    - gitleaks -v --repo-path=./ --config=./.gitlab/gitleaks.toml --commit-to="${LAST_TAG_HASH}"
+      --report=gitleaks_report.json
   artifacts:
     when: on_failure
     paths:
@@ -134,7 +149,9 @@ flake8 full:
     - *before_defaults
     - python3 -m pip install flake8 flake8-import-order flake8-blind-except flake8-builtins
   script:
-    - flake8 --max-line-length=120 --import-order-style=pycharm --application-import-names hyp3lib --statistics --tee --output-file flake8_report.txt
+    - flake8 --max-line-length=120 --import-order-style=pycharm
+      --application-import-names hyp3lib
+      --statistics --tee --output-file flake8_report.txt
   allow_failure: true
   artifacts:
     when: on_failure
