@@ -321,6 +321,7 @@ test S3 PyPI:
   stage: verify
   before_script:
     - *before_conda_env
+    - conda install -c conda-forge -y pip
     - *before_defaults
     - export SDIST_VERSION=$(python3 setup.py --version)
   script:
