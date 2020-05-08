@@ -280,33 +280,6 @@ safety 36:
   <<: *only_mr_protected
 
 
-pytest 27:
-  stage: test
-  before_script:
-    - *before_conda_env
-  script:
-    - tox -e py27
-  artifacts:
-    paths:
-      - pip_freeze_*.txt
-      - conda_export_*.txt
-  <<: *only_mr_protected
-
-safety 27:
-  stage: dependancy analysis
-  before_script:
-    - *before_defaults
-    - python3 -m pip install safety
-  script:
-    - safety check --full-report --stdin < pip_freeze_py27.txt
-    - awk -F '=' '/^[^#]/ {print $1 "==" $2}' conda_export_py27.txt | safety check --full-report --stdin
-  allow_failure: true
-  needs:
-    - job: "pytest 27"
-      artifacts: true
-  <<: *only_mr_protected
-
-
 package S3 PyPI:
   stage: package
   script:
