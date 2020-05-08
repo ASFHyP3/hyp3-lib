@@ -29,8 +29,6 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
@@ -47,10 +45,8 @@ setup(
         'matplotlib',
         'netCDF4',
         'numpy',
-        'gdal',  # FIXME: Need to verify if GDAL v2 or v3 is being used
+        'gdal',
         'pillow',
-        # FIXME: Need to verify if HyP3 uses pyproj v1 or v2 type syntax:
-        #  http://pyproj4.github.io/pyproj/stable/examples.html
         'pyproj',
         'pyshp',
         'requests',
