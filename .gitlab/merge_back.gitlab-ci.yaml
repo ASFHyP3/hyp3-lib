@@ -21,7 +21,7 @@ ff merge:
       -i ${GITLAB_TOOLS_BOT_SSH} -F /dev/null"
     - git config --global user.email "UAF-asf-apd@alaska.edu"
     - git config --global user.name "Tools-bot"
-    - git remote set-url origin git@scm.asf.alaska.edu:hyp3/hyp3-ci.git
+    - git remote set-url origin git@scm.asf.alaska.edu:hyp3/hyp3-lib.git
     - git fetch --all
   script:
     - git checkout develop && git pull --ff-only
