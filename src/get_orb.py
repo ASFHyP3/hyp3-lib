@@ -26,7 +26,7 @@ def getPageContentsESA(url, verify):
     results = json.loads(page.text)
     print("results : {}".format(results))
     if results['count'] > 0:
-        print results['results'][0]['physical_name']
+        print(results['results'][0]['physical_name'])
         fileName = results['results'][0]['physical_name']
         url = results['results'][0]['remote_url']
         return(fileName,url)
