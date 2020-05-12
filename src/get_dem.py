@@ -297,10 +297,8 @@ def writeVRT(dem_proj, nodata, tile_list, poly_list, outFile):
 
     # Write VRT file
     with open(outFile, 'w') as outF:
-        outF.write(et.tostring(vrt, xml_declaration=False, encoding='utf-8',
-            pretty_print=True))
+        outF.write(et.tostring(vrt, xml_declaration=False, encoding='utf-8',pretty_print=True))
         outF.close()
-
 
 # GET DEM file and convert into ISCE format
 def get_ISCE_dem(west,south,east,north,demName,demXMLName):
@@ -353,6 +351,9 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     if 'EU_DEM' in demname:
         y_min -= 2
         y_max += 2
+#        y_min += 2
+#        y_max -= 2
+
 
     # Copy the files into a dem directory
     if not os.path.isdir("DEM"):
@@ -381,7 +382,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
 #
 #   Set the output projection to either NPS, SPS, or UTM
 #
-    if demproj == 3413: 	# North Polar Stereo
+    if demproj == 3413:         # North Polar Stereo
         outproj = ('EPSG:3413')
         outproj_num = 3413
     elif demproj == 3031:        # South Polar Stereo
@@ -512,9 +513,9 @@ def clean_dem(inDem,outDem):
     logging.info("DEM minimum value: {}".format(np.min(data)))
  
     if data.dtype == np.float32:
-        saa.write_gdal_file_float(outDem,trans,proj,data.astype(np.float32))
+        saa.write_gdal_file_float(outDem,trans,proj,data.astype(np.float32),nodata=-32767)
     elif data.dtype == np.uint16:
-        saa.write_gdal_file(outDem,trans,proj,data)
+        saa.write_gdal_file(outDem,trans,proj,data,nodata=-32767)
     else: 
         logging.error("ERROR: Unknown DEM data type {}".format(dataType))
         exit(1)
