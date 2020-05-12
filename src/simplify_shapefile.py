@@ -70,7 +70,7 @@ def simplify_shapefile(inshp,outshp):
             logging.error("ERROR: service unavaible - it may be that your shapefile is too large.  Reduce to under 300 points") 
           
         if not response.status_code == requests.codes.ok:
-            response.raise_for_status("Response error: it may be that your shapefile is too large.  Reduce to under 300 points")
+            response.raise_for_status("ERROR: Unable to simplify shapefile")
         
         results = json.loads(response.text)
 #       logging.info(json.dumps(results, sort_keys=True, indent=4))
