@@ -206,6 +206,9 @@ def shape2geometry_ext(shapeFile):
   spatialRef = layer.GetSpatialRef()
   layerDef = layer.GetLayerDefn()
   featureCount = layerDef.GetFieldCount()
+
+  linear = False
+
   for ii in range(featureCount):
     field = {}
     field['name'] = layerDef.GetFieldDefn(ii).GetName()
@@ -214,19 +217,26 @@ def shape2geometry_ext(shapeFile):
       field['width'] = layerDef.GetFieldDefn(ii).GetWidth()
     fields.append(field)
   for feature in layer:
-    multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
     geometry = feature.GetGeometryRef()
     count = geometry.GetGeometryCount()
     if geometry.GetGeometryName() == 'MULTIPOLYGON':
+      multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
       for i in range(0, count):
         polygon = geometry.GetGeometryRef(i)
         multipolygon.AddGeometry(polygon)
+    elif geometry.GetGeometryName() == 'LINESTRING':
+      linear = True
+      linestring = ogr.CreateGeometryFromWkt(geometry.ExportToWkt())
     else:
+      multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
       multipolygon.AddGeometry(geometry)
     value = {}
     for field in fields:
       value[field['name']] = feature.GetField(field['name'])
-    value['geometry'] = multipolygon
+    if linear == True:
+      value['geometry'] = linestring
+    else:
+      value['geometry'] = multipolygon
     values.append(value)
   shape.Destroy()
 
@@ -271,6 +281,46 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
       outLayer.CreateFeature(outFeature)
       outFeature.Destroy()
   outShape.Destroy()
+
+
+# Save geometry with fields to GeoJSON file
+def geometry2geojson(fields, values, spatialRef, merge, geojsonFile):
+
+  driver = ogr.GetDriverByName('GeoJSON')
+  if os.path.exists(geojsonFile):
+    driver.DeleteDataSource(geojsonFile)
+  outDataSource = driver.CreateDataSource(geojsonFile)
+  outLayer = outDataSource.CreateLayer('layer', srs=spatialRef)
+  for field in fields:
+    fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
+    if field['type'] == ogr.OFTString:
+      fieldDefinition.SetWidth(field['width'])
+    elif field['type'] == ogr.OFTReal:
+      fieldDefinition.SetWidth(24)
+      fieldDefinition.SetPrecision(8)
+    outLayer.CreateField(fieldDefinition)
+  featureDefinition = outLayer.GetLayerDefn()
+  if merge == True:
+    combine = ogr.Geometry(ogr.wkbMultiPolygon)
+    for value in values:
+      combine = combine.Union(value['geometry'])
+    outFeature = ogr.Feature(featureDefinition)
+    for field in fields:
+      name = field['name']
+      outFeature.SetField(name, 'multipolygon')
+    outFeature.SetGeometry(combine)
+    outLayer.CreateFeature(outFeature)
+    outFeature.Destroy()
+  else:
+    for value in values:
+      outFeature = ogr.Feature(featureDefinition)
+      for field in fields:
+        name = field['name']
+        outFeature.SetField(name, value[name])
+      outFeature.SetGeometry(value['geometry'])
+      outLayer.CreateFeature(outFeature)
+      outFeature.Destroy()
+  outDataSource.Destroy()
 
 
 # Save data with fields to shapefile
@@ -376,6 +426,10 @@ def geotiff2data(inGeotiff):
   data = inBand.ReadAsArray()
   if data.dtype == np.uint8:
     dtype = 'BYTE'
+  elif data.dtype == np.int16:
+    dtype = 'INT16'
+  elif data.dtype == np.int32:
+    dtype = 'INT32'
   elif data.dtype == np.float32:
     dtype = 'FLOAT'
   elif data.dtype == np.float64:
@@ -390,10 +444,16 @@ def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
   gdalDriver = gdal.GetDriverByName('GTiff')
   if dtype == 'BYTE':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
-      ['COMPRESS=DEFLATE'])
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
+  elif dtype == 'INT16':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int16,
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
+  elif dtype == 'INT32':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int32,
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   elif dtype == 'FLOAT':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Float32,
-      ['COMPRESS=DEFLATE'])
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   outRaster.SetGeoTransform(geoTrans)
   outRaster.SetProjection(proj.ExportToWkt())
   outBand = outRaster.GetRasterBand(1)
