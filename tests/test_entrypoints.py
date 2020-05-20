@@ -1,6 +1,15 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 
+def test_gc_map_mod_script(script_runner):
+    """
+    This is testing `scripts/GC_map_mod`, which is installed as a *script*
+    and not registered as a entrypoint -- see setup.py
+    """
+    ret = script_runner.run('GC_map_mod')
+    assert ret.success
+
+
 def test_apply_wb_mask(script_runner):
     ret = script_runner.run('apply_wb_mask.py', '-h')
     assert ret.success
