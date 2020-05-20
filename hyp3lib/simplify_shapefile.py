@@ -106,7 +106,7 @@ def main():
     parser.add_argument("outfile",help="output shapefile")
     args = parser.parse_args()
 
-    logFile = "simplify_shapefile.log".format(os.getpid())
+    logFile = "simplify_shapefile.log"
     logging.basicConfig(filename=logFile, format='%(asctime)s - %(levelname)s - %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     logging.getLogger().addHandler(logging.StreamHandler())
