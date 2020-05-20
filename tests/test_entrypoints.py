@@ -1,6 +1,9 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import pytest
 
+
+@pytest.mark.script_launch_mode('subprocess')
 def test_gc_map_mod_script(script_runner):
     """
     This is testing `scripts/GC_map_mod`, which is installed as a *script*
