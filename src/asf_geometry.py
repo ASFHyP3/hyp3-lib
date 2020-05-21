@@ -88,7 +88,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
   return (data, colFirst, rowFirst, geoTrans, proj)
 
 
-def reproject2grid(inRaster, tsEPSG):
+def reproject2grid(inRaster, tsEPSG, xRes = None ):
 
   # Read basic metadata
   cols = inRaster.RasterXSize
@@ -99,7 +99,8 @@ def reproject2grid(inRaster, tsEPSG):
 
   # Define warping options
   rasterFormat = 'VRT'
-  xRes = geoTrans[1]
+  if xRes is None:
+      xRes = geoTrans[1]
   yRes = xRes
   resampleAlg = gdal.GRA_Bilinear
   options = ['COMPRESS=DEFLATE']
@@ -282,6 +283,46 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
   outShape.Destroy()
 
 
+# Save geometry with fields to GeoJSON file
+def geometry2geojson(fields, values, spatialRef, merge, geojsonFile):
+
+  driver = ogr.GetDriverByName('GeoJSON')
+  if os.path.exists(geojsonFile):
+    driver.DeleteDataSource(geojsonFile)
+  outDataSource = driver.CreateDataSource(geojsonFile)
+  outLayer = outDataSource.CreateLayer('layer', srs=spatialRef)
+  for field in fields:
+    fieldDefinition = ogr.FieldDefn(field['name'], field['type'])
+    if field['type'] == ogr.OFTString:
+      fieldDefinition.SetWidth(field['width'])
+    elif field['type'] == ogr.OFTReal:
+      fieldDefinition.SetWidth(24)
+      fieldDefinition.SetPrecision(8)
+    outLayer.CreateField(fieldDefinition)
+  featureDefinition = outLayer.GetLayerDefn()
+  if merge == True:
+    combine = ogr.Geometry(ogr.wkbMultiPolygon)
+    for value in values:
+      combine = combine.Union(value['geometry'])
+    outFeature = ogr.Feature(featureDefinition)
+    for field in fields:
+      name = field['name']
+      outFeature.SetField(name, 'multipolygon')
+    outFeature.SetGeometry(combine)
+    outLayer.CreateFeature(outFeature)
+    outFeature.Destroy()
+  else:
+    for value in values:
+      outFeature = ogr.Feature(featureDefinition)
+      for field in fields:
+        name = field['name']
+        outFeature.SetField(name, value[name])
+      outFeature.SetGeometry(value['geometry'])
+      outLayer.CreateFeature(outFeature)
+      outFeature.Destroy()
+  outDataSource.Destroy()
+
+
 # Save data with fields to shapefile
 def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans,
   classes, threshold, background, shapeFile):
@@ -403,6 +444,9 @@ def data2geotiff(data, geoTrans, proj, dtype, noData, outFile):
   gdalDriver = gdal.GetDriverByName('GTiff')
   if dtype.upper() == 'BYTE': # aka GDT_UInt8:
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Byte,
+      ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
+  elif dtype == 'INT16':
+    outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int16,
       ['COMPRESS=DEFLATE', 'BIGTIFF=YES'])
   elif dtype == 'INT32':
     outRaster = gdalDriver.Create(outFile, cols, rows, 1, gdal.GDT_Int32,

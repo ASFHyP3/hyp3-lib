@@ -79,6 +79,10 @@ def read_gdal_file(filehandle,band=1,gcps=False):
         gcpproj = filehandle.GetGCPProjection()
         return filehandle.RasterXSize,filehandle.RasterYSize,geotransform,geoproj,gcp,gcpproj,data
 
+def get_NoData_value(infile):
+    fhandle = open_gdal_file(infile)
+    val = fhandle.GetRasterBand(1).GetNoDataValue()
+    return val
     
 def read_gdal_file_small(filehandle,band,xsize,ysize):
         banddata = filehandle.GetRasterBand(band)
@@ -180,7 +184,7 @@ def open_gdal_file_forscanline(file,x,y,trans,proj,dt='UInt16'):
 def write_gdal_file_byscanline(driver,xoff,yoff,data,band=1):
         driver.GetRasterBand(band).WriteArray(data,xoff,yoff)
 
-def write_gdal_file(filename,geotransform,geoproj,data,gcps='',gcpproj=''):
+def write_gdal_file(filename,geotransform,geoproj,data,gcps='',gcpproj='',nodata=None):
         (x,y) = data.shape
         format = "GTiff"
         driver = gdal.GetDriverByName(format)
@@ -194,6 +198,8 @@ def write_gdal_file(filename,geotransform,geoproj,data,gcps='',gcpproj=''):
         nsres = geotransform[5]
 
         dst_ds.GetRasterBand(1).WriteArray(data)
+        if nodata is not None:
+            dst_ds.GetRasterBand(1).SetNoDataValue(nodata)
         dst_ds.SetGeoTransform([northing,weres,rotation,easting,rotation,nsres])
         dst_ds.SetProjection(geoproj)
         if gcps != '' and gcpproj!='':
