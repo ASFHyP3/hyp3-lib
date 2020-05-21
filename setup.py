@@ -67,6 +67,9 @@ setup(
 
     packages=find_packages(),
 
+    # FIXME: this could/should be converted to python so it can be registered as an entrypoint
+    scripts=['scripts/GC_map_mod'],
+
     entry_points={'console_scripts': [
         'apply_wb_mask.py = hyp3lib.apply_wb_mask:main',
         'byteSigmaScale.py = hyp3lib.byteSigmaScale:main',

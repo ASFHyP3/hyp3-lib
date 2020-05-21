@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+################################################################################
+#     GC_MAP_mod: script to run DIFF&GEO program sequence to  create           #
+#             refined geocoding lookup table                                   #
+################################################################################
+# uw  20020730
+# clw 20040414 modified output file name offset_fitm
+# clw 20050428 modified for Win32 compatibility creating diff_par.in
+# wg  20110318 customized
+# wg  201505?? updated
+# JHK 20200514 Converted tsch to bash
+################################################################################
+echo " "
+echo "GC_MAP: refined lookup table derivation for terrain corrected SAR geocoding"
+
+if [[ $# -lt 10 ]]; then
+  echo " "
+  echo "usage: GC_MAP <SLC_par> <OFF_par> <DEM_par> <lat_ovr> <lon_ovr> <DEM_gc_par> <DEM_gc> <pwr> <MAP_to_RDC> [inc] [pix] [ls_map]"
+  echo " "
+  echo "    1.  SLC_par     (input) reference slc geometry parameter file"
+  echo "    2.  OFF_par     (input) ISP offset/interferogram parameter file, enter - if geocoding SLC or MLI data"
+  echo "                    if you first input is mli par in the same interferogram geometry, please keep - here"
+  echo "    3.  DEM_par     (input) DEM parameter file"
+  echo "    4.  DEM         (input) DEM data file"
+  echo "    5.  lat_ovr     latitude DEM oversampling factor"
+  echo "    6.  lon_ovr     longitude DEM oversampling factor"
+  echo "    7.  DEM_gc_par  (output, and if existing input) DEM segment parameter file used for geocoding"
+  echo "    8.  DEM_gc      (output) segment of DEM used for geocoding"
+  echo "                    interpolated if lat_ovr > 1  or lon_ovr > 1"
+  echo "    9.  pwr         (input) SAR intensity image (for fine registration)"
+  echo "    10. MAP_to_RDC  (output) refined geocoding lookup table"
+  echo "    11. inc         (output) local incidence angle (between surface normal and look vector) (in map geometry)"
+  echo "    12. pix         (output) pixel area normalization factor (in map geometry)"
+  echo "    13. ls_map      (output) layover and shadow map (in map geometry)"
+  echo "    14. rlks        number of range looks (enter - for default: 1)"
+  echo "    15. azlks       number of azimuth looks (enter - for default: 1)"
+  echo "    16. rpos        center of region for comparision in range (enter - for default: image center"
+  echo "    17. azpos       center of region for comparision in azimuth (enter - for default: image center)"
+  echo "    18. wsize       window size for initial coregistration"
+  echo "  Remark: select - as filename to avoid creation of corresponding output file"
+  echo "  it is better to use *.mli.par and leave off_par as '-'"
+  exit
+fi
+
+slc_par=${1}
+off=${2}
+DEM_par=${3}
+DEM=${4}
+lat_ovr=${5}
+lon_ovr=${6}
+DEM_gc_par=${7}
+DEM_gc=${8}
+pwr=${9}
+MAP_to_RDC=${10}
+inc=${11:-'-'}
+pix=${12:-'-'}
+ls_map=${13:-'-'}
+rlks=${14:-'1'}
+azlks=${15:-'1'}
+rpos=${16:-'-'}
+azpos=${17:-'-'}
+wsize=${18}
+
+map_to_rdc="map_to_rdc"     # initial geocoding lookup table
+pwr_sim="pwr_sim"           # simulated SAR intensity image in rdc
+pwr_sim_map="pwr_sim_map"   # simulated SAR intensity image in map geometry
+hgt_sim="hgt_sim"           # geocoded height generated with map_to_rdc
+diff_par="diff_par"         # Create (DIFF&GEO-)DIFF&GEO parameter file
+offs="offs"
+snr="snr"
+offsets="offsets"
+coffs="coffs"
+coffsets="coffsets"
+
+if [[ ${off} == "-" ]]; then
+  width=`awk '$1 == "range_samples:" {print $2}' ${slc_par}`
+  nlines=`awk '$1 == "azimuth_lines:" {print $2}' ${slc_par}`
+else
+  width=`awk '$1 == "interferogram_width:" {print $2}' ${off}`
+  nlines=`awk '$1 == "interferogram_azimuth_lines:" {print $2}' ${off}`
+fi
+
+################################################################################
+# Initial Geocoding lookup table derivation                                    #
+################################################################################
+echo ""
+echo "Generation of initial geocoding lookup table"
+echo "gc_map ${slc_par} ${off} ${DEM_par} ${DEM} ${DEM_gc_par} ${DEM_gc} \
+    ${map_to_rdc} ${lat_ovr} ${lon_ovr} ${pwr_sim_map} - - ${inc} - ${pix} ${ls_map} - 3"
+nice gc_map ${slc_par} ${off} ${DEM_par} ${DEM} ${DEM_gc_par} ${DEM_gc} \
+    ${map_to_rdc} ${lat_ovr} ${lon_ovr} ${pwr_sim_map} - - ${inc} - ${pix} ${ls_map} - 3
+if [[ -e "-" ]]; then rm "-"; fi
+
+dem_width=`awk '$1 == "width:" {print $2}' ${DEM_gc_par}`
+dem_nlines=`awk '$1 == "nlines:" {print $2}' ${DEM_gc_par}`
+echo "${dem_width} ${dem_nlines}"
+
+echo "DEM segment width after oversampling:           ${dem_width}"
+echo "DEM segment number of lines after oversampling: ${dem_nlines}"
+
+
+################################################################################
+# transformation of simulated SAR image from map to SAR geometry               #
+################################################################################
+echo ""
+echo "transformation of simulated SAR image from map to SAR geometry"
+echo "geocode ${map_to_rdc} ${pwr_sim_map} ${dem_width} ${pwr_sim} ${width} ${nlines} 1 0 - -"
+nice geocode ${map_to_rdc} ${pwr_sim_map} ${dem_width} ${pwr_sim} ${width} ${nlines} 1 0 - -
+
+################################################################################
+# Create (DIFF&GEO-)DIFF&GEO parameter file:                                   #
+################################################################################
+echo ""
+if [[ -e ${diff_par} ]]; then rm ${diff_par}; fi
+
+echo 'GC_map_mod' > diff_par.in
+echo '0 0' >> diff_par.in
+echo '32 32' >> diff_par.in
+echo '128 128' >> diff_par.in
+echo '0.2'    >>diff_par.in
+
+if [[ ${off} == "-" ]]; then
+    echo "Create DIFF&GEO parameter file from SLC/MLI parameter file"
+    create_diff_par ${slc_par} - ${diff_par} 1 < diff_par.in
+else
+    echo "Create DIFF&GEO parameter file from ISP/offset parameter file"
+    create_diff_par ${off} - ${diff_par} 0 < diff_par.in
+fi
+
+################################################################################
+# Fine registration (pwr_sim used as reference geom.)                          #
+################################################################################
+echo " $wsize"
+echo "Fine registration (pwr_sim used as reference geom.)"
+#echo "init_offsetm $pwr_sim $pwr $diff_par $rlks $azlks $rpos $azpos - - 0.2 $wsize"
+#nice init_offsetm $pwr_sim $pwr $diff_par $rlks $azlks $rpos $azpos - - 0.2 $wsize
+
+echo ""
+#    if [[ 0 ]]; then  ### first round
+#        echo "offset_pwrm $pwr_sim $pwr $diff_par $offs $snr - - $offsets 2 - - 0.2"
+#        nice offset_pwrm $pwr_sim $pwr $diff_par $offs $snr - - $offsets 2 - - 0.2
+#        echo ""
+#        echo "offset_fitm $offs $snr $diff_par $coffs $coffsets - 1"
+#        nice offset_fitm $offs $snr $diff_par $coffs $coffsets - 1
+#    fi
+
+echo " "
+echo "offset_pwrm ${pwr_sim} ${pwr} ${diff_par} ${offs} ${snr} 128 128 ${offsets} 4 128 128 0.2"
+nice offset_pwrm ${pwr_sim} ${pwr} ${diff_par} ${offs} ${snr} 128 128 ${offsets} 4 128 128 0.2
+
+echo ""
+echo "offset_fitm ${offs} ${snr} ${diff_par} ${coffs} ${coffsets} 0.2 1 "
+nice offset_fitm ${offs} ${snr} ${diff_par} ${coffs} ${coffsets} 0.2 1 > offset_fitm.out
+
+if [[ -e ${offs} ]]; then rm "${offs}"; fi
+if [[ -e ${snr} ]]; then rm "${snr}"; fi
+if [[ -e ${offsets} ]]; then rm "${offsets}"; fi
+if [[ -e ${coffs} ]]; then rm "${coffs}"; fi
+if [[ -e ${coffsets} ]]; then rm "${coffsets}"; fi
+
+################################################################################
+# Refine lookup table with registration offset polynomials                     #
+################################################################################
+echo ""
+echo "Refine lookup table with registration offset polynomials"
+echo "gc_map_fine ${map_to_rdc} ${dem_width} ${diff_par} ${MAP_to_RDC} 1"
+nice gc_map_fine ${map_to_rdc} ${dem_width} ${diff_par} ${MAP_to_RDC} 1
+#if [[-e ${MAP_to_RDC} && -e ${map_to_rdc} ]]; then rm  "${map_to_rdc}"; fi
+
+################################################################################
+# Quality control                                                              #
+################################################################################
+if [[ -e "offset_fitm.out" ]]; then
+  echo ""
+  echo "GC_MAP Quality control:"
+  echo "***********************"
+  grep "final" offset_fitm.out
+  echo ""
+fi
+
+echo " rm offs snr offsets coffs coffsets "
+echo End of GC_MAP
