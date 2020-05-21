@@ -3,7 +3,6 @@
 import argparse
 from argparse import RawTextHelpFormatter
 import os
-import io # To remove that BOM bit from some csv's
 import sys
 from osgeo import gdal, ogr, osr
 from datetime import datetime, timedelta
@@ -11,13 +10,12 @@ import netCDF4 as nc
 import numpy as np
 import configparser
 from asf_time_series import addImage2netcdf, initializeNetcdf
-from argparse_helpers import file_exists
 
-def csv2time_series_netcdf(csvFile, netcdfFile, days_apart=1):
+
+def csv2time_series_netcdf(csvFile, netcdfFile):
 
   ### Read CSV files
-  csv_file = io.open(csvFile, "r", encoding='utf-8-sig') # utf-8-sig handles BOM
-  lines = [line.rstrip() for line in csv_file]
+  lines = [line.rstrip() for line in open(csvFile)]
   timeCount = len(lines)
   width = len(lines[0].split(','))
   height = 1
@@ -55,7 +53,7 @@ def csv2time_series_netcdf(csvFile, netcdfFile, days_apart=1):
   for ii in range(timeCount):
     layerName = ('test_layer_%03d' % (ii+1))
     granule.append(layerName)
-    days = timedelta(days=ii*days_apart)
+    days = timedelta(days=ii)
     date = refTime + days
     #timestamp.append(datetime.strptime(date, '%Y%m%dT%H%M%S'))
     timestamp.append(date)
@@ -79,15 +77,17 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(prog='csv2time_series_file',
     description='generates a time series stack from a CSV file',
     formatter_class=RawTextHelpFormatter)
-  parser.add_argument('csv', metavar='<csvfile>', action="store", type=file_exists,
+  parser.add_argument('csv', metavar='<csvfile>',
     help='name of the CSV input file')
-  parser.add_argument('netcdf', metavar='<netCDF file>', action="store",
-    help='name of the netCDF test time series output file')
-  parser.add_argument('--days','-d', action="store", type=int, default=1,
-    help='Number of days apart to save each granule. (Default=1)')
+  parser.add_argument('netcdf', metavar='<netCDF file>',
+    help='name of the netCDF test time series file')
   if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
   args = parser.parse_args()
 
-  csv2time_series_netcdf(args.csv, args.netcdf, days_apart=args.days)
+  if not os.path.exists(args.csv):
+    print('Configuration file (%s) does not exist!' % args.config)
+    sys.exit(1)
+
+  csv2time_series_netcdf(args.csv, args.netcdf)
