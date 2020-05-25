@@ -139,6 +139,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: package
     steps:
+      - uses: actions/checkout@v2
+
       - uses: goanpeca/setup-miniconda@v1
         with:
           auto-update-conda: true
@@ -147,10 +149,10 @@ jobs:
           environment-file: conda-env.yml
           channels: conda-forge, nodefaults
 
-      - name: Pytest in conda environment
+      - name: Pip install ${{ needs.package.outputs.SDIST_VERSION }}
         shell: bash -l {0}
         run: |
-          export SDIST_VERSION={{'${{ needs.package.outputs.SDIST_VERSION }}'}}
+          export SDIST_VERSION=${{ needs.package.outputs.SDIST_VERSION }}
           python -m pip install hyp3lib==${SDIST_VERSION} \
               --trusted-host "${S3_PYPI_HOST}" \
               --extra-index-url "http://${S3_PYPI_HOST}"
