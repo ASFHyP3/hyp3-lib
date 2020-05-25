@@ -2,8 +2,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import os
 
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 _HERE = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(_HERE, 'README.md'), 'r') as f:
@@ -12,7 +11,7 @@ with open(os.path.join(_HERE, 'README.md'), 'r') as f:
 setup(
     name='hyp3lib',
     use_scm_version=True,
-    description='HyP3 common library plugin',
+    description='Common library for HyP3 plugins',
     long_description=long_desc,
     long_description_content_type='text/markdown',
 
@@ -35,6 +34,8 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries',
         ],
+
+    # python_requires='~=3.6',
 
     install_requires=[
         'boto3',
@@ -60,8 +61,6 @@ setup(
             'pytest',
             'pytest-cov',
             'pytest-console-scripts',
-            'tox',
-            'tox-conda',
         ]
     },
 
