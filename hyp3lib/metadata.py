@@ -3,12 +3,22 @@
 import datetime
 import os
 import logging
+from pathlib import Path
+from typing import Union
+
+from hyp3lib import GranuleError
 
 
-def add_citation(cfg, dir_):
+def add_esa_citation(granule: str, dir_: Union[str, Path]):
+    """Add an ESA citation for S1 Granules
 
-    if not cfg['granule'].startswith('S1'):
-        return
+    Args:
+        granule: The name of the granule
+        dir_: The directory to add the citation file to
+    """
+
+    if not granule.startswith('S1'):
+        raise GranuleError
 
     y = int(datetime.datetime.now().year)
     ay = None
