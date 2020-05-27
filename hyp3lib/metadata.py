@@ -1,43 +1,31 @@
 """Utilities for metadata manipulation"""
 
-import datetime
 import os
-import logging
+import re
+from datetime import datetime
 from pathlib import Path
 from typing import Union
 
 from hyp3lib import GranuleError
 
 
-def add_esa_citation(granule: str, dir_: Union[str, Path]):
-    """Add an ESA citation for S1 Granules
+def add_esa_citation(granule: str, directory: Union[str, Path]):
+    """Add an ESA citation file for S1 Granules
 
     Args:
         granule: The name of the granule
-        dir_: The directory to add the citation file to
+        directory: The directory to add the citation file to
     """
 
     if not granule.startswith('S1'):
-        raise GranuleError
+        raise GranuleError(f'ESA citation only valid for S1 granules, not: {granule}')
 
-    current_year = datetime.datetime.now().year
-    aq_year = None
-    for subdir, dirs, files in os.walk(dir_):
-        for f in files:
-            try:
-                for item in f.split("_"):
-                    if item[0:8].isdigit() and item[8] == "T" and item[9:15].isdigit():
-                        aq_year = item[0:4]
-                        break
-            except:
-                logging.error(f"ERROR: Unable to determine acquisition year from filename {f}")
-            if aq_year:
-                break
-        if aq_year:
-            break
+    current_year = datetime.now().year
+    try:
+        timestamp = re.search(r'\d{8}T\d{6}', granule)[0]
+        aq_year = datetime.strptime(timestamp, '%Y%m%dT%H%M%S').year
+    except (TypeError, ValueError):
+        raise GranuleError(f'Unable to determine acquisition year from: {granule}')
 
-    if aq_year is None:
-        aq_year = current_year
-
-    with open(os.path.join(dir_, 'ESA_citation.txt'), 'w') as f:
-        f.write(f'ASF DAAC {current_year}, contains modified Copernicus Sentinel data {aq_year}, processed by ESA.')
+    with open(os.path.join(directory, 'ESA_citation.txt'), 'w') as f:
+        f.write(f'ASF DAAC {current_year}, contains modified Copernicus Sentinel data {aq_year}, processed by ESA.\n')
