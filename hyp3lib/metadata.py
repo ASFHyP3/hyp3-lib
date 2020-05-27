@@ -20,24 +20,24 @@ def add_esa_citation(granule: str, dir_: Union[str, Path]):
     if not granule.startswith('S1'):
         raise GranuleError
 
-    y = int(datetime.datetime.now().year)
-    ay = None
+    current_year = datetime.datetime.now().year
+    aq_year = None
     for subdir, dirs, files in os.walk(dir_):
         for f in files:
             try:
                 for item in f.split("_"):
                     if item[0:8].isdigit() and item[8] == "T" and item[9:15].isdigit():
-                        ay = item[0:4]
+                        aq_year = item[0:4]
                         break
             except:
-                logging.error("ERROR: Unable to determine acquisition year from filename {f}".format(f=f))
-            if ay:
+                logging.error(f"ERROR: Unable to determine acquisition year from filename {f}")
+            if aq_year:
                 break
-        if ay:
+        if aq_year:
             break
 
-    if ay is None:
-        ay = y
+    if aq_year is None:
+        aq_year = current_year
 
     with open(os.path.join(dir_, 'ESA_citation.txt'), 'w') as f:
-        f.write('ASF DAAC {0}, contains modified Copernicus Sentinel data {1}, processed by ESA.'.format(y,ay))
+        f.write(f'ASF DAAC {current_year}, contains modified Copernicus Sentinel data {aq_year}, processed by ESA.')
