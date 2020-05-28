@@ -31,8 +31,4 @@ dependencies:
     - s3pypi
     - setuptools-scm[toml]
     - safety
-    # For running
-    - --trusted-host hyp3-pypi.s3-website-us-east-1.amazonaws.com
-      --extra-index-url http://hyp3-pypi.s3-website-us-east-1.amazonaws.com
-    - hyp3lib
-    - hyp3proclib
+
