@@ -5,6 +5,8 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 # FIXME: Python 3.8+ this should be `from importlib.metadata...`
 from importlib_metadata import PackageNotFoundError, version
 
+from hyp3lib.exceptions import GranuleError
+
 
 try:
     __version__ = version(__name__)
@@ -15,3 +17,5 @@ except PackageNotFoundError:
     # Or, to just get the version number use:
     #    python setup.py --version
     pass
+
+__all__ = ['__version__', 'GranuleError']
