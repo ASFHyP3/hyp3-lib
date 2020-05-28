@@ -2,5 +2,4 @@
 
 
 class GranuleError(Exception):
-    """Error to be raised for incompatible or missing granlues"""
-
+    """Error to be raised for incompatible or missing granules"""
