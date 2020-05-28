@@ -1,3 +1,3 @@
-# hyp3-lib
+# HyP3-lib
 
-A collection of routines to ingest and process SAR images.
+Common library for HyP3 plugins

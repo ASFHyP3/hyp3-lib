@@ -1,0 +1,34 @@
+name: hyp3-lib
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - pip
+  # For packaging, and testing
+  - setuptools
+  - wheel
+  - pytest
+  - pytest-console-scripts
+  - pytest-cov
+  # For running
+  - boto3
+  - gdal=2.*
+  - imageio
+  - importlib_metadata
+  - lxml
+  - matplotlib
+  - netCDF4
+  - numpy
+  - pillow
+  - proj
+  - pyshp
+  - requests
+  - scipy
+  - six
+  - statsmodels
+  - pip:
+    # for packaging and testing
+    - s3pypi
+    - setuptools-scm[toml]
+    - safety
+
