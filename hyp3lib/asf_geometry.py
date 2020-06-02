@@ -576,7 +576,7 @@ def raster_meta(rasterFile):
   return (spatialRef, gt, shape, pixel)
 
 
-def overlapMask(meta, maskShape, invert, outFile):
+def overlapMask(meta, maskShape, invert):
 
   ### Extract metadata
   posting = meta['pixelSize']
