@@ -1,8 +1,8 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
 import subprocess
 import logging
+
+from hyp3lib import ExecuteError
 
 
 def execute(cmd, expected=None, logfile=None, uselogging=False):
@@ -46,7 +46,7 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
         for line in output.split('\n'):
             last = line
             if next_line:
-                raise Exception(tool + ': ' + line)
+                raise ExecuteError(tool + ': ' + line)
             elif '** Error: *****' in line:  # MapReady style error
                 next_line = True
             elif 'Error per GCP' in line:  # MapReady message that is NOT an error
@@ -56,9 +56,9 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
             elif 'Root mean squared error' in line:  # RTC message that is NOT an error
                 pass
             elif 'ERROR' in line.upper():
-                raise Exception(tool + ': ' + line)
+                raise ExecuteError(tool + ': ' + line)
         # No error line found, die with last line
-        raise Exception(tool + ': ' + last)
+        raise ExecuteError(tool + ': ' + last)
 
     if expected is not None:
         if uselogging:
@@ -75,6 +75,6 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
                 logging.info('Expected output file not found: ' + expected)
             else:
                 print('Expected output file not found: ' + expected)
-            raise Exception("Expected output file not found: " + expected)
+            raise ExecuteError("Expected output file not found: " + expected)
 
     return output
