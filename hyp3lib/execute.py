@@ -1,8 +1,8 @@
 """Managed subprocessing for HyP3 externals"""
 
+import logging
 import os
 import subprocess
-import logging
 from pathlib import Path
 from typing import Optional, TextIO, Union
 
@@ -38,7 +38,7 @@ def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Opti
         logging.info('subprocess return value was ' + str(return_val))
     else:
         print('subprocess return value was ' + str(return_val))
-    
+
     for line in output.split('\n'):
         if len(line.rstrip()) > 0:
             if uselogging:
@@ -47,7 +47,7 @@ def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Opti
                 print('Proc: ' + line)
             if logfile is not None:
                 logfile.write("%s\n" % line)
-                
+
     if uselogging:
         logging.info('Finished: ' + cmd)
     else:
