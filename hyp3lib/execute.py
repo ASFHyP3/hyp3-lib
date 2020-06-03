@@ -1,12 +1,30 @@
+"""Managed subprocessing for HyP3 externals"""
+
 import os
 import subprocess
 import logging
+from pathlib import Path
+from typing import Optional, TextIO, Union
 
 from hyp3lib import ExecuteError
 
 
-def execute(cmd, expected=None, logfile=None, uselogging=False):
+def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Optional[TextIO] = None,
+            uselogging: bool = False) -> str:
+    """
+    Run a command in a subprocess and perform some post-process verification of
+    the command's execution
 
+    Args:
+        cmd: The command to subprocess in a shell
+        expected: Ensure an expected file created by the cmd exists
+        logfile: A file to to write the cmd's stdout to
+        uselogging: Instead of printing status messages of this function, log
+            them with the logging module
+
+    Returns:
+        output: The stdout of cmd
+    """
     if uselogging:
         logging.info('Running command: ' + cmd)
     else:
