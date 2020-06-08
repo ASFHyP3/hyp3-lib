@@ -1,13 +1,12 @@
 """Subsets a GeoTIFF file using an AOI from a shapefile"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
-import sys
+import shutil
+
 import numpy as np
 from osgeo import gdal, ogr, osr
-import shutil
+
 
 def point_within_polygon(x, y, polygon):
 
@@ -154,12 +153,10 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.inGeoTIFF):
-        print('GeoTIFF file (%s) does not exist!' % args.inGeoTIFF)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.inGeoTIFF} does not exist!')
 
     if not os.path.exists(args.shapeFile):
-        print('Shapefile (%s) does not exist!' % args.shapeFile)
-        sys.exit(1)
+        parser.error(f'Shapefile {args.shapeFile} does not exist!')
 
     subset_geotiff_shape(args.inGeoTIFF, args.shapeFile, args.outGeoTIFF)
 

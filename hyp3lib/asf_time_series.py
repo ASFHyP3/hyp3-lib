@@ -1,15 +1,15 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
-import sys
 from datetime import datetime, timedelta
+
+import netCDF4 as nc
+import numpy as np
+import statsmodels.api as sm
 from osgeo import gdal, ogr, osr
 from scipy import ndimage
-import numpy as np
-import netCDF4 as nc
-from statsmodels.tsa.seasonal import seasonal_decompose
-import statsmodels.api as sm
 from scipy.interpolate import interp1d
+from statsmodels.tsa.seasonal import seasonal_decompose
+
+from hyp3lib import GeometryError
 from hyp3lib.asf_geometry import geometry_proj2geo, raster_meta
 
 tolerance = 0.00005
@@ -392,8 +392,7 @@ def time_series_slice(ncFile, x, y, typeXY):
   if 'Transverse_Mercator' in var:
     wkt = timeSeries.variables['Transverse_Mercator'].getncattr('crs_wkt')
   else:
-    print('Could not find map projection information!')
-    sys.exit(1)
+    raise GeometryError('Could not find map projection information!')
 
   ### Work out line/sample from various input types
   if typeXY == 'pixel':

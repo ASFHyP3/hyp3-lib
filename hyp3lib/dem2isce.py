@@ -1,10 +1,8 @@
 """generates an XML file for a DEM for ISCE processing"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
-import sys
+
 import lxml.etree as et
 from osgeo import osr, gdal
 
@@ -14,8 +12,7 @@ def dem2isce(demFile, hdrFile, xmlFile):
   # Read metadata from the DEM
   raster = gdal.Open(demFile, gdal.GA_ReadOnly)
   if raster is None:
-    print('Unable to open DEM file (%s) !' % demFile)
-    sys.exit(1)
+    raise FileNotFoundError(f'Unable to open DEM file {demFile} !')
   print('Converting %s file (%s) ...' % (raster.GetDriver().ShortName, demFile))
   gt = raster.GetGeoTransform()
   band = raster.GetRasterBand(1)

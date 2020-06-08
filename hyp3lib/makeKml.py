@@ -1,13 +1,11 @@
 """Create a KML file from a geotiff and a png"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
-import sys
+import zipfile
+
 import lxml.etree as et
 from osgeo import gdal
-import zipfile
 
 
 def makeKML(geotiff,pngFile):
@@ -65,11 +63,9 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
-        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.geotiff} does not exist!')
     if not os.path.exists(args.pngFile):
-        print('PNG file (%s) does not exist!' % args.pngFile)
-        sys.exit(1)
+        parser.error(f'PNG file {args.pngFile} does not exist!')
 
     makeKML(args.geotiff, args.pngFile)
 
