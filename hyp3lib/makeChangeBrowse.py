@@ -1,14 +1,13 @@
 """Creates browse images for classified change detection geotiffs"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
-import hyp3lib.saa_func_lib as saa
-import numpy as np
-import sys
 import os
-from hyp3lib.makeAsfBrowse import makeAsfBrowse
+
+import numpy as np
 from osgeo import gdal
+
+import hyp3lib.saa_func_lib as saa
+from hyp3lib.makeAsfBrowse import makeAsfBrowse
 
 MAX_CLASSES = 10
 
@@ -158,8 +157,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
-        print('ERROR: GeoTIFF file (%s) does not exist!' % args.geotiff)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.geotiff} does not exist!')
 
     makeChangeBrowse(args.geotiff, type=args.type)
 

@@ -6,9 +6,10 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 from importlib_metadata import PackageNotFoundError, version
 
 from hyp3lib.exceptions import (
+    DemError,
+    ExecuteError,
     GeometryError,
     GranuleError,
-    ExecuteError,
 )
 
 try:
@@ -23,7 +24,8 @@ except PackageNotFoundError:
 
 __all__ = [
     '__version__',
+    'DemError',
+    'ExecuteError',
     'GeometryError',
     'GranuleError',
-    'ExecuteError',
 ]

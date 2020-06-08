@@ -1,14 +1,12 @@
 """Creates a Cloud Optimized Geotiff from the input geotiff(s)"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import shutil
-import os
-import sys
+import argparse
 import glob
 import logging
+import os
+import shutil
+
 from osgeo import gdal
-import argparse
 
 
 def cogify_dir(dir="PRODUCT",debug=False,res=30):
@@ -63,11 +61,9 @@ def main():
 
     for myfile in args.geotiff:
         if not os.path.exists(myfile):
-            print('ERROR: GeoTIFF file (%s) does not exist!' % myfile)
-            sys.exit(1)
+            parser.error(f'GeoTIFF file {myfile} does not exist!')
         if not os.path.splitext(myfile)[1] == '.tif':
-            print('ERRORL Input file (%s) is not geotiff!' % myfile)
-            sys.exit(1)
+            parser.error(f'Input file {myfile} is not a GeoTFF!')
 
         outfile = myfile.replace(".tif", "_cog.tif")
         make_cog(myfile, outfile)

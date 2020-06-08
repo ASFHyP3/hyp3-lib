@@ -1,17 +1,15 @@
 """generates boundary shapefile from GeoTIFF file"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import os
-import sys
 import argparse
-from scipy import ndimage
+import os
+
 from osgeo import ogr
+from scipy import ndimage
+
 from hyp3lib.asf_geometry import raster_meta, geotiff2boundary_mask, data_geometry2shape
 
+
 # from hyp3lib.asf_time_series import raster_metadata
-
-
 def raster_metadata(input):
 
   # Set up shapefile attributes
@@ -144,8 +142,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.input):
-        print('GeoTIFF file (%s) does not exist!' % args.input)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.input} does not exist!')
 
     raster_boundary2shape(
         args.input, args.threshold, args.shape, args.no_closing, args.fill_holes, args.pixel_shift

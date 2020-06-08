@@ -1,12 +1,10 @@
 """Resamples a GeoTIFF file and saves it in a number of formats"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
-import sys
-from hyp3lib.resample_geotiff import resample_geotiff
+
 from hyp3lib import saa_func_lib as saa
+from hyp3lib.resample_geotiff import resample_geotiff
 
 
 def makeAsfBrowse(geotiff, baseName, use_nn=False):
@@ -40,11 +38,9 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
-        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-        sys.exit(1)
-    if len(os.path.splitext(args.basename)[1]) != 0:
-        print('Output file (%s) has an extension!' % args.basename)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.geotiff} does not exist!')
+    if os.path.splitext(args.basename)[-1]:
+        parser.error(f'Output file {args.basename} has an extension!')
 
     makeAsfBrowse(args.geotiff, args.basename)
 

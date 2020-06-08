@@ -1,34 +1,33 @@
 """Get a DEM file in .tif format from the ASF DEM heap"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import os
-import sys
-import shutil
-import math
-from osgeo import gdal
 import argparse
-import boto3
-from botocore.handlers import disable_signing
-import subprocess
-from hyp3lib import dem2isce
-from hyp3lib import saa_func_lib as saa
+import logging
+import math
 import multiprocessing as mp
+import os
+import shutil
+import subprocess
+
+import boto3
 import lxml.etree as et
 import numpy as np
-from hyp3lib.asf_geometry import raster_meta
-import logging
+from botocore.handlers import disable_signing
+from osgeo import gdal
 from osgeo import ogr
 from osgeo import osr
 from pyproj import Proj, transform
 
 import hyp3lib.etc
+from hyp3lib import DemError
+from hyp3lib import dem2isce
+from hyp3lib import saa_func_lib as saa
+from hyp3lib.asf_geometry import raster_meta
 
 
 def positive_int(value):
     ivalue = int(value)
     if ivalue <= 0:
-        raise argparse.ArgumentTypeError("{} is an invalid positive int value".format(value))
+        raise argparse.ArgumentTypeError(f"{value} is an invalid positive int value")
     return ivalue
 
 def transform_bounds(inb, inepsg, outepsg):
@@ -144,8 +143,8 @@ def get_best_dem(y_min,y_max,x_min,x_max,demName=None):
             best_poly_list = poly_list
 
     if best_pct < .20:
-        logging.error("ERROR: Unable to find a DEM file for that area")
-        sys.exit(1)
+        raise DemError("Unable to find a DEM file for that area")
+
     logging.info("Best DEM: {}".format(best_name))
     logging.info("Tile List: {}".format(best_tile_list))
     return(best_name, best_epsg, best_tile_list, best_poly_list)
@@ -315,8 +314,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         logging.info("Snapping to grid at posting of %s meters" % post)
 
     if y_min < -90 or y_max > 90:
-        logging.error("ERROR: Please use latitude in range (-90,90) %s %s" % (y_min,y_max))
-        sys.exit(1)
+        raise ValueError(f"Please use latitude in range (-90, 90) ({y_min}, {y_max})")
 
     if x_min > x_max:
         logging.warning("WARNING: minimum easting > maximum easting - swapping")
