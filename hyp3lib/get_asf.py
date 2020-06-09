@@ -797,8 +797,7 @@ def download_granules(cfg, trynum=0):
 
     # Check data directory
     if len(cfg.dataDir) >0 and not os.path.exists(cfg.dataDir):
-        log.error('Data directory (%s) does not exist' % cfg.dataDir)
-        sys.exit(1)
+        raise FileNotFoundError(f'Data directory {cfg.dataDir} does not exist')
 
     n = len(cfg.new.keys())
     log.info("Have %d granules to get" % n)
@@ -1033,7 +1032,7 @@ def main():
         cfg.point is None and \
         cfg.wkt is None:
         log.critical("Please specify granules to get, or search criteria.")
-        exit(-1)
+        sys.exit(-1)
 
     if n_args > 0 and (
             cfg.platforms is not None or
@@ -1047,11 +1046,11 @@ def main():
 
     if cfg.wkt is not None and cfg.point is not None:
         log.critical("You can't specify both a WKT string and a point")
-        exit(-1)
+        sys.exit(-1)
 
     if cfg.user is None or cfg.password is None:
         log.critical("Please provide your URS login credentials")
-        exit(-1)
+        sys.exit(-1)
 
     if cfg.delayStr:
         cfg.delay = int(cfg.delayStr)
@@ -1076,69 +1075,55 @@ def main():
     signal.signal(signal.SIGQUIT, signal_handler)
     signal.signal(signal.SIGHUP, signal_handler)
 
-    try:
-        log.debug("Debug messages: " + str(cfg.debug))
+    log.debug("Debug messages: " + str(cfg.debug))
 
-        log.debug("Download Dir: " + cfg.tmpDir)
-        log.debug("Data Dir: " + cfg.dataDir)
-        log.debug("Delay: " + str(cfg.delay) + "s")
-        log.debug("Max Results: " + str(cfg.max))
-        log.debug("Max Retries: " + str(cfg.max_retries))
-        log.debug("Get Orbits: " + str(cfg.get_orb))
+    log.debug("Download Dir: " + cfg.tmpDir)
+    log.debug("Data Dir: " + cfg.dataDir)
+    log.debug("Delay: " + str(cfg.delay) + "s")
+    log.debug("Max Results: " + str(cfg.max))
+    log.debug("Max Retries: " + str(cfg.max_retries))
+    log.debug("Get Orbits: " + str(cfg.get_orb))
 
-        if n_args > 0:
-            cfg.new = dict()
-            for i in range(0,n_args):
-                g1 = find_granules_file(i, args[i], cfg)
-                cfg.new.update(g1)
-            download_granules(cfg)
+    if n_args > 0:
+        cfg.new = dict()
+        for i in range(0,n_args):
+            g1 = find_granules_file(i, args[i], cfg)
+            cfg.new.update(g1)
+        download_granules(cfg)
 
-        else:
-            start = None
-            if cfg.start_time:
-                if "T" in cfg.start_time:
-                    start = datetime.datetime.strptime(cfg.start_time, "%Y-%m-%dT%H:%M:%S")
-                else:
-                    start = datetime.datetime.strptime(cfg.start_time, "%Y-%m-%d")
-                log.debug("Start Time: " + str(start))
+    else:
+        start = None
+        if cfg.start_time:
+            if "T" in cfg.start_time:
+                start = datetime.datetime.strptime(cfg.start_time, "%Y-%m-%dT%H:%M:%S")
+            else:
+                start = datetime.datetime.strptime(cfg.start_time, "%Y-%m-%d")
+            log.debug("Start Time: " + str(start))
 
-            end = None
-            if cfg.end_time:
-                if "T" in cfg.end_time:
-                    end = datetime.datetime.strptime(cfg.end_time, "%Y-%m-%dT%H:%M:%S")
-                else:
-                    end = datetime.datetime.strptime(cfg.end_time, "%Y-%m-%d")
-                log.debug("End Time: " + str(start))
+        end = None
+        if cfg.end_time:
+            if "T" in cfg.end_time:
+                end = datetime.datetime.strptime(cfg.end_time, "%Y-%m-%dT%H:%M:%S")
+            else:
+                end = datetime.datetime.strptime(cfg.end_time, "%Y-%m-%d")
+            log.debug("End Time: " + str(start))
 
-            log.debug("Platform(s): " + str(cfg.platforms))
-            log.debug("Beam Mode(s): " + str(cfg.beammodes))
-            log.debug("WKT: " + str(cfg.wkt))
-            log.debug("Point: " + str(cfg.point))
-            log.debug("Level: " + str(cfg.level))
-            log.debug("Dry Run: " + str(cfg.dry_run))
+        log.debug("Platform(s): " + str(cfg.platforms))
+        log.debug("Beam Mode(s): " + str(cfg.beammodes))
+        log.debug("WKT: " + str(cfg.wkt))
+        log.debug("Point: " + str(cfg.point))
+        log.debug("Level: " + str(cfg.level))
+        log.debug("Dry Run: " + str(cfg.dry_run))
 
-            cfg.new = find_granules_search(cfg.platforms, cfg.beammodes, start, end, cfg.wkt, cfg.point, cfg.max,
-                                           cfg.level, wget_options=cfg.wget_options)
+        cfg.new = find_granules_search(cfg.platforms, cfg.beammodes, start, end, cfg.wkt, cfg.point, cfg.max,
+                                       cfg.level, wget_options=cfg.wget_options)
 
-            #g = find_granules('ALOS', 'FBS', datetime.datetime.strptime("2008-12-01T00:00:00", "%Y-%m-%dT%H:%M:%S"),
-            #                  datetime.datetime.strptime("2008-12-31T00:00:00", "%Y-%m-%dT%H:%M:%S"),
-            #                  "-155.08,65.82,-153.28,64.47,-149.94,64.55,-149.50,63.07,-153.5,61.91")
-            download_granules(cfg)
+        #g = find_granules('ALOS', 'FBS', datetime.datetime.strptime("2008-12-01T00:00:00", "%Y-%m-%dT%H:%M:%S"),
+        #                  datetime.datetime.strptime("2008-12-31T00:00:00", "%Y-%m-%dT%H:%M:%S"),
+        #                  "-155.08,65.82,-153.28,64.47,-149.94,64.55,-149.50,63.07,-153.5,61.91")
+        download_granules(cfg)
 
         log.info("Done")
-
-    # if we get a SystemExit from down in, pass it thru silently
-    except SystemExit:
-        raise
-    # trap Ctrl-C
-    except KeyboardInterrupt:
-        log.critical("Keyboard interrupt received (Ctrl-C).")
-    except Exception:
-        log.critical("Uncaught exception seen, traceback follows.")
-        tb = traceback.format_exc().split("\n")
-        for tbline in tb:
-            log.info(tbline)
-        log.critical("Aborting due to uncaught exception.")
 
 
 if __name__ == '__main__':

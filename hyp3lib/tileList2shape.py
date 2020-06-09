@@ -1,11 +1,10 @@
 """generates a shapefile from a list of tile files"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
-import sys
+
 from osgeo import ogr, osr
+
 from hyp3lib.asf_geometry import geotiff2polygon, geometry2shape
 
 
@@ -50,8 +49,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.file_list):
-        print('GeoTIFF file (%s) does not exist!' % args.file_list)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.file_list} does not exist!')
 
     tileList2shape(args.file_list, args.shape_file)
 

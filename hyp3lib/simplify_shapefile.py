@@ -1,17 +1,15 @@
 """Simplify complicated shapefiles"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import glob
-import shutil
-import requests
-import json
 import argparse
+import glob
+import json
 import logging
 import os
-import sys
-from osgeo import osr, ogr
+import shutil
+
+import requests
 import shapefile
+from osgeo import osr, ogr
 
 
 def wkt2shape(wkt,output_file):
@@ -43,8 +41,7 @@ def wkt2shape(wkt,output_file):
 
 def simplify_shapefile(inshp,outshp):
     if not os.path.isfile(inshp):
-        logging.error("ERROR: File {} does not exist".format(inshp))
-        sys.exit(1)
+        raise FileNotFoundError(f"{inshp} does not exist")
     sf = shapefile.Reader(inshp)
     shapes = sf.shapes() 
     scnt = len(shapes)
@@ -62,7 +59,7 @@ def simplify_shapefile(inshp,outshp):
         # post a request for simplification service
         try:
             response = requests.post('https://api.daac.asf.alaska.edu/services/utils/files_to_wkt', files=files)
-        except:
+        except requests.RequestException:
             logging.error("ERROR: service unavaible - it may be that your shapefile is too large.  Reduce to under 300 points")
 
         if not response.status_code == requests.codes.ok:

@@ -1,14 +1,14 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import os
-import sys
 import csv
-from osgeo import gdal, ogr, osr
-from scipy import ndimage
+import os
+
 import numpy as np
+from osgeo import gdal, ogr, osr
 from osgeo.gdalconst import GA_ReadOnly
+from scipy import ndimage
+
+from hyp3lib import GeometryError
 from hyp3lib.saa_func_lib import get_zone
-import logging
+
 
 # Determine the boundary polygon of a GeoTIFF file
 def geotiff2polygon_ext(geotiff):
@@ -432,14 +432,10 @@ def spatial_query(source, reference, function):
   # Extract information from tiles and boundary shapefiles
   (geoTile, spatialRef, nameTile) = shape2geometry(reference, 'tile')
   if geoTile is None:
-    logging.error('Could not extract information (tile) out of shapefile (%s)' %
-      reference)
-    sys.exit(1)
+    raise GeometryError(f'Could not extract information (tile) out of shapefile {reference}')
   (boundary, spatialRef, granule) = shape2geometry(source, 'granule')
   if boundary is None:
-    logging.error('Could not extract information (granule) out of shapefile (%s)' %
-      source)
-    sys.exit(1)
+    raise GeometryError(f'Could not extract information (granule) out of shapefile {source}')
 
   # Perform the spatial analysis
   i = 0
@@ -594,8 +590,7 @@ def overlapMask(meta, maskShape, invert, outFile):
   outProj = outLayer.GetSpatialRef()
   outEPSG = int(outProj.GetAttrValue('AUTHORITY', 1))
   if geoEPSG != outEPSG:
-    print('Expecting mask file with EPSG code: {0}'.format(geoEPSG))
-    sys.exit(1)
+    raise GeometryError(f'Expecting mask file with EPSG code: {geoEPSG}')
 
   ### Define re-projection from geographic to UTM
   inProj = osr.SpatialReference()

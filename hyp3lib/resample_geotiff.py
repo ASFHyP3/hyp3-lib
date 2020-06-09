@@ -1,16 +1,14 @@
 """Resamples a GeoTIFF file and saves it in a number of formats"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
-import os
-import sys
+import glob
 import math
+import os
+import zipfile
+
 import lxml.etree as et
 from osgeo import gdal
 from osgeo.gdalconst import GRIORA_Cubic, GRIORA_NearestNeighbour
-import zipfile
-import glob
 
 
 def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
@@ -18,9 +16,7 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
   # Check output format
   formats = ['GEOTIFF', 'JPEG', 'JPG', 'PNG', 'KML']
   if outFormat.upper() not in formats:
-    print('Unkown output format ({0})!'.format(outFormat.upper()))
-    sys.exit(1)
-
+    raise ValueError(f'Unknown output format ({outFormat.upper()})! Accepted formats: {formats}')
   if use_nn:
       resampleMethod = GRIORA_NearestNeighbour
   else:
@@ -185,11 +181,9 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
-        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-        sys.exit(1)
-    if len(os.path.splitext(args.output)[1]) == 0:
-        print('Output file (%s) does not have an extension!' % args.output)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.geotiff} does not exist!')
+    if not os.path.splitext(args.output)[-1]:
+        parser.error(f'Output file {args.output} does not have an extension!')
 
     resample_geotiff(args.geotiff, args.width, args.format, args.output)
 

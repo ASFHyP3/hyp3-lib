@@ -1,10 +1,8 @@
 """Applies a LUT to a GeoTIFF"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
-import sys
+
 import numpy as np
 from osgeo import gdal, osr
 
@@ -86,8 +84,7 @@ def main():
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
-        print('GeoTIFF file (%s) does not exist!' % args.geotiff)
-        sys.exit(1)
+        parser.error(f'GeoTIFF file {args.geotiff} does not exist!')
 
     geotiff_lut(args.geotiff, args.lut, args.output)
 

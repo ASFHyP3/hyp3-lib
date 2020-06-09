@@ -1,12 +1,30 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
+"""Managed subprocessing for HyP3 externals"""
 
+import logging
 import os
 import subprocess
-import logging
+from pathlib import Path
+from typing import Optional, TextIO, Union
+
+from hyp3lib import ExecuteError
 
 
-def execute(cmd, expected=None, logfile=None, uselogging=False):
+def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Optional[TextIO] = None,
+            uselogging: bool = False) -> str:
+    """
+    Run a command in a subprocess and perform some post-process verification of
+    the command's execution
 
+    Args:
+        cmd: The command to subprocess in a shell
+        expected: Ensure an expected file created by the cmd exists
+        logfile: A file to to write the cmd's stdout to
+        uselogging: Instead of printing status messages of this function, log
+            them with the logging module
+
+    Returns:
+        output: The stdout of cmd
+    """
     if uselogging:
         logging.info('Running command: ' + cmd)
     else:
@@ -20,7 +38,7 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
         logging.info('subprocess return value was ' + str(return_val))
     else:
         print('subprocess return value was ' + str(return_val))
-    
+
     for line in output.split('\n'):
         if len(line.rstrip()) > 0:
             if uselogging:
@@ -29,7 +47,7 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
                 print('Proc: ' + line)
             if logfile is not None:
                 logfile.write("%s\n" % line)
-                
+
     if uselogging:
         logging.info('Finished: ' + cmd)
     else:
@@ -46,7 +64,7 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
         for line in output.split('\n'):
             last = line
             if next_line:
-                raise Exception(tool + ': ' + line)
+                raise ExecuteError(tool + ': ' + line)
             elif '** Error: *****' in line:  # MapReady style error
                 next_line = True
             elif 'Error per GCP' in line:  # MapReady message that is NOT an error
@@ -56,9 +74,9 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
             elif 'Root mean squared error' in line:  # RTC message that is NOT an error
                 pass
             elif 'ERROR' in line.upper():
-                raise Exception(tool + ': ' + line)
+                raise ExecuteError(tool + ': ' + line)
         # No error line found, die with last line
-        raise Exception(tool + ': ' + last)
+        raise ExecuteError(tool + ': ' + last)
 
     if expected is not None:
         if uselogging:
@@ -75,6 +93,6 @@ def execute(cmd, expected=None, logfile=None, uselogging=False):
                 logging.info('Expected output file not found: ' + expected)
             else:
                 print('Expected output file not found: ' + expected)
-            raise Exception("Expected output file not found: " + expected)
+            raise ExecuteError("Expected output file not found: " + expected)
 
     return output
