@@ -1,9 +1,19 @@
-"""Converts a dual-pol RTC to a color GeoTIFF"""
+"""RGB decomposition of a dual-pol RTC
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+The RGB decomposition enhances RTC dual-pol data for visual interpretation. It
+decomposes the co-pol and cross-pol signal into these color channels:
+    red: simple bounce (polarized) with some volume scattering
+    green: volume (depolarized) scattering
+    blue: simple bounce with very low volume scattering
+
+In the case where the volume to simple scattering ratio is larger than expected
+for typical vegetation, such as in glaciated areas or some forest types, a teal
+color (green + blue) is used.
+"""
 
 import argparse
 import os
+
 import numpy as np
 from osgeo import gdal, osr
 
@@ -148,7 +158,7 @@ def main():
         prog=os.path.basename(__file__),
         description=__doc__,
     )
-    parser.add_argument('fullpol', help='name of the full-pol RTC file (input)')
+    parser.add_argument('copol', help='name of the co-pol RTC file (input)')
     parser.add_argument('crosspol', help='name of the cross-pol RTC (input)')
     parser.add_argument('threshold', help='threshold value in dB (input)')
     parser.add_argument('geotiff', help='name of color GeoTIFF file (output)')
@@ -158,7 +168,7 @@ def main():
     parser.add_argument('-float', action='store_true', help='save as floating point')
     args = parser.parse_args()
 
-    rtc2color(args.fullpol, args.crosspol, args.threshold, args.geotiff,
+    rtc2color(args.copol, args.crosspol, args.threshold, args.geotiff,
               args.cleanup, args.teal, args.amp, args.float)
 
 
