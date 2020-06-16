@@ -68,7 +68,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
   print('Estimated Total RAM usage = {} GB'.format(size*16))
 
   # Read full-pol image
-  print('Reading full-pol image (%s)' % out_tif)
+  print('Reading co-pol image (%s)' % copol_tif)
   data = fullpol.GetRasterBand(1).ReadAsArray()
   cp = (data[:rows, :cols]).astype(np.float16)
   data = None
