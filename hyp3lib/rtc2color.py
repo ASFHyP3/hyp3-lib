@@ -58,9 +58,11 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   cp = (data[:rows, :cols]).astype(np.float16)
   data = None
   cp[np.isnan(cp)] = 0
+  # FIXME: do we get negative powers from RTC?
   cp[cp < 0] = 0
   if cleanup == True:
     cp[cp < 0.0039811] = 0
+  # FIXME: Should this be applied *before* the above cleanup?
   if amp == True:
     cp = cp*cp
 
@@ -72,7 +74,9 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   xp[np.isnan(xp)] = 0
   xp[xp < 0] = 0
   if cleanup == True:
-    xp[xp < 0.0039811] = 0
+      # FIXME: Is this the correct value? 0.0039811 ~= pow(10.0, -24.0 / 10.0),
+      #        or our default threshold
+      xp[xp < 0.0039811] = 0
   if amp == True:
     xp = xp*xp
 
@@ -117,8 +121,12 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   if real == True:
     red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)
   else:
+    # FIXME: Should we *scale* this? There are values over 1
     red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)*255
+  # FIXME: We should be *adding* 1 I think... values less than 1 will be between
+  #        the no data value and our minimum valid value...
   red[red==0] = 1
+  # FIXME: Is this the right mask (xp > 0)? Red should be mostly copol
   red = red * mask
 
   outBand.WriteArray(red)
@@ -130,6 +138,7 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   else:
     green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)*255
   green[green==0]=1
+  # FIXME: Is this the right mask (xp > 0)? Green should be both copol and crosspol
   green = green * mask
   outBand.WriteArray(green)
   green = None
@@ -140,6 +149,7 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   else:
     blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)*255
   blue[blue==0] = 1
+  # FIXME: Is this the right mask (xp > 0)? Blue should be only copol and no crosspol
   blue = blue * mask
   outBand.WriteArray(blue)
   blue = None
