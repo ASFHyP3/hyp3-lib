@@ -13,13 +13,28 @@ color (green + blue) is used.
 
 import argparse
 import os
+from pathlib import Path
+from typing import Union
 
 import numpy as np
 from osgeo import gdal, osr
 
 
-def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
-  teal=False, amp=False, real=False):
+def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], threshold: float, out_tif: Union[str, Path],
+              cleanup=False, teal=False, amp=False, real=False):
+  """RGB decomposition of a dual-pol RTC
+
+  Args:
+      copol_tif: Path to the co-pol GeoTIF
+      crosspol_tif: Path to the cross-pol GeoTIF
+      threshold: Decomposition threshold in db
+      out_tif: Path to the output GeoTIF
+      cleanup: Cleanup bad data using a -24 db threshold for valid pixels
+      teal: Combine green and blue channels because the volume to simple scattering ratio is high
+      amp: input TIFs are in amplitude and not power
+      real: Output floating point values instead of RGB scaled (0--255) ints
+  """
+  # FIXME: Can we just determine if we should use teal?
 
   # Suppress GDAL warnings
   gdal.UseExceptions()
@@ -29,8 +44,8 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   g = pow(10.0, np.float32(threshold)/10.0)
 
   # Read input parameter
-  fullpol = gdal.Open(fullpolFile)
-  crosspol = gdal.Open(crosspolFile)
+  fullpol = gdal.Open(copol_tif)
+  crosspol = gdal.Open(crosspol_tif)
   cpCols = fullpol.RasterXSize
   cpRows = fullpol.RasterYSize
   xpCols = crosspol.RasterXSize
@@ -53,7 +68,7 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   print('Estimated Total RAM usage = {} GB'.format(size*16))
 
   # Read full-pol image
-  print('Reading full-pol image (%s)' % fullpolFile)
+  print('Reading full-pol image (%s)' % out_tif)
   data = fullpol.GetRasterBand(1).ReadAsArray()
   cp = (data[:rows, :cols]).astype(np.float16)
   data = None
@@ -67,7 +82,7 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
     cp = cp*cp
 
   # Read cross-pol image
-  print('Reading cross-pol image (%s)' % crosspolFile)
+  print('Reading cross-pol image (%s)' % crosspol_tif)
   data = crosspol.GetRasterBand(1).ReadAsArray()
   xp = (data[:rows, :cols]).astype(np.float16)
   data = None
@@ -104,10 +119,10 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   # Write output GeoTIFF
   driver = gdal.GetDriverByName('GTiff')
   if real == True:
-    outRaster = driver.Create(geotiff, cols, rows, 3, gdal.GDT_Float32,
+    outRaster = driver.Create(out_tif, cols, rows, 3, gdal.GDT_Float32,
       ['COMPRESS=LZW'])
   else:
-    outRaster = driver.Create(geotiff, cols, rows, 3, gdal.GDT_Byte,
+    outRaster = driver.Create(out_tif, cols, rows, 3, gdal.GDT_Byte,
       ['COMPRESS=LZW'])
   outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
   outRasterSRS = osr.SpatialReference()
@@ -170,7 +185,7 @@ def main():
     )
     parser.add_argument('copol', help='name of the co-pol RTC file (input)')
     parser.add_argument('crosspol', help='name of the cross-pol RTC (input)')
-    parser.add_argument('threshold', help='threshold value in dB (input)')
+    parser.add_argument('threshold', type=float, help='threshold value in dB (input)')
     parser.add_argument('geotiff', help='name of color GeoTIFF file (output)')
     parser.add_argument('-cleanup', action='store_true', help='clean up artifacts in powerscale images')
     parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
