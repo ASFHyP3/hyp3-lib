@@ -14,6 +14,9 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   gdal.UseExceptions()
   gdal.PushErrorHandler('CPLQuietErrorHandler')
 
+  # Threshold for cleaning *power* data
+  clean_threshold = pow(10.0, -48.0 / 10)
+
   # Convert threshold to power scale
   g = pow(10.0, np.float32(threshold)/10.0)
 
@@ -48,10 +51,10 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   data = None
   cp[np.isnan(cp)] = 0
   cp[cp < 0] = 0
-  if cleanup == True:
-    cp[cp < 0.0039811] = 0
   if amp == True:
-    cp = cp*cp
+      cp = cp * cp
+  if cleanup == True:
+    cp[cp < clean_threshold] = 0
 
   # Read cross-pol image
   print('Reading cross-pol image (%s)' % crosspolFile)
@@ -60,10 +63,10 @@ def rtc2color(fullpolFile, crosspolFile, threshold, geotiff, cleanup=False,
   data = None
   xp[np.isnan(xp)] = 0
   xp[xp < 0] = 0
-  if cleanup == True:
-    xp[xp < 0.0039811] = 0
   if amp == True:
-    xp = xp*xp
+      xp = xp * xp
+  if cleanup == True:
+    xp[xp < clean_threshold] = 0
 
   # Calculate color decomposition
   print('Calculating color decomposition components')
