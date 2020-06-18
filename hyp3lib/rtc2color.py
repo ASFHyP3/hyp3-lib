@@ -109,11 +109,11 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     below_threshold_mask = xp < power_threshold
 
     driver = gdal.GetDriverByName('GTiff')
-    outRaster = driver.Create(out_tif, cols, rows, 3, out_type, ['COMPRESS=LZW'])
-    outRaster.SetGeoTransform((geotransform[0], geotransform[1], 0, geotransform[3], 0, geotransform[5]))
-    outRasterSRS = osr.SpatialReference()
-    outRasterSRS.ImportFromWkt(proj_wkt)
-    outRaster.SetProjection(outRasterSRS.ExportToWkt())
+    out_raster = driver.Create(out_tif, cols, rows, 3, out_type, ['COMPRESS=LZW'])
+    out_raster.SetGeoTransform((geotransform[0], geotransform[1], 0, geotransform[3], 0, geotransform[5]))
+    out_raster_srs = osr.SpatialReference()
+    out_raster_srs.ImportFromWkt(proj_wkt)
+    out_raster.SetProjection(out_raster_srs.ExportToWkt())
 
     logging.info('Calculating color decomposition components')
 
@@ -133,27 +133,27 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
         bp[below_threshold_mask] = 0
 
     logging.info('Calculate red channel and save in GeoTIFF')
-    outBand = outRaster.GetRasterBand(1)
+    out_band = out_raster.GetRasterBand(1)
     red = 1.0 + (rp + zp) * scale_factor
     red[invalid_xp_mask] = 0
-    outBand.WriteArray(red)
+    out_band.WriteArray(red)
     del red
 
     logging.info('Calculate green channel and save in GeoTIFF')
-    outBand = outRaster.GetRasterBand(2)
+    out_band = out_raster.GetRasterBand(2)
 
     green = 1.0 + (gp + 2.0 * zp) * scale_factor
     green[invalid_xp_mask] = 0
-    outBand.WriteArray(green)
+    out_band.WriteArray(green)
     del green
 
     logging.info('Calculate blue channel and save in GeoTIFF')
-    outBand = outRaster.GetRasterBand(3)
+    out_band = out_raster.GetRasterBand(3)
     blue = 1.0 + (bp + 5.0 * zp) * scale_factor
     blue[invalid_xp_mask] = 0
-    outBand.WriteArray(blue)
+    out_band.WriteArray(blue)
 
-    outRaster = None  # because gdal is weird
+    out_raster = None  # because gdal is weird
 
 
 def main():
