@@ -162,6 +162,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument('copol', help='the co-pol RTC GeoTIF')
     parser.add_argument('crosspol', help='the cross-pol GeoTIF')
