@@ -168,11 +168,12 @@ def main():
     parser.add_argument('crosspol', help='the cross-pol GeoTIF')
     parser.add_argument('threshold', type=float, help='decomposition threshold value in dB')
     parser.add_argument('geotiff', help='the output color GeoTIFF file name')
-    parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup artifacts using a -48 db power threshold')
-    parser.add_argument('-t', '--teal', action='store_true',
+    parser.add_argument('-c', '-cleanup', '--cleanup', action='store_true',
+                        help='cleanup artifacts using a -48 db power threshold')
+    parser.add_argument('-t', '-teal', '--teal', action='store_true',
                         help='combine green and blue channels because the volume to simple scattering ratio is high')
-    parser.add_argument('-a', '--amp', action='store_true', help='input is amplitude, not powerscale')
-    parser.add_argument('-r', '--real', action='store_true',
+    parser.add_argument('-a', '-amp', '--amp', action='store_true', help='input is amplitude, not powerscale')
+    parser.add_argument('-r', '-real', '--real', action='store_true',
                         help='output real (floating point) values instead of RGB scaled (0--255) ints')
     args = parser.parse_args()
 
@@ -183,7 +184,7 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging.INFO, handlers=(out, err))
 
     rtc2color(args.copol, args.crosspol, args.threshold, args.geotiff,
-              args.cleanup, args.teal, args.amp, args.float)
+              args.cleanup, args.teal, args.amp, args.real)
 
 
 if __name__ == '__main__':
