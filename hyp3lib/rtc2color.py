@@ -8,11 +8,13 @@ decomposes the co-pol and cross-pol signal into these color channels:
 
 In the case where the volume to simple scattering ratio is larger than expected
 for typical vegetation, such as in glaciated areas or some forest types, a teal
-color (green + blue) is used.
+color (green + blue) can be used
 """
 
 import argparse
+import logging
 import os
+import sys
 from pathlib import Path
 from typing import Union
 
@@ -22,158 +24,136 @@ from osgeo import gdal, osr
 
 def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], threshold: float, out_tif: Union[str, Path],
               cleanup=False, teal=False, amp=False, real=False):
-  """RGB decomposition of a dual-pol RTC
+    """RGB decomposition of a dual-pol RTC
 
-  Args:
-      copol_tif: Path to the co-pol GeoTIF
-      crosspol_tif: Path to the cross-pol GeoTIF
-      threshold: Decomposition threshold in db
-      out_tif: Path to the output GeoTIF
-      cleanup: Cleanup bad data using a -24 db threshold for valid pixels
-      teal: Combine green and blue channels because the volume to simple scattering ratio is high
-      amp: input TIFs are in amplitude and not power
-      real: Output floating point values instead of RGB scaled (0--255) ints
-  """
-  # FIXME: Can we just determine if we should use teal?
+    Args:
+        copol_tif: The co-pol RTC GeoTIF
+        crosspol_tif: The cross-pol RTC GeoTIF
+        threshold: Decomposition threshold value in db
+        out_tif: The output color GeoTIFF file name
+        cleanup: Cleanup artifacts using a -48 db power threshold
+        teal: Combine green and blue channels because the volume to simple scattering ratio is high
+        amp: input TIFs are in amplitude and not power
+        real: Output real (floating point) values instead of RGB scaled (0--255) ints
+    """
+    # FIXME: Can we just determine if we should use teal?
 
-  # Suppress GDAL warnings
-  gdal.UseExceptions()
-  gdal.PushErrorHandler('CPLQuietErrorHandler')
+    # Suppress GDAL warnings but raise python exceptions
+    # https://gis.stackexchange.com/a/91393
+    gdal.UseExceptions()
+    gdal.PushErrorHandler('CPLQuietErrorHandler')
 
-  # Convert threshold to power scale
-  g = pow(10.0, np.float32(threshold)/10.0)
+    clean_threshold = pow(10.0, -48.0 / 10.0)  # db to power
+    power_threshold = pow(10.0, threshold / 10.0)  # db to power
 
-  # Read input parameter
-  fullpol = gdal.Open(copol_tif)
-  crosspol = gdal.Open(crosspol_tif)
-  cpCols = fullpol.RasterXSize
-  cpRows = fullpol.RasterYSize
-  xpCols = crosspol.RasterXSize
-  xpRows = crosspol.RasterYSize
-  cols = min(cpCols, xpCols)
-  rows = min(cpRows, xpRows)
-  geotransform = fullpol.GetGeoTransform()
-  originX = geotransform[0]
-  originY = geotransform[3]
-  pixelWidth = geotransform[1]
-  pixelHeight = geotransform[5]
+    # used scale the results to fit inside RGB 1-255 (ints), with 0 for no/bad data
+    scale_factor = 1.0 if real else 254.0
+    # FIXME: Float32 or 64?
+    out_type = gdal.GDT_Float32 if real else gdal.GDT_Byte
 
-  # Estimate memory required...
-  size = float(rows*cols)/float(1024*1024*1024)
+    copol = gdal.Open(copol_tif)
+    crosspol = gdal.Open(crosspol_tif)
 
-  # print('float16 variables: cp,xp,diff,zp,rp,bp,red = {} GB'.format(size*14))
-  # print('uint8 variables: mask, blue_mask = {} GB".format(size*2))
+    geotransform = copol.GetGeoTransform()
+    proj_wkt = copol.GetProjectionRef()
 
-  print('Data size is {} lines by {} samples ({} Gpixels)'.format(rows,cols,size))
-  print('Estimated Total RAM usage = {} GB'.format(size*16))
+    cols = min(copol.RasterXSize, crosspol.RasterXSize)
+    rows = min(copol.RasterYSize, crosspol.RasterYSize)
 
-  # Read full-pol image
-  print('Reading co-pol image (%s)' % copol_tif)
-  data = fullpol.GetRasterBand(1).ReadAsArray()
-  cp = (data[:rows, :cols]).astype(np.float16)
-  data = None
-  cp[np.isnan(cp)] = 0
-  # FIXME: do we get negative powers from RTC?
-  cp[cp < 0] = 0
-  if cleanup == True:
-    cp[cp < 0.0039811] = 0
-  # FIXME: Should this be applied *before* the above cleanup?
-  if amp == True:
-    cp = cp*cp
+    # FIXME: do we really need this?
+    # Estimate memory required...
+    size = float(rows * cols) / float(1024 * 1024 * 1024)  # in Gibibyte
+    # print('float16 variables: cp,xp,diff,zp,rp,bp,red = {} GB'.format(size*14))
+    # print('uint8 variables: mask, below_threshold_mask = {} GB".format(size*2))
+    logging.warning(f'Data size is {rows} lines by {cols} samples ({size} GiPixels)')
+    # FIXME: this is the ram usage for *one* variable, not for this whole script
+    logging.warning(f'Estimated Total RAM usage = {size * 16} GiB')
 
-  # Read cross-pol image
-  print('Reading cross-pol image (%s)' % crosspol_tif)
-  data = crosspol.GetRasterBand(1).ReadAsArray()
-  xp = (data[:rows, :cols]).astype(np.float16)
-  data = None
-  xp[np.isnan(xp)] = 0
-  xp[xp < 0] = 0
-  if cleanup == True:
-      # FIXME: Is this the correct value? 0.0039811 ~= pow(10.0, -24.0 / 10.0),
-      #        or our default threshold
-      xp[xp < 0.0039811] = 0
-  if amp == True:
-    xp = xp*xp
+    logging.info(f'Reading co-pol image {copol_tif}')
+    cp = np.nan_to_num(copol.GetRasterBand(1).ReadAsArray()[:rows, :cols])
+    copol = None  # because gdal is weird
 
-  # Calculate color decomposition
-  print('Calculating color decomposition components')
+    if amp:
+        cp *= cp
 
-  mask = (cp > xp).astype(np.uint8)
-  diff = (cp - xp).astype(np.float16)
-  diff[diff < 0] = 0
-  zp = (np.arctan(np.sqrt(diff))*2.0/np.pi*mask).astype(np.float16)
-  mask = (cp > 3.0*xp).astype(np.uint8)
-  diff = cp - 3.0*xp
-  diff[diff < 0] = 0
-  rp = (np.sqrt(diff)*mask).astype(np.float16)
+    if cleanup:
+        cp[cp < clean_threshold] = 0
+    else:
+        # FIXME: Should this be here or before amp conversion to power? That is,
+        #        are the negative amp values, and if so, are they indicative of
+        #        bad data? This *was* done before amp conversion before...
+        cp[cp < 0] = 0
 
-  mask = (3.0*xp > cp).astype(np.uint8)
-  if teal == False:
-    mask = 0
-  diff = 3.0*xp - cp
-  diff[diff < 0] = 0
-  bp = (np.sqrt(diff)*mask).astype(np.float16)
-  mask = (xp > 0).astype(np.uint8)
-  blue_mask = (xp < g).astype(np.uint8)
+    # Read cross-pol image
+    logging.info(f'Reading cross-pol image {crosspol_tif}')
+    xp = np.nan_to_num(crosspol.GetRasterBand(1).ReadAsArray()[:rows, :cols])
+    crosspol = None  # because gdal is weird
 
-  # Write output GeoTIFF
-  driver = gdal.GetDriverByName('GTiff')
-  if real == True:
-    outRaster = driver.Create(out_tif, cols, rows, 3, gdal.GDT_Float32,
-      ['COMPRESS=LZW'])
-  else:
-    outRaster = driver.Create(out_tif, cols, rows, 3, gdal.GDT_Byte,
-      ['COMPRESS=LZW'])
-  outRaster.SetGeoTransform((originX, pixelWidth, 0, originY, 0, pixelHeight))
-  outRasterSRS = osr.SpatialReference()
-  outRasterSRS.ImportFromWkt(fullpol.GetProjectionRef())
-  outRaster.SetProjection(outRasterSRS.ExportToWkt())
-  fullpol = None
-  crosspol = None
+    if amp:
+        xp *= xp
 
-  print('Calculate red channel and save in GeoTIFF')
-  outBand = outRaster.GetRasterBand(1)
-  if real == True:
-    red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)
-  else:
-    # FIXME: Should we *scale* this? There are values over 1
-    red = (2.0*rp*(1 - blue_mask) + zp*blue_mask)*255
-  # FIXME: We should be *adding* 1 I think... values less than 1 will be between
-  #        the no data value and our minimum valid value...
-  red[red==0] = 1
-  # FIXME: Is this the right mask (xp > 0)? Red should be mostly copol
-  red = red * mask
+    if cleanup:
+        xp[xp < clean_threshold] = 0
+    else:
+        # FIXME: Should this be here or before amp conversion to power? That is,
+        #        are the negative amp values, and if so, are they indicative of
+        #        bad data? This *was* done before amp conversion before...
+        xp[xp < 0] = 0
 
-  outBand.WriteArray(red)
-  red = None
-  print('Calculate green channel and save in GeoTIFF')
-  outBand = outRaster.GetRasterBand(2)
-  if real == True:
-    green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)
-  else:
-    green = (3.0*np.sqrt(xp)*(1 - blue_mask) + 2.0*zp*blue_mask)*255
-  green[green==0]=1
-  # FIXME: Is this the right mask (xp > 0)? Green should be both copol and crosspol
-  green = green * mask
-  outBand.WriteArray(green)
-  green = None
-  print('Calculate blue channel and save in GeoTIFF')
-  outBand = outRaster.GetRasterBand(3)
-  if real == True:
-    blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)
-  else:
-    blue = (2.0*bp*(1 - blue_mask) + 5.0*zp*blue_mask)*255
-  blue[blue==0] = 1
-  # FIXME: Is this the right mask (xp > 0)? Blue should be only copol and no crosspol
-  blue = blue * mask
-  outBand.WriteArray(blue)
-  blue = None
-  xp = None
-  cp = None
-  zp = None
-  bp = None
-  blue_mask = None
-  outRaster = None
+    # Find all our no data and bad data pixels
+    # NOTE: we're using crosspol here because it will typically have the most bad
+    # data and we want the same mask applied to all 3 channels (otherwise, we'll
+    # accidentally be changing colors from intended.
+    invalid_xp_mask = ~(xp > 0)
+    # mask for applying colors
+    below_threshold_mask = xp < power_threshold
+
+    driver = gdal.GetDriverByName('GTiff')
+    outRaster = driver.Create(out_tif, cols, rows, 3, out_type, ['COMPRESS=LZW'])
+    outRaster.SetGeoTransform((geotransform[0], geotransform[1], 0, geotransform[3], 0, geotransform[5]))
+    outRasterSRS = osr.SpatialReference()
+    outRasterSRS.ImportFromWkt(proj_wkt)
+    outRaster.SetProjection(outRasterSRS.ExportToWkt())
+
+    logging.info('Calculating color decomposition components')
+
+    zp = np.arctan(np.sqrt(np.clip(cp - xp, 0, None))) * 2.0 / np.pi
+    zp[~below_threshold_mask] = 0
+
+    rp = 2.0 * np.sqrt(np.clip(cp - 3.0 * xp, 0, None))
+    rp[below_threshold_mask] = 0
+
+    gp = 3.0 * np.sqrt(xp)
+    gp[below_threshold_mask] = 0
+
+    if not teal:
+        bp = np.zeros(cp.shape)
+    else:
+        bp = 2.0 * np.sqrt(np.clip(3.0 * xp - cp, 0, None))
+        bp[below_threshold_mask] = 0
+
+    logging.info('Calculate red channel and save in GeoTIFF')
+    outBand = outRaster.GetRasterBand(1)
+    red = 1.0 + (rp + zp) * scale_factor
+    red[invalid_xp_mask] = 0
+    outBand.WriteArray(red)
+    del red
+
+    logging.info('Calculate green channel and save in GeoTIFF')
+    outBand = outRaster.GetRasterBand(2)
+
+    green = 1.0 + (gp + 2.0 * zp) * scale_factor
+    green[invalid_xp_mask] = 0
+    outBand.WriteArray(green)
+    del green
+
+    logging.info('Calculate blue channel and save in GeoTIFF')
+    outBand = outRaster.GetRasterBand(3)
+    blue = 1.0 + (bp + 5.0 * zp) * scale_factor
+    blue[invalid_xp_mask] = 0
+    outBand.WriteArray(blue)
+
+    outRaster = None  # because gdal is weird
 
 
 def main():
@@ -183,15 +163,23 @@ def main():
         prog=os.path.basename(__file__),
         description=__doc__,
     )
-    parser.add_argument('copol', help='name of the co-pol RTC file (input)')
-    parser.add_argument('crosspol', help='name of the cross-pol RTC (input)')
-    parser.add_argument('threshold', type=float, help='threshold value in dB (input)')
-    parser.add_argument('geotiff', help='name of color GeoTIFF file (output)')
-    parser.add_argument('-cleanup', action='store_true', help='clean up artifacts in powerscale images')
-    parser.add_argument('-teal', action='store_true', help='extend the blue band with teal')
-    parser.add_argument('-amp', action='store_true', help='input is amplitude, not powerscale')
-    parser.add_argument('-float', action='store_true', help='save as floating point')
+    parser.add_argument('copol', help='the co-pol RTC GeoTIF')
+    parser.add_argument('crosspol', help='the cross-pol GeoTIF')
+    parser.add_argument('threshold', type=float, help='decomposition threshold value in dB')
+    parser.add_argument('geotiff', help='the output color GeoTIFF file name')
+    parser.add_argument('-c', '--cleanup', action='store_true', help='cleanup artifacts using a -48 db power threshold')
+    parser.add_argument('-t', '--teal', action='store_true',
+                        help='combine green and blue channels because the volume to simple scattering ratio is high')
+    parser.add_argument('-a', '--amp', action='store_true', help='input is amplitude, not powerscale')
+    parser.add_argument('-r', '--real', action='store_true',
+                        help='output real (floating point) values instead of RGB scaled (0--255) ints')
     args = parser.parse_args()
+
+    out = logging.StreamHandler(stream=sys.stdout)
+    out.addFilter(lambda record: record.levelno <= logging.INFO)
+    err = logging.StreamHandler()
+    err.setLevel(logging.WARNING)
+    logging.basicConfig(format='%(message)s', level=logging.INFO, handlers=(out, err))
 
     rtc2color(args.copol, args.crosspol, args.threshold, args.geotiff,
               args.cleanup, args.teal, args.amp, args.float)
