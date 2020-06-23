@@ -109,37 +109,36 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     zp = np.arctan(np.sqrt(np.clip(cp - xp, 0, None))) * 2.0 / np.pi
     zp[~below_threshold_mask] = 0
 
+    logging.info('Calculate red channel and save in GeoTIFF')
     rp = 2.0 * np.sqrt(np.clip(cp - 3.0 * xp, 0, None))
     rp[below_threshold_mask] = 0
+    red = 1.0 + (rp + zp) * scale_factor
+    red[invalid_xp_mask] = 0
 
+    out_band = out_raster.GetRasterBand(1)
+    out_band.WriteArray(red)
+    del rp, red
+
+    logging.info('Calculate green channel and save in GeoTIFF')
     gp = 3.0 * np.sqrt(xp)
     gp[below_threshold_mask] = 0
+    green = 1.0 + (gp + 2.0 * zp) * scale_factor
+    green[invalid_xp_mask] = 0
 
+    out_band = out_raster.GetRasterBand(2)
+    out_band.WriteArray(green)
+    del gp, green
+
+    logging.info('Calculate blue channel and save in GeoTIFF')
     if not teal:
         bp = np.zeros(cp.shape)
     else:
         bp = 2.0 * np.sqrt(np.clip(3.0 * xp - cp, 0, None))
         bp[below_threshold_mask] = 0
-
-    logging.info('Calculate red channel and save in GeoTIFF')
-    out_band = out_raster.GetRasterBand(1)
-    red = 1.0 + (rp + zp) * scale_factor
-    red[invalid_xp_mask] = 0
-    out_band.WriteArray(red)
-    del red
-
-    logging.info('Calculate green channel and save in GeoTIFF')
-    out_band = out_raster.GetRasterBand(2)
-
-    green = 1.0 + (gp + 2.0 * zp) * scale_factor
-    green[invalid_xp_mask] = 0
-    out_band.WriteArray(green)
-    del green
-
-    logging.info('Calculate blue channel and save in GeoTIFF')
-    out_band = out_raster.GetRasterBand(3)
     blue = 1.0 + (bp + 5.0 * zp) * scale_factor
     blue[invalid_xp_mask] = 0
+
+    out_band = out_raster.GetRasterBand(3)
     out_band.WriteArray(blue)
 
     out_raster = None  # because gdal is weird
