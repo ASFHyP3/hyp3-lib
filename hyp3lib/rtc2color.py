@@ -36,7 +36,6 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
         amp: input TIFs are in amplitude and not power
         real: Output real (floating point) values instead of RGB scaled (0--255) ints
     """
-    # FIXME: Can we just determine if we should use teal?
 
     # Suppress GDAL warnings but raise python exceptions
     # https://gis.stackexchange.com/a/91393
@@ -48,7 +47,6 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
 
     # used scale the results to fit inside RGB 1-255 (ints), with 0 for no/bad data
     scale_factor = 1.0 if real else 254.0
-    # FIXME: Float32 or 64?
     out_type = gdal.GDT_Float32 if real else gdal.GDT_Byte
 
     copol = gdal.Open(copol_tif)
@@ -59,15 +57,6 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
 
     cols = min(copol.RasterXSize, crosspol.RasterXSize)
     rows = min(copol.RasterYSize, crosspol.RasterYSize)
-
-    # FIXME: do we really need this?
-    # Estimate memory required...
-    size = float(rows * cols) / float(1024 * 1024 * 1024)  # in Gibibyte
-    # print('float16 variables: cp,xp,diff,zp,rp,bp,red = {} GB'.format(size*14))
-    # print('uint8 variables: mask, below_threshold_mask = {} GB".format(size*2))
-    logging.warning(f'Data size is {rows} lines by {cols} samples ({size} GiPixels)')
-    # FIXME: this is the ram usage for *one* variable, not for this whole script
-    logging.warning(f'Estimated Total RAM usage = {size * 16} GiB')
 
     logging.info(f'Reading co-pol image {copol_tif}')
     cp = np.nan_to_num(copol.GetRasterBand(1).ReadAsArray()[:rows, :cols])
