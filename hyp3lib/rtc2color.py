@@ -92,7 +92,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     # Find all our no data and bad data pixels
     # NOTE: we're using crosspol here because it will typically have the most bad
     # data and we want the same mask applied to all 3 channels (otherwise, we'll
-    # accidentally be changing colors from intended.
+    # accidentally be changing colors from intended)
     invalid_xp_mask = ~(xp > 0)
     # mask for applying colors
     below_threshold_mask = xp < power_threshold
