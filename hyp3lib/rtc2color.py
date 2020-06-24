@@ -186,7 +186,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     out_band.WriteArray(green)
     del green
 
-    logging.info(f'Calculate blue channel and save in GeoTIFF')
+    logging.info('Calculate blue channel and save in GeoTIFF')
     blue = calculate_color_channel(
         copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='teal' if teal else 'blue'
     )
