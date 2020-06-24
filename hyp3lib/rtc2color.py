@@ -22,6 +22,106 @@ import numpy as np
 from osgeo import gdal, osr
 
 
+def cleanup_threshold(amp=False, cleanup=False) -> float:
+    """Determine the appropriate cleanup threshold value to use in amp or power
+
+    Args:
+        amp: input TIF is in amplitude and not power
+        cleanup: Cleanup artifacts using a -48 db power threshold
+
+    Returns:
+        clean_threshold: the cleaning threshold to use in amp or power
+    """
+    if amp and cleanup:
+        clean_threshold = pow(10.0, -24.0 / 10.0)  # db to amp
+    elif cleanup:
+        clean_threshold = pow(10.0, -48.0 / 10.0)  # db to power
+    else:
+        clean_threshold = 0.0
+
+    return clean_threshold
+
+
+def prepare_geotif_data(geotiff_handle: gdal.Dataset, rows: int, cols: int, amp=False, cleanup=False) -> np.ndarray:
+    """Load in and clean the GeoTIFF for calculating the color thresholds
+
+    Args:
+        geotiff_handle: gdal Dataset for the GeoTIFF to prepare
+        rows: number of data rows to read in
+        cols: number of data columns to read in
+        amp: input TIF is in amplitude and not power
+        cleanup: Cleanup artifacts using a -48 db power threshold
+
+    Returns:
+        data: A numpy array containing the prepared GeoTIFF data
+    """
+
+    data = np.nan_to_num(geotiff_handle.GetRasterBand(1).ReadAsArray()[:rows, :cols])
+
+    threshold = cleanup_threshold(amp, cleanup)
+    data[data < threshold] = 0.0
+
+    if amp:  # to power
+        data *= data
+
+    return data
+
+
+def calculate_color_channel(copol_data: np.ndarray, crosspol_data: np.ndarray, threshold: float,
+                            scale_factor: float, color: str):
+    """Calculate color channel values for the RGB decomposition of copol and crosspol data
+
+    Args:
+        copol_data: copol data
+        crosspol_data: crosspol data
+        threshold: decomposition threshold value in db
+        scale_factor: scale data by this factor
+        color: the color channel to calculate
+
+    Returns:
+        color_channel: color channel data
+    """
+
+    power_threshold = pow(10.0, threshold / 10.0)  # db to power
+    below_threshold_mask = crosspol_data < power_threshold
+
+    # I don't know what 'zp' is...
+    zp = np.arctan(np.sqrt(np.clip(copol_data - crosspol_data, 0, None))) * 2.0 / np.pi
+    zp[~below_threshold_mask] = 0
+
+    if color == 'red':
+        z_constant = 1.0
+        color_term = 2.0 * np.sqrt(np.clip(copol_data - 3.0 * crosspol_data, 0, None))
+        color_term[below_threshold_mask] = 0.0
+
+    elif color == 'green':
+        z_constant = 2.0
+        color_term = 3.0 * np.sqrt(crosspol_data)
+        color_term[below_threshold_mask] = 0.0
+
+    elif color == 'blue':
+        z_constant = 5.0
+        color_term = np.zeros(copol_data.shape)
+
+    elif color == 'teal':
+        z_constant = 5.0
+        color_term = 2.0 * np.sqrt(np.clip(3.0 * crosspol_data - copol_data, 0, None))
+
+    else:
+        raise ValueError(f'Unknown color {color}, pick red, green, blue, or teal')
+
+    # Find all our no data and bad data pixels
+    # NOTE: we're using crosspol here because it will typically have the most bad
+    # data and we want the same mask applied to all 3 channels (otherwise, we'll
+    # accidentally be changing colors from intended)
+    invalid_crosspol_mask = ~(crosspol_data > 0)
+
+    color_channel = 1.0 + (color_term + z_constant * zp) * scale_factor
+    color_channel[invalid_crosspol_mask] = 0
+
+    return color_channel
+
+
 def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], threshold: float, out_tif: Union[str, Path],
               cleanup=False, teal=False, amp=False, real=False):
     """RGB decomposition of a dual-pol RTC
@@ -42,106 +142,59 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     gdal.UseExceptions()
     gdal.PushErrorHandler('CPLQuietErrorHandler')
 
-    clean_threshold = pow(10.0, -48.0 / 10.0)  # db to power
-    power_threshold = pow(10.0, threshold / 10.0)  # db to power
+    copol_handle = gdal.Open(copol_tif)
+    crosspol_handle = gdal.Open(crosspol_tif)
 
-    # used scale the results to fit inside RGB 1-255 (ints), with 0 for no/bad data
-    scale_factor = 1.0 if real else 254.0
-    out_type = gdal.GDT_Float32 if real else gdal.GDT_Byte
+    rows = min(copol_handle.RasterYSize, crosspol_handle.RasterYSize)
+    cols = min(copol_handle.RasterXSize, crosspol_handle.RasterXSize)
 
-    copol = gdal.Open(copol_tif)
-    crosspol = gdal.Open(crosspol_tif)
+    geotransform = copol_handle.GetGeoTransform()
+    projection_reference = copol_handle.GetProjectionRef()
 
-    geotransform = copol.GetGeoTransform()
-    proj_wkt = copol.GetProjectionRef()
+    copol_data = prepare_geotif_data(copol_handle, rows, cols, amp=amp, cleanup=cleanup)
+    crosspol_data = prepare_geotif_data(crosspol_handle, rows, cols, amp=amp, cleanup=cleanup)
 
-    cols = min(copol.RasterXSize, crosspol.RasterXSize)
-    rows = min(copol.RasterYSize, crosspol.RasterYSize)
-
-    logging.info(f'Reading co-pol image {copol_tif}')
-    cp = np.nan_to_num(copol.GetRasterBand(1).ReadAsArray()[:rows, :cols])
-    copol = None  # because gdal is weird
-
-    if amp:
-        cp *= cp
-
-    if cleanup:
-        cp[cp < clean_threshold] = 0
-    else:
-        # FIXME: Should this be here or before amp conversion to power? That is,
-        #        are the negative amp values, and if so, are they indicative of
-        #        bad data? This *was* done before amp conversion before...
-        cp[cp < 0] = 0
-
-    # Read cross-pol image
-    logging.info(f'Reading cross-pol image {crosspol_tif}')
-    xp = np.nan_to_num(crosspol.GetRasterBand(1).ReadAsArray()[:rows, :cols])
-    crosspol = None  # because gdal is weird
-
-    if amp:
-        xp *= xp
-
-    if cleanup:
-        xp[xp < clean_threshold] = 0
-    else:
-        # FIXME: Should this be here or before amp conversion to power? That is,
-        #        are the negative amp values, and if so, are they indicative of
-        #        bad data? This *was* done before amp conversion before...
-        xp[xp < 0] = 0
-
-    # Find all our no data and bad data pixels
-    # NOTE: we're using crosspol here because it will typically have the most bad
-    # data and we want the same mask applied to all 3 channels (otherwise, we'll
-    # accidentally be changing colors from intended)
-    invalid_xp_mask = ~(xp > 0)
-    # mask for applying colors
-    below_threshold_mask = xp < power_threshold
+    copol_handle = None  # How to close because gdal is weird
+    crosspol_handle = None  # How to close because gdal is weird
 
     driver = gdal.GetDriverByName('GTiff')
+    out_type = gdal.GDT_Float32 if real else gdal.GDT_Byte
     out_raster = driver.Create(out_tif, cols, rows, 3, out_type, ['COMPRESS=LZW'])
     out_raster.SetGeoTransform((geotransform[0], geotransform[1], 0, geotransform[3], 0, geotransform[5]))
     out_raster_srs = osr.SpatialReference()
-    out_raster_srs.ImportFromWkt(proj_wkt)
+    out_raster_srs.ImportFromWkt(projection_reference)
     out_raster.SetProjection(out_raster_srs.ExportToWkt())
 
     logging.info('Calculating color decomposition components')
 
-    zp = np.arctan(np.sqrt(np.clip(cp - xp, 0, None))) * 2.0 / np.pi
-    zp[~below_threshold_mask] = 0
+    # used scale the results to fit inside RGB 1-255 (ints), with 0 for no/bad data
+    scale_factor = 1.0 if real else 254.0
 
     logging.info('Calculate red channel and save in GeoTIFF')
-    rp = 2.0 * np.sqrt(np.clip(cp - 3.0 * xp, 0, None))
-    rp[below_threshold_mask] = 0
-    red = 1.0 + (rp + zp) * scale_factor
-    red[invalid_xp_mask] = 0
-
+    red = calculate_color_channel(
+        copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='red'
+    )
     out_band = out_raster.GetRasterBand(1)
     out_band.WriteArray(red)
-    del rp, red
+    del red
 
     logging.info('Calculate green channel and save in GeoTIFF')
-    gp = 3.0 * np.sqrt(xp)
-    gp[below_threshold_mask] = 0
-    green = 1.0 + (gp + 2.0 * zp) * scale_factor
-    green[invalid_xp_mask] = 0
-
+    green = calculate_color_channel(
+        copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='green'
+    )
     out_band = out_raster.GetRasterBand(2)
     out_band.WriteArray(green)
-    del gp, green
+    del green
 
-    logging.info('Calculate blue channel and save in GeoTIFF')
-    if not teal:
-        bp = np.zeros(cp.shape)
-    else:
-        bp = 2.0 * np.sqrt(np.clip(3.0 * xp - cp, 0, None))
-        bp[below_threshold_mask] = 0
-    blue = 1.0 + (bp + 5.0 * zp) * scale_factor
-    blue[invalid_xp_mask] = 0
-
+    logging.info(f'Calculate blue channel and save in GeoTIFF')
+    blue = calculate_color_channel(
+        copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='teal' if teal else 'blue'
+    )
     out_band = out_raster.GetRasterBand(3)
     out_band.WriteArray(blue)
+    del blue
 
-    out_raster = None  # because gdal is weird
+    out_raster = None  # How to close because gdal is weird
 
 
 def main():
