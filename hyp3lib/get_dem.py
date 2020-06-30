@@ -361,7 +361,7 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
     elif "NED" in demname or "EU_DEM_V11" in demname:
         nodata = -3.4028234663852886e+38
     else:
-        raise DemError(f'Unkown NoData value for DEM {demname}')
+        raise DemError(f'Unable to determine NoData value for DEM {demname}')
 
     writeVRT(demproj, nodata, tile_list, poly_list, 'temp.vrt')
  
