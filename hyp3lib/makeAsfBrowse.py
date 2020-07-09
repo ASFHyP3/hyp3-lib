@@ -13,7 +13,7 @@ def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False):
     Args:
         geotiff: name of GeoTIFF file
         base_name: base name of output files
-        use_nn: Use GRIORA_NearestNeighbour interpolation instead of GRIORA_Cubic
+        use_nn: Use GDAL's GRIORA_NearestNeighbour interpolation instead of GRIORA_Cubic
             to resample the GeoTIFF
     """
     tiff_x_res, _, _, _ = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
@@ -37,8 +37,8 @@ def main():
     parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
     parser.add_argument('basename', help='base name of output files (output)')
     parser.add_argument('-n', '--nearest-neighbor', action='store_true',
-                        help='Use GRIORA_NearestNeighbour interpolation instead'
-                             ' of GRIORA_Cubic to resample the GeoTIFF')
+                        help="Use GDAL's GRIORA_NearestNeighbour interpolation instead"
+                             " of GRIORA_Cubic to resample the GeoTIFF")
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
