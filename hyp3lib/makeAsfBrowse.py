@@ -21,11 +21,14 @@ def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False, width: int = 2048)
     """
     tiff_width, _, _, _ = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
     if tiff_width < width:
-        logging.warning(f'Width exceeds image dimension of {width} - using actual value of {tiff_width}')
-        width = tiff_width
+        logging.warning(f'Requested image dimension of {width} exceeds GeoTIFF width {tiff_width}.'
+                        f' Using GeoTIFF width')
+        browse_width = tiff_width
+    else:
+        browse_width = width
 
-    resample_geotiff(geotiff, width, 'KML', f'{base_name}.kmz', use_nn)
-    resample_geotiff(geotiff, width, 'PNG', f'{base_name}.png', use_nn)
+    resample_geotiff(geotiff, browse_width, 'KML', f'{base_name}.kmz', use_nn)
+    resample_geotiff(geotiff, browse_width, 'PNG', f'{base_name}.png', use_nn)
 
 
 def main():
