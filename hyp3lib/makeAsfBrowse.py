@@ -11,19 +11,19 @@ def makeAsfBrowse(geotiff, baseName, use_nn=False):
     kmzName = baseName + ".kmz"
     pngName = baseName + ".png"
     lrgName = baseName + "_large.png"
-    x1,y1,trans1,proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
+    x1, y1, trans1, proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
     if (x1 < 2048):
         print("Warning: width exceeds image dimension - using actual value")
-        resample_geotiff(geotiff,x1,"KML",kmzName,use_nn)
-        if x1 < 1024:      
-            resample_geotiff(geotiff,x1,"PNG",pngName,use_nn)
+        resample_geotiff(geotiff, x1, "KML", kmzName, use_nn)
+        if x1 < 1024:
+            resample_geotiff(geotiff, x1, "PNG", pngName, use_nn)
         else:
-            resample_geotiff(geotiff,1024,"PNG",pngName,use_nn)
-        resample_geotiff(geotiff,x1,"PNG",lrgName,use_nn)
+            resample_geotiff(geotiff, 1024, "PNG", pngName, use_nn)
+        resample_geotiff(geotiff, x1, "PNG", lrgName, use_nn)
     else:
-        resample_geotiff(geotiff,2048,"KML",kmzName,use_nn)
-        resample_geotiff(geotiff,1024,"PNG",pngName,use_nn)
-        resample_geotiff(geotiff,2048,"PNG",lrgName,use_nn)
+        resample_geotiff(geotiff, 2048, "KML", kmzName, use_nn)
+        resample_geotiff(geotiff, 1024, "PNG", pngName, use_nn)
+        resample_geotiff(geotiff, 2048, "PNG", lrgName, use_nn)
 
 
 def main():
