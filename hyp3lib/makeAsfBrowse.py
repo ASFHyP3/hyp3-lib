@@ -7,7 +7,15 @@ from hyp3lib import saa_func_lib as saa
 from hyp3lib.resample_geotiff import resample_geotiff
 
 
-def makeAsfBrowse(geotiff, base_name, use_nn=False):
+def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False):
+    """
+    Make a 2048 KML and PNG browse image for ASF
+    Args:
+        geotiff: name of GeoTIFF file
+        base_name: base name of output files
+        use_nn: Use GRIORA_NearestNeighbour interpolation instead of GRIORA_Cubic
+            to resample the GeoTIFF
+    """
     tiff_x_res, _, _, _ = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
     if tiff_x_res < 2048:
         print("Warning: width exceeds image dimension - using actual value")
@@ -27,7 +35,7 @@ def main():
         description=__doc__,
     )
     parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
-    parser.add_argument('basename', help='base name of output file (output)')
+    parser.add_argument('basename', help='base name of output files (output)')
     parser.add_argument('-n', '--nearest-neighbor', action='store_true',
                         help='Use GRIORA_NearestNeighbour interpolation instead'
                              ' of GRIORA_Cubic to resample the GeoTIFF')
