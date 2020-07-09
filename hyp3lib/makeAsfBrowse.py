@@ -7,17 +7,16 @@ from hyp3lib import saa_func_lib as saa
 from hyp3lib.resample_geotiff import resample_geotiff
 
 
-def makeAsfBrowse(geotiff, baseName, use_nn=False):
-    kmzName = baseName + ".kmz"
-    pngName = baseName + ".png"
-    x1, y1, trans1, proj1 = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
-    if (x1 < 2048):
+def makeAsfBrowse(geotiff, base_name, use_nn=False):
+    tiff_x_res, _, _, _ = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
+    if tiff_x_res < 2048:
         print("Warning: width exceeds image dimension - using actual value")
-        resample_geotiff(geotiff, x1, "KML", kmzName, use_nn)
-        resample_geotiff(geotiff, x1, "PNG", pngName, use_nn)
+        resolution = tiff_x_res
     else:
-        resample_geotiff(geotiff, 2048, "KML", kmzName, use_nn)
-        resample_geotiff(geotiff, 2048, "PNG", pngName, use_nn)
+        resolution = 2048
+
+    resample_geotiff(geotiff, resolution, "KML", f'{base_name}.kmz', use_nn)
+    resample_geotiff(geotiff, resolution, "PNG", f'{base_name}.png', use_nn)
 
 
 def main():
@@ -29,6 +28,9 @@ def main():
     )
     parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
     parser.add_argument('basename', help='base name of output file (output)')
+    parser.add_argument('-n', '--nearest-neighbor', action='store_true',
+                        help='Use GRIORA_NearestNeighbour interpolation instead'
+                             ' of GRIORA_Cubic to resample the GeoTIFF')
     args = parser.parse_args()
 
     if not os.path.exists(args.geotiff):
@@ -36,7 +38,7 @@ def main():
     if os.path.splitext(args.basename)[-1]:
         parser.error(f'Output file {args.basename} has an extension!')
 
-    makeAsfBrowse(args.geotiff, args.basename)
+    makeAsfBrowse(args.geotiff, args.basename, use_nn=args.nearest_neighbor)
 
 
 if __name__ == '__main__':
