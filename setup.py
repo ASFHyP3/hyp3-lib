@@ -48,7 +48,7 @@ setup(
         'numpy',
         'gdal',
         'pillow',
-        'pyproj',
+        'pyproj~=2.0',
         'pyshp',
         'requests',
         'scipy',
