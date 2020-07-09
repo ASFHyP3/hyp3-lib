@@ -1,4 +1,4 @@
-"""Resamples a GeoTIFF file and saves it in a number of formats"""
+"""Resamples a GeoTIFF file to make a KML and a PNG browse image for ASF"""
 
 import argparse
 import os
@@ -34,8 +34,8 @@ def main():
         prog=os.path.basename(__file__),
         description=__doc__,
     )
-    parser.add_argument('geotiff', help='name of GeoTIFF file (input)')
-    parser.add_argument('basename', help='base name of output files (output)')
+    parser.add_argument('geotiff', help='name of GeoTIFF file to resample')
+    parser.add_argument('basename', help='base name of output files')
     parser.add_argument('-n', '--nearest-neighbor', action='store_true',
                         help="Use GDAL's GRIORA_NearestNeighbour interpolation instead"
                              " of GRIORA_Cubic to resample the GeoTIFF")
