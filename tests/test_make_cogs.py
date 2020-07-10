@@ -5,27 +5,28 @@ import requests
 from hyp3lib.make_cogs import make_cog, cogify_dir
 
 
+def _is_cog(filename):
+    with open(filename, 'rb') as f:
+        response = requests.post('http://cog-validate.radiant.earth/api/validate', files={'file': f})
+    return response.status_code == 200
+
+
 def test_make_cog(geotiff):
     make_cog(geotiff)
-
-    with open(geotiff, 'rb') as f:
-        response = requests.post('http://cog-validate.radiant.earth/api/validate', files={'file': f})
-
-    assert response.status_code == 200
+    assert _is_cog(geotiff)
 
 
 def test_cogify_dir(geotiff):
-    copy_extensions = ['_1.tif', '_2.tif']
-    for ext in copy_extensions:
-        shutil.copy(geotiff, geotiff.replace('.tif', ext))
+    base_dir = os.path.dirname(geotiff)
+    copy_names = [os.path.join(base_dir, '1.tif'), os.path.join(base_dir, '2.tif')]
 
-    cogify_dir(os.path.dirname(geotiff), file_pattern='*_?.tif')
+    for name in copy_names:
+        shutil.copy(geotiff, name)
 
-    for ext in copy_extensions:
-        with open(geotiff.replace('.tif', ext), 'rb') as f:
-            response = requests.post('http://cog-validate.radiant.earth/api/validate', files={'file': f})
-        assert response.status_code == 200
+    # Only cogify our copied files
+    cogify_dir(base_dir, file_pattern='?.tif')
 
-    with open(geotiff, 'rb') as f:
-        response = requests.post('http://cog-validate.radiant.earth/api/validate', files={'file': f})
-    assert response.status_code == 400
+    for name in copy_names:
+        assert _is_cog(name)
+
+    assert not _is_cog(geotiff)
