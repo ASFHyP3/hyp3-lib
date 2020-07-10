@@ -9,9 +9,9 @@ from hyp3lib.makeAsfBrowse import makeAsfBrowse
 
 def test_width_smaller(geotiff):
     geotiff_base = geotiff.replace('.tif', '')
-    browse_width = makeAsfBrowse(geotiff, geotiff_base, width=100)
+    browse_width = makeAsfBrowse(geotiff, geotiff_base, width=10)
 
-    assert browse_width == 100
+    assert browse_width == 10
     with Image.open(f'{geotiff_base}.png') as png:
         assert png.size[0] == browse_width
 
