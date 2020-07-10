@@ -20,7 +20,7 @@ dependencies:
   - netCDF4
   - numpy
   - pillow
-  - proj
+  - proj>=2
   - pyshp
   - requests
   - scipy

@@ -15,7 +15,7 @@ from botocore.handlers import disable_signing
 from osgeo import gdal
 from osgeo import ogr
 from osgeo import osr
-from pyproj import Proj, transform
+from pyproj import Transformer
 
 import hyp3lib.etc
 from hyp3lib import DemError
@@ -30,22 +30,6 @@ def positive_int(value):
         raise argparse.ArgumentTypeError(f"{value} is an invalid positive int value")
     return ivalue
 
-def transform_bounds(inb, inepsg, outepsg):
-    ptx = inb[0]
-    pty = inb[1]
-    ret1 = transform_point(ptx,pty,inepsg,outepsg)
-    ptx = inb[2]
-    pty = inb[3]
-    ret2 = transform_point(ptx,pty,inepsg,outepsg) 
-    return([ret1[0],ret1[1],ret2[0],ret2[1]])
-
-
-def transform_point(ptx,pty,inepsg,outepsg):
-    inProj = Proj(init='epsg:{}'.format(inepsg))
-    outProj = Proj(init='epsg:{}'.format(outepsg))
-    x1,y1 = ptx,pty
-    x2,y2 = transform(inProj,outProj,x1,y1)
-    return([x2,y2])
 
 def reproject_wkt(wkt, in_epsg, out_epsg):
 
@@ -406,26 +390,26 @@ def get_dem(x_min,y_min,x_max,y_max,outfile,post=None,processes=1,demName=None,l
         pixsize = 60.
         gcssize = gcssize * 2
 
-    bounds = [x_min,y_min,x_max,y_max]
 
     logging.info("Creating initial raster file")
     logging.info("    tmpdem {t}".format(t=tmpdem))
     logging.info("    pixsize {p}".format(p=pixsize))
-    logging.info("    bounds {b}".format(b=bounds))
+    logging.info(f"    bounds: x_min {x_min}; y_min {y_min}; x_max {x_max}; y_max {y_max}")
 
     # xform bounds to projection of the DEM
     if demproj != 4326:
-        bounds = transform_bounds(bounds,4326,demproj)
-        logging.info("    transformed bounds {b}".format(b=bounds))
-        if bounds[0] > bounds[2]:
-            (bounds[0], bounds[2]) = (bounds[2], bounds[0])
-        if bounds[1] > bounds[3]:
-            (bounds[1], bounds[3]) = (bounds[3], bounds[1])
+        transformer = Transformer.from_crs('epsg:4326', f'epsg:{demproj}')
+        t_x, t_y = transformer.transform([x_min, x_max], [y_min, y_max])
+        x_min, x_max = sorted(t_x)
+        y_min, y_max = sorted(t_y)
+        logging.info(f"    transformed bounds: x_min {x_min}; y_min {y_min}; x_max {x_max}; y_max {y_max}")
 
     if demproj == 4269 or demproj == 4326:
-        gdal.Warp(tmpdem,"temp.vrt",xRes=gcssize,yRes=gcssize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        res = gcssize
     else:
-        gdal.Warp(tmpdem,"temp.vrt",xRes=pixsize,yRes=pixsize,outputBounds=bounds,resampleAlg="cubic",dstNodata=-32767)
+        res = pixsize
+    gdal.Warp(tmpdem, "temp.vrt", xRes=res, yRes=res, outputBounds=[x_min, y_min, x_max, y_max],
+              resampleAlg="cubic", dstNodata=-32767)
 
     # If DEM is from NED collection, then it will have a NAD83 ellipse -
     # need to convert to WGS84
