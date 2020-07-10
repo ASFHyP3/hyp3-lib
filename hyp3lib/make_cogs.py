@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 from osgeo import gdal
 
 
-def cogify_dir(directory: str = "PRODUCT", file_pattern: str = '*.tif'):
+def cogify_dir(directory: str, file_pattern: str = '*.tif'):
     """
     Convert all found GeoTIFF files to a Cloud Optimized GeoTIFF inplace
     Args:
@@ -21,10 +21,10 @@ def cogify_dir(directory: str = "PRODUCT", file_pattern: str = '*.tif'):
     path_expression = os.path.join(directory, file_pattern)
     logging.info(f'Converting files to COGs for {path_expression}')
     for filename in glob(path_expression):
-        make_cog(filename)
+        cogify_file(filename)
 
 
-def make_cog(filename: str):
+def cogify_file(filename: str):
     """
     Convert a GeoTIFF to a Cloud Optimized GeoTIFF inplace
 
@@ -55,7 +55,7 @@ def main():
     logging.basicConfig(format='%(message)s', level=logging.INFO, handlers=(out, err))
 
     for geotiff_file in args.geotiffs:
-        make_cog(geotiff_file)
+        cogify_file(geotiff_file)
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@ import os
 import shutil
 import requests
 
-from hyp3lib.make_cogs import make_cog, cogify_dir
+from hyp3lib.make_cogs import cogify_dir, cogify_file
 
 
 def _is_cog(filename):
@@ -13,7 +13,7 @@ def _is_cog(filename):
 
 def test_make_cog(geotiff):
     assert not _is_cog(geotiff)
-    make_cog(geotiff)
+    cogify_file(geotiff)
     assert _is_cog(geotiff)
 
 
