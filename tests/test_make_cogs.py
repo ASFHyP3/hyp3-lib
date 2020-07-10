@@ -12,6 +12,7 @@ def _is_cog(filename):
 
 
 def test_make_cog(geotiff):
+    assert not _is_cog(geotiff)
     make_cog(geotiff)
     assert _is_cog(geotiff)
 
