@@ -12,7 +12,7 @@ from osgeo import gdal
 
 
 def cogify_dir(directory: str = "PRODUCT", file_pattern: str = '*.tif'):
-    f"""
+    """
     Convert all found GeoTIFF files to a Cloud Optimized GeoTIFF inplace
     Args:
         directory: directory to search through
