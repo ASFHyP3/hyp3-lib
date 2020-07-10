@@ -11,13 +11,11 @@ def test_width_smaller(geotiff):
     browse_width = makeAsfBrowse(geotiff, geotiff_base, width=100)
 
     assert browse_width == 100
+    with Image.open(f'{geotiff_base}.png') as png:
+        assert png.size[0] == browse_width
 
-    assert os.path.exists(f'{geotiff_base}.png')
     assert os.path.exists(f'{geotiff_base}.png.aux.xml')
     assert os.path.exists(f'{geotiff_base}.kmz')
-
-    with Image.open(geotiff.replace('.tif', '.png')) as png:
-        assert png.size[0] == browse_width
 
 
 def test_width_larger(geotiff, caplog):
@@ -26,11 +24,6 @@ def test_width_larger(geotiff, caplog):
     with caplog.at_level(logging.DEBUG):
         browse_width = makeAsfBrowse(geotiff, geotiff_base)
 
-        assert os.path.exists(f'{geotiff_base}.png')
-        assert os.path.exists(f'{geotiff_base}.png.aux.xml')
-        assert os.path.exists(f'{geotiff_base}.kmz')
-
         assert 'Using GeoTIFF width' in caplog.text
-
         with Image.open(f'{geotiff_base}.png') as png:
             assert png.size[0] == browse_width
