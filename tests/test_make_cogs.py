@@ -21,7 +21,7 @@ def test_cogify_dir(geotiff):
 
     cogify_dir(os.path.dirname(geotiff), file_pattern='*_?.tif')
 
-    for ext in copy_extensions[:-1]:
+    for ext in copy_extensions:
         with open(geotiff.replace('.tif', ext), 'rb') as f:
             response = requests.post('http://cog-validate.radiant.earth/api/validate', files={'file': f})
         assert response.status_code == 200
