@@ -5,7 +5,8 @@ import logging
 import os
 import sys
 
-from hyp3lib import saa_func_lib as saa
+from osgeo import gdal
+
 from hyp3lib.resample_geotiff import resample_geotiff
 
 
@@ -18,17 +19,22 @@ def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False, width: int = 2048)
         use_nn: Use GDAL's GRIORA_NearestNeighbour interpolation instead of GRIORA_Cubic
             to resample the GeoTIFF
         width: browse image width
+
+    Returns:
+        browse_width: the width of the created browse image
     """
-    tiff_width, _, _, _ = saa.read_gdal_file_geo(saa.open_gdal_file(geotiff))
-    if tiff_width < width:
-        logging.warning(f'Requested image dimension of {width} exceeds GeoTIFF width {tiff_width}.'
+    tiff = gdal.Open(geotiff)
+    if tiff.RasterXSize < width:
+        logging.warning(f'Requested image dimension of {width} exceeds GeoTIFF width {tiff.RasterXSize}.'
                         f' Using GeoTIFF width')
-        browse_width = tiff_width
+        browse_width = tiff.RasterXSize
     else:
         browse_width = width
 
     resample_geotiff(geotiff, browse_width, 'KML', f'{base_name}.kmz', use_nn)
     resample_geotiff(geotiff, browse_width, 'PNG', f'{base_name}.png', use_nn)
+
+    return browse_width
 
 
 def main():
