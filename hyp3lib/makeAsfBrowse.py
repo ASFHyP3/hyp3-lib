@@ -24,10 +24,13 @@ def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False, width: int = 2048)
         browse_width: the width of the created browse image
     """
     tiff = gdal.Open(geotiff)
-    if tiff.RasterXSize < width:
-        logging.warning(f'Requested image dimension of {width} exceeds GeoTIFF width {tiff.RasterXSize}.'
+    tiff_width = tiff.RasterXSize
+    tiff = None  # How to close with gdal
+
+    if tiff_width < width:
+        logging.warning(f'Requested image dimension of {width} exceeds GeoTIFF width {tiff_width}.'
                         f' Using GeoTIFF width')
-        browse_width = tiff.RasterXSize
+        browse_width = tiff_width
     else:
         browse_width = width
 
