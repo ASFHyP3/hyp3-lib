@@ -1,45 +1,41 @@
-"""Creates a Cloud Optimized Geotiff from the input geotiff(s)"""
+"""Creates a Cloud Optimized GeoTIFF from the input GeoTIFF(s)"""
 
 import argparse
-import glob
 import logging
 import os
 import shutil
+import sys
+from glob import glob
+from tempfile import NamedTemporaryFile
 
 from osgeo import gdal
 
 
-def cogify_dir(dir="PRODUCT",debug=False,res=30):
-    back = os.getcwd()
-    os.chdir(dir)
-    tmpfile = "tmp_cog_{}.tif".format(os.getpid())
-    for myfile in glob.glob("*.tif"):
-        logging.info("Converting file {} into COG".format(myfile))
-        make_cog(myfile,tmpfile,res=res)
-        shutil.move(tmpfile,myfile)
-    os.chdir(back)
+def cogify_dir(directory: str, file_pattern: str = '*.tif'):
+    """
+    Convert all found GeoTIFF files to a Cloud Optimized GeoTIFF inplace
+    Args:
+        directory: directory to search through
+        file_pattern: the pattern for finding GeoTIFFs
+    """
+    path_expression = os.path.join(directory, file_pattern)
+    logging.info(f'Converting files to COGs for {path_expression}')
+    for filename in glob(path_expression):
+        cogify_file(filename)
 
 
-def make_cog(inFile,outFile,debug=False,res=30):
-    print("Creating COG file {} from input file {}".format(outFile, inFile))
-    tmpFile = 'cog_{}.tif'.format(os.getpid())
-    shutil.copy(inFile,tmpFile)
+def cogify_file(filename: str):
+    """
+    Convert a GeoTIFF to a Cloud Optimized GeoTIFF inplace
 
-    if res == 10:
-        os.system('gdaladdo -r average {} 2 4 8 16 32'.format(tmpFile))
-    else:
-        os.system('gdaladdo -r average {} 2 4 8 16'.format(tmpFile))
-
-    if debug:
-        shutil.copy(tmpFile,"make_cog1.tif")
-
-    co = ["TILED=YES","COMPRESS=DEFLATE","COPY_SRC_OVERVIEWS=YES"]
-    gdal.Translate(outFile,tmpFile,creationOptions=co,noData="0")
-
-    if debug:
-        shutil.copy(outFile,"make_cog2.tif")
-
-    os.remove(tmpFile)
+    Args:
+        filename: GeoTIFF file to convert
+    """
+    logging.info(f'Converting {filename} to COG')
+    creation_options = ['TILED=YES', 'COMPRESS=DEFLATE']
+    with NamedTemporaryFile() as temp_file:
+        shutil.copy(filename, temp_file.name)
+        gdal.Translate(filename, temp_file.name, format='GTiff', creationOptions=creation_options, noData=0)
 
 
 def main():
@@ -49,26 +45,18 @@ def main():
         prog=os.path.basename(__file__),
         description=__doc__,
     )
-    parser.add_argument('geotiff', nargs='+', help='name of GeoTIFF file (input)')
-
-    logFile = "make_cogs_{}.log".format(os.getpid())
-    logging.basicConfig(filename=logFile, format='%(asctime)s - %(levelname)s - %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
-    logging.getLogger().addHandler(logging.StreamHandler())
-    logging.info("Starting run")
-
+    parser.add_argument('geotiffs', nargs='+', help='name of GeoTIFF file(s)')
     args = parser.parse_args()
 
-    for myfile in args.geotiff:
-        if not os.path.exists(myfile):
-            parser.error(f'GeoTIFF file {myfile} does not exist!')
-        if not os.path.splitext(myfile)[1] == '.tif':
-            parser.error(f'Input file {myfile} is not a GeoTFF!')
+    out = logging.StreamHandler(stream=sys.stdout)
+    out.addFilter(lambda record: record.levelno <= logging.INFO)
+    err = logging.StreamHandler()
+    err.setLevel(logging.WARNING)
+    logging.basicConfig(format='%(message)s', level=logging.INFO, handlers=(out, err))
 
-        outfile = myfile.replace(".tif", "_cog.tif")
-        make_cog(myfile, outfile)
+    for geotiff_file in args.geotiffs:
+        cogify_file(geotiff_file)
 
 
 if __name__ == '__main__':
     main()
-
