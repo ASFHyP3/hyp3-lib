@@ -20,7 +20,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOOLS_BOT_PAK }}
           ALLOW_TAG_PREFIX: "true"
-          RELEASE_NAME_PREFIX: HYp3-lib
+          RELEASE_NAME_PREFIX: HyP3-lib
 
       - name: Attempt fast-forward develop from master
         run: |
@@ -40,4 +40,5 @@ jobs:
           pr_assignee: ${{ github.actor }}
           pr_label: tools-bot
           pr_draft: false
+          pr_allow_empty: true
           github_token: ${{ secrets.TOOLS_BOT_PAK }}
