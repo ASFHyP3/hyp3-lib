@@ -15,7 +15,7 @@ setup(
     long_description=long_desc,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/asfadmin/hyp3-lib',
+    url='https://github.com/ASFHyP3/hyp3-lib',
 
     author='ASF APD/Tools Team',
     author_email='uaf-asf-apd@alaska.edu',
