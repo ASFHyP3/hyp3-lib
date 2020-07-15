@@ -52,7 +52,17 @@ def _get_asf_orbit_url(search_url, platform, timestamp, verify=True):
     return search_url + best
 
 
-def get_orbit_url(granule, orbit_type, provider='ESA'):
+def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 'ESA'):
+    """Get the URL of an orbit file from a provider
+
+    Args:
+        granule: Granule name to find an orbit file for
+        orbit_type: Orbit type to download
+        provider: Povider name to download the orbit file from
+
+    Returns:
+        orbit_url: The url to the matched orbit file
+    """
     platform = granule[0:3]
     time_stamps = re.split('_+', granule)[4:6]
 
@@ -62,7 +72,7 @@ def get_orbit_url(granule, orbit_type, provider='ESA'):
         end_time = datetime.strptime(time_stamps[1], '%Y%m%dT%H%M%S') + delta
 
         params = {
-            "product_type": orbit_type,
+            "product_type": orbit_type.upper(),
             "product_name__startswith": platform,
             "validity_start__lt": start_time.strftime('%Y-%m-%dT%H:%M:%S'),
             "validity_stop__gt": end_time.strftime('%Y-%m-%dT%H:%M:%S'),
@@ -85,14 +95,26 @@ def get_orbit_url(granule, orbit_type, provider='ESA'):
 
         platform = granule[0:3]
 
-        orb = _get_asf_orbit_url(url, platform, time_stamps[0].replace('T', ''))
-        return orb
+        orbit_url = _get_asf_orbit_url(url, platform, time_stamps[0].replace('T', ''))
+        return orbit_url
 
     else:
         raise OrbitDownloadError(f'Unkown orbit file provider {provider}')
 
 
-def download_sentinel_orbit_file(granule, directory=None, providers = ('ESA', 'ASF')):
+def download_sentinel_orbit_file(granule: str, directory: str = None, providers=('ESA', 'ASF')):
+    """Download a Sentinel-1 Orbit file
+
+    Args:
+        granule: Granule name to find an orbit file for
+        directory: Directory to save the orbit files into
+        providers: Iterable of providers to attempt to download the orbit file from, in order of preference
+
+    Returns: Tuple of:
+        orbit_file: The downloaded orbit file
+        provider: The provider used to download the orbit file from
+
+    """
     for provider in providers:
         orbit_url = get_orbit_url(granule, 'AUX_POEORB', provider=provider)
         if not orbit_url:
@@ -105,14 +127,14 @@ def download_sentinel_orbit_file(granule, directory=None, providers = ('ESA', 'A
             orbit_url, directory=directory, headers={'User-Agent': 'python3 asfdaac/apt-insar'}, chunk_size=5242880
         )
 
-        # TODO: this
-        verify_opod(orbit_file)
+        try:
+            verify_opod(orbit_file)
+        except ValueError:
+            raise OrbitDownloadError(f'Downloaded orbit file is invalid: {orbit_file}')
 
         return orbit_file, provider
 
-    # No orbit file found
-    # FIXME: error message
-    raise OrbitDownloadError()
+    raise OrbitDownloadError(f'Unable to find a matching orbit file from providers: {providers}')
 
 
 def main():
@@ -122,17 +144,23 @@ def main():
         prog=os.path.basename(__file__),
         description=__doc__,
     )
-    parser.add_argument("safeFiles", help="Sentinel-1 SAFE file name(s)", nargs="*")
-    parser.add_argument("-p", "--provider", choices=['ASF', 'ESA'], help="Name of orbit file server organization")
-    # TODO Directory
+    parser.add_argument('safe_files', help='Sentinel-1 SAFE file name(s)', nargs="*")
+    parser.add_argument('-p', '--provider', choices=['ASF', 'ESA'], help='Name of orbit file provider organization')
+    parser.add_argument('-d', '--directory', help='Download files to this directory')
     args = parser.parse_args()
 
     if args.provider is None:
         args.provider = ('ASF', 'ESA')
 
-    for safe in args.safeFiles:
-            orbit_file, provided_by = download_sentinel_orbit_file(safe, directory=None, providers=tuple(args.provider))
+    for safe in args.safe_files:
+        try:
+            orbit_file, provided_by = download_sentinel_orbit_file(
+                safe, directory=args.directory, providers=tuple(args.provider)
+            )
             print("Downloaded orbit file {} from {}".format(orbit_file, provided_by))
+        except OrbitDownloadError as e:
+            print(f'WARNING: unable to download orbit file for {safe}')
+            print(f'    {e}')
 
 
 if __name__ == "__main__":
