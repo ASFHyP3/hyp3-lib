@@ -1,10 +1,10 @@
 """Get Sentinel-1 orbit file(s) from ASF or ESA website"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
+import logging
 import os
 import re
+import sys
 from datetime import datetime, timedelta
 
 import requests
@@ -152,15 +152,20 @@ def main():
     if args.provider is None:
         args.provider = ('ASF', 'ESA')
 
+    out = logging.StreamHandler(stream=sys.stdout)
+    out.addFilter(lambda record: record.levelno <= logging.INFO)
+    err = logging.StreamHandler()
+    err.setLevel(logging.WARNING)
+    logging.basicConfig(format='%(message)s', level=logging.INFO, handlers=(out, err))
+
     for safe in args.safe_files:
         try:
             orbit_file, provided_by = download_sentinel_orbit_file(
                 safe, directory=args.directory, providers=tuple(args.provider)
             )
-            print("Downloaded orbit file {} from {}".format(orbit_file, provided_by))
+            logging.info("Downloaded orbit file {} from {}".format(orbit_file, provided_by))
         except OrbitDownloadError as e:
-            print(f'WARNING: unable to download orbit file for {safe}')
-            print(f'    {e}')
+            logging.warning(f'WARNING: unable to download orbit file for {safe}\n    {e}')
 
 
 if __name__ == "__main__":
