@@ -11,20 +11,27 @@ import requests
 from lxml import html
 from requests.adapters import HTTPAdapter
 from six.moves.urllib.parse import urlparse
+from urllib3.util.retry import Retry
 
 from hyp3lib import OrbitDownloadError
 from hyp3lib.fetch import download_file
 from hyp3lib.verify_opod import verify_opod
 
 
-def _get_asf_orbit_url(search_url, platform, timestamp, verify=True):
+def _get_asf_orbit_url(search_url, platform, timestamp):
     if not search_url.endswith('/'):
         search_url += '/'
 
     hostname = urlparse(search_url).hostname
     session = requests.Session()
-    session.mount(hostname, HTTPAdapter(max_retries=10))
-    page = session.get(search_url, timeout=60, verify=verify)
+    retries = Retry(
+        total=3,
+        backoff_factor=10,
+        status_forcelist=[429, 500, 503, 504],
+    )
+    session.mount(hostname, HTTPAdapter(max_retries=retries))
+    page = session.get(search_url)
+    page.raise_for_status()
     tree = html.fromstring(page.content)
     file_list = []
     for item in tree.xpath('//a[@href]//@href'):

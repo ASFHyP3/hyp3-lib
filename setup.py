@@ -54,6 +54,7 @@ setup(
         'scipy',
         'six',
         'statsmodels',
+        'urllib3',
     ],
 
     extras_require={
