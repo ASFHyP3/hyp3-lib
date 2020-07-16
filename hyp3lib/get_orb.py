@@ -100,7 +100,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
         raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
 
 
-def _download_and_verify_orbit(url: str, directory: str = None):
+def _download_and_verify_orbit(url: str, directory: str = '.'):
     orbit_file = download_file(url, directory=directory, chunk_size=5242880)
     try:
         verify_opod(orbit_file)
@@ -111,7 +111,7 @@ def _download_and_verify_orbit(url: str, directory: str = None):
     return orbit_file
 
 
-def downloadSentinelOrbitFile(granule: str, directory: str = None, providers=('ESA', 'ASF')):
+def downloadSentinelOrbitFile(granule: str, directory: str = '.', providers=('ESA', 'ASF')):
     """Download a Sentinel-1 Orbit file
 
     Args:
@@ -147,14 +147,13 @@ def main():
     parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument('safe_files', help='Sentinel-1 SAFE file name(s)', nargs="*")
-    parser.add_argument('-p', '--provider', choices=['ASF', 'ESA'], help='Name of orbit file provider organization')
-    parser.add_argument('-d', '--directory', help='Download files to this directory')
+    parser.add_argument('-p', '--provider', choices=['ESA', 'ASF'], nargs='*', default=['ESA', 'ASF'],
+                        help="Name(s) of the orbit file providers' organization, in order of preference")
+    parser.add_argument('-d', '--directory', default=os.getcwd(), help='Download files to this directory')
     args = parser.parse_args()
-
-    if args.provider is None:
-        args.provider = ('ASF', 'ESA')
 
     out = logging.StreamHandler(stream=sys.stdout)
     out.addFilter(lambda record: record.levelno <= logging.INFO)
