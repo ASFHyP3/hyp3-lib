@@ -4,6 +4,9 @@ import os
 import shutil
 import pytest
 
+import requests
+
+
 _HERE = os.path.dirname(__file__)
 
 
