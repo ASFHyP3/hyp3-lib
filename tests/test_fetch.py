@@ -54,3 +54,8 @@ def test_download_file_retries():
         _ = fetch.download_file('http://httpstat.us/500', backoff_factor=backoff_factor, retries=total_retries)
     after = datetime.now()
     assert (after - before).seconds >= expected_time
+
+
+def test_download_file_none():
+    with pytest.raises(requests.exceptions.InvalidURL):
+        _ = fetch.download_file(url=None)

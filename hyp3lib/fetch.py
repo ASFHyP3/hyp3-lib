@@ -23,7 +23,10 @@ def download_file(url: str, directory: str = '', chunk_size=None, retries=2, bac
     """
     logging.info(f'Downloading {url}')
 
-    download_path = os.path.join(directory, url.split("/")[-1])
+    try:
+        download_path = os.path.join(directory, url.split("/")[-1])
+    except AttributeError:
+        raise requests.exceptions.InvalidURL(f'Invalid URL provided: {url}')
 
     session = requests.Session()
     retry_strategy = Retry(

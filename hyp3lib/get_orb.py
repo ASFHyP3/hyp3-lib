@@ -96,12 +96,11 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
 
 
 def _download_and_verify_orbit(url: str, directory: str = ''):
-    orbit_file = download_file(url, directory=directory, chunk_size=5242880)
+    orbit_file = download_file(url, directory=directory)
     try:
         verify_opod(orbit_file)
     except ValueError:
-        logging.warning(f'Downloaded an invalid orbit file {orbit_file}')
-        return None
+        raise OrbitDownloadError(f'Downloaded an invalid orbit file {orbit_file}')
 
     return orbit_file
 
@@ -119,27 +118,19 @@ def downloadSentinelOrbitFile(granule: str, directory: str = '', providers=('ESA
         provider: The provider used to download the orbit file from
 
     """
-    for provider in providers:
-        try:
-            url = get_orbit_url(granule, 'AUX_POEORB', provider=provider)
-            if url is not None:
+    for orbit_type in ('AUX_POEORB', 'AUX_RESORB'):
+        for provider in providers:
+            try:
+                url = get_orbit_url(granule, orbit_type, provider=provider)
                 orbit_file = _download_and_verify_orbit(url, directory=directory)
                 if orbit_file:
                     return orbit_file, provider
-        except (requests.RequestException, OrbitDownloadError) as e:
-            logging.exception('Error encountered fetching orbit file; looking for another', exc_info=e)
-            continue
-
-    for provider in providers:
-        try:
-            url = get_orbit_url(granule, 'AUX_RESORB', provider=provider)
-            if url is not None:
-                orbit_file = _download_and_verify_orbit(url, directory=directory)
-                if orbit_file:
-                    return orbit_file, provider
-        except (requests.RequestException, OrbitDownloadError) as e:
-            logging.exception('Error encountered fetching orbit file; looking for another', exc_info=e)
-            continue
+            except (requests.RequestException, OrbitDownloadError) as e:
+                logging.exception(
+                    f'Error encountered fetching {orbit_type} orbit file from {provider}; looking for another',
+                    exc_info=e,
+                )
+                continue
 
     raise OrbitDownloadError(f'Unable to find a valid orbit file from providers: {providers}')
 
