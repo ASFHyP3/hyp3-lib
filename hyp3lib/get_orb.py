@@ -92,8 +92,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
         orbit_url = _get_asf_orbit_url(orbit_type.lower(), platform, time_stamps[0].replace('T', ''))
         return orbit_url
 
-    else:
-        raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
+    raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
 
 
 def _download_and_verify_orbit(url: str, directory: str = '.'):
