@@ -1,11 +1,6 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
 import shutil
 import pytest
-
-import requests
-
 
 _HERE = os.path.dirname(__file__)
 

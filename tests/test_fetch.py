@@ -51,7 +51,6 @@ def test_download_file_retries():
 
     before = datetime.now()
     with pytest.raises(requests.exceptions.RetryError):
-        _ = fetch.download_file(f'http://httpstat.us/500',
-                                backoff_factor=backoff_factor, retries=total_retries)
+        _ = fetch.download_file('http://httpstat.us/500', backoff_factor=backoff_factor, retries=total_retries)
     after = datetime.now()
     assert (after - before).seconds >= expected_time
