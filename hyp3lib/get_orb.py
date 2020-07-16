@@ -111,7 +111,7 @@ def _download_and_verify_orbit(url: str, directory: str = None):
     return orbit_file
 
 
-def download_sentinel_orbit_file(granule: str, directory: str = None, providers=('ESA', 'ASF')):
+def downloadSentinelOrbitFile(granule: str, directory: str = None, providers=('ESA', 'ASF')):
     """Download a Sentinel-1 Orbit file
 
     Args:
@@ -164,7 +164,7 @@ def main():
 
     for safe in args.safe_files:
         try:
-            orbit_file, provided_by = download_sentinel_orbit_file(
+            orbit_file, provided_by = downloadSentinelOrbitFile(
                 safe, directory=args.directory, providers=tuple(args.provider)
             )
             logging.info("Downloaded orbit file {} from {}".format(orbit_file, provided_by))
