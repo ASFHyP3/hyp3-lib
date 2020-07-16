@@ -32,26 +32,22 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
     response = session.get(search_url)
     response.raise_for_status()
     tree = html.fromstring(response.content)
-    file_list = [file for file in tree.xpath('//a[@href]//@href') if file.endswith('.EOF')]
+    file_list = [file for file in tree.xpath('//a[@href]//@href')
+                 if file.startswith(platform) and file.endswith('.EOF')]
 
     d1 = 0
     best = None
-    for item in file_list:
-        if 'S1' in item:
-            item = item.replace(' ', '')
-            item1 = item
-            this_plat = item[0:3]
-            item = item.replace('T', '')
-            item = item.replace('V', '')
-            t = re.split('_', item)
-            if len(t) > 7:
-                start = t[6]
-                end = t[7].replace('.EOF', '')
-                if start < timestamp < end and platform == this_plat:
-                    d = ((int(timestamp) - int(start)) + (int(end) - int(timestamp))) / 2
-                    if d > d1:
-                        best = item1.replace(' ', '')
-                        d1 = d
+    for file in file_list:
+        file = file.strip()
+        t = re.split('_', file.replace('T', '').replace('V', ''))
+        if len(t) > 7:
+            start = t[6]
+            end = t[7].replace('.EOF', '')
+            if start < timestamp < end:
+                d = ((int(timestamp) - int(start)) + (int(end) - int(timestamp))) / 2
+                if d > d1:
+                    best = file
+                    d1 = d
     return search_url + best
 
 
