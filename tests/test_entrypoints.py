@@ -133,11 +133,6 @@ def test_offset_xml(script_runner):
     assert ret.success
 
 
-def test_par_s1_slc_single(script_runner):
-    ret = script_runner.run('par_s1_slc_single.py', '-h')
-    assert ret.success
-
-
 def test_ps2dem(script_runner):
     ret = script_runner.run('ps2dem.py', '-h')
     assert ret.success

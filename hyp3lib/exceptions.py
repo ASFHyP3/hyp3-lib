@@ -15,3 +15,7 @@ class GeometryError(Exception):
 
 class GranuleError(Exception):
     """Error to be raised for incompatible or missing granules"""
+
+
+class OrbitDownloadError(Exception):
+    """Error to be raised when unable to fetch an orbit file"""
