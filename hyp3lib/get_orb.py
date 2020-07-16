@@ -18,9 +18,8 @@ from hyp3lib.fetch import download_file
 from hyp3lib.verify_opod import verify_opod
 
 
-def _get_asf_orbit_url(search_url, platform, timestamp):
-    if not search_url.endswith('/'):
-        search_url += '/'
+def _get_asf_orbit_url(orbit_type, platform, timestamp):
+    search_url = f'https://s1qc.asf.alaska.edu/{orbit_type.lower()}/'
 
     hostname = urlparse(search_url).hostname
     session = requests.Session()
@@ -30,13 +29,10 @@ def _get_asf_orbit_url(search_url, platform, timestamp):
         status_forcelist=[429, 500, 503, 504],
     )
     session.mount(hostname, HTTPAdapter(max_retries=retries))
-    page = session.get(search_url)
-    page.raise_for_status()
-    tree = html.fromstring(page.content)
-    file_list = []
-    for item in tree.xpath('//a[@href]//@href'):
-        if 'EOF' in item:
-            file_list.append(item)
+    response = session.get(search_url)
+    response.raise_for_status()
+    tree = html.fromstring(response.content)
+    file_list = [file for file in tree.xpath('//a[@href]//@href') if file.endswith('.EOF')]
 
     d1 = 0
     best = None
@@ -73,7 +69,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
     platform = granule[0:3]
     time_stamps = re.split('_+', granule)[4:6]
 
-    if provider == 'ESA':
+    if provider.upper() == 'ESA':
         delta = timedelta(seconds=60)
         start_time = datetime.strptime(time_stamps[0], '%Y%m%dT%H%M%S') - delta
         end_time = datetime.strptime(time_stamps[1], '%Y%m%dT%H%M%S') + delta
@@ -97,16 +93,22 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
         return orbit_url
 
     elif provider.upper() == 'ASF':
-        url = f'https://s1qc.asf.alaska.edu/{orbit_type.lower()}/'
-        granule = os.path.basename(granule).rstrip('/')
-
-        platform = granule[0:3]
-
-        orbit_url = _get_asf_orbit_url(url, platform, time_stamps[0].replace('T', ''))
+        orbit_url = _get_asf_orbit_url(orbit_type.lower(), platform, time_stamps[0].replace('T', ''))
         return orbit_url
 
     else:
-        raise OrbitDownloadError(f'Unkown orbit file provider {provider}')
+        raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
+
+
+def _download_and_verify_orbit(url: str, directory: str = None):
+    orbit_file = download_file(url, directory=directory, chunk_size=5242880)
+    try:
+        verify_opod(orbit_file)
+    except ValueError:
+        logging.warning(f'Downloaded an invalid orbit file {orbit_file}')
+        return None
+
+    return orbit_file
 
 
 def download_sentinel_orbit_file(granule: str, directory: str = None, providers=('ESA', 'ASF')):
@@ -123,25 +125,20 @@ def download_sentinel_orbit_file(granule: str, directory: str = None, providers=
 
     """
     for provider in providers:
-        orbit_url = get_orbit_url(granule, 'AUX_POEORB', provider=provider)
-        if not orbit_url:
-            orbit_url = get_orbit_url(granule, 'AUX_RESORB', provider=provider)
+        url = get_orbit_url(granule, 'AUX_POEORB', provider=provider)
+        if url is not None:
+            orbit_file = _download_and_verify_orbit(url, directory=directory)
+            if orbit_file:
+                return orbit_file, provider
 
-        if not orbit_url:
-            break
+    for provider in providers:
+        url = get_orbit_url(granule, 'AUX_RESORB', provider=provider)
+        if url is not None:
+            orbit_file = _download_and_verify_orbit(url, directory=directory)
+            if orbit_file:
+                return orbit_file, provider
 
-        orbit_file = download_file(
-            orbit_url, directory=directory, headers={'User-Agent': 'python3 asfdaac/apt-insar'}, chunk_size=5242880
-        )
-
-        try:
-            verify_opod(orbit_file)
-        except ValueError:
-            raise OrbitDownloadError(f'Downloaded orbit file is invalid: {orbit_file}')
-
-        return orbit_file, provider
-
-    raise OrbitDownloadError(f'Unable to find a matching orbit file from providers: {providers}')
+    raise OrbitDownloadError(f'Unable to find a valid orbit file from providers: {providers}')
 
 
 def main():
