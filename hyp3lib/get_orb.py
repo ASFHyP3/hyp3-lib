@@ -121,18 +121,26 @@ def downloadSentinelOrbitFile(granule: str, directory: str = '.', providers=('ES
 
     """
     for provider in providers:
-        url = get_orbit_url(granule, 'AUX_POEORB', provider=provider)
-        if url is not None:
-            orbit_file = _download_and_verify_orbit(url, directory=directory)
-            if orbit_file:
-                return orbit_file, provider
+        try:
+            url = get_orbit_url(granule, 'AUX_POEORB', provider=provider)
+            if url is not None:
+                orbit_file = _download_and_verify_orbit(url, directory=directory)
+                if orbit_file:
+                    return orbit_file, provider
+        except (requests.RequestException, OrbitDownloadError) as e:
+            logging.exception('Error encountered fetching orbit file; looking for another', exc_info=e)
+            continue
 
     for provider in providers:
-        url = get_orbit_url(granule, 'AUX_RESORB', provider=provider)
-        if url is not None:
-            orbit_file = _download_and_verify_orbit(url, directory=directory)
-            if orbit_file:
-                return orbit_file, provider
+        try:
+            url = get_orbit_url(granule, 'AUX_RESORB', provider=provider)
+            if url is not None:
+                orbit_file = _download_and_verify_orbit(url, directory=directory)
+                if orbit_file:
+                    return orbit_file, provider
+        except (requests.RequestException, OrbitDownloadError) as e:
+            logging.exception('Error encountered fetching orbit file; looking for another', exc_info=e)
+            continue
 
     raise OrbitDownloadError(f'Unable to find a valid orbit file from providers: {providers}')
 
