@@ -10,6 +10,7 @@ def test_download_sentinel_orbit_file_esa():
 
     assert provider == 'ESA'
     assert os.path.exists(orbit_file)
+    assert orbit_file == 'S1A_OPER_AUX_POEORB_OPOD_20150711T121908_V20150620T225944_20150622T005944.EOF'
 
 
 def test_download_sentinel_orbit_file_asf():
@@ -17,6 +18,7 @@ def test_download_sentinel_orbit_file_asf():
 
     assert provider == 'ASF'
     assert os.path.exists(orbit_file)
+    assert orbit_file == 'S1A_OPER_AUX_POEORB_OPOD_20150711T121908_V20150620T225944_20150622T005944.EOF'
 
 
 def test_get_orbit_url_esa():

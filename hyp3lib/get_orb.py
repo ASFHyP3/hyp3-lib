@@ -95,7 +95,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
     raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
 
 
-def _download_and_verify_orbit(url: str, directory: str = '.'):
+def _download_and_verify_orbit(url: str, directory: str = ''):
     orbit_file = download_file(url, directory=directory, chunk_size=5242880)
     try:
         verify_opod(orbit_file)
@@ -106,7 +106,7 @@ def _download_and_verify_orbit(url: str, directory: str = '.'):
     return orbit_file
 
 
-def downloadSentinelOrbitFile(granule: str, directory: str = '.', providers=('ESA', 'ASF')):
+def downloadSentinelOrbitFile(granule: str, directory: str = '', providers=('ESA', 'ASF')):
     """Download a Sentinel-1 Orbit file
 
     Args:
