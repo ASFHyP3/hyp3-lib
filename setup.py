@@ -15,7 +15,7 @@ setup(
     long_description=long_desc,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/asfadmin/hyp3-lib',
+    url='https://github.com/ASFHyP3/hyp3-lib',
 
     author='ASF APD/Tools Team',
     author_email='uaf-asf-apd@alaska.edu',
@@ -54,6 +54,7 @@ setup(
         'scipy',
         'six',
         'statsmodels',
+        'urllib3',
     ],
 
     extras_require={
@@ -61,6 +62,7 @@ setup(
             'pytest',
             'pytest-cov',
             'pytest-console-scripts',
+            'responses',
         ]
     },
 
@@ -94,7 +96,6 @@ setup(
         'makeColorPhase.py = hyp3lib.makeColorPhase:main',
         'makeKml.py = hyp3lib.makeKml:main',
         'offset_xml.py = hyp3lib.offset_xml:main',
-        'par_s1_slc_single.py = hyp3lib.par_s1_slc_single:main',
         'ps2dem.py = hyp3lib.ps2dem:main',
         'raster_boundary2shape.py = hyp3lib.raster_boundary2shape:main',
         'rasterMask.py = hyp3lib.rasterMask:main',

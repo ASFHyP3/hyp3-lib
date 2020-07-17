@@ -10,6 +10,7 @@ from hyp3lib.exceptions import (
     ExecuteError,
     GeometryError,
     GranuleError,
+    OrbitDownloadError,
 )
 
 try:
@@ -28,4 +29,5 @@ __all__ = [
     'ExecuteError',
     'GeometryError',
     'GranuleError',
+    'OrbitDownloadError',
 ]

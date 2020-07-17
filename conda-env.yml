@@ -12,7 +12,7 @@ dependencies:
   - pytest-cov
   # For running
   - boto3
-  - gdal=2.*
+  - gdal
   - imageio
   - importlib_metadata
   - lxml
@@ -22,10 +22,12 @@ dependencies:
   - pillow
   - proj>=2
   - pyshp
+  - responses
   - requests
   - scipy
   - six
   - statsmodels
+  - urllib3
   - pip:
     # for packaging and testing
     - s3pypi

@@ -37,7 +37,7 @@ jobs:
       - name: Pytest in conda environment
         shell: bash -l {0}
         run: |
-          python -m pip install .
+          python -m pip install .[develop]
           pytest --cov=hyp3lib
 
       - name: Safety analysis of conda environment
@@ -67,7 +67,7 @@ jobs:
         with:
           query: .github/queries/asssociated-pr.query.yml
           outputFile: pr.json
-          owner: asfadmin
+          owner: ASFHyP3
           name: hyp3-lib
           sha: ${{ github.sha }}
 
@@ -79,7 +79,7 @@ jobs:
         with:
           query: .github/queries/pr-labels.query.yml
           outputFile: labels.json
-          owner: asfadmin
+          owner: ASFHyP3
           name: hyp3-lib
 
       - name: Upload a Build Artifact
