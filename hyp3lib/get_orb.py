@@ -48,7 +48,11 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
                 if d > d1:
                     best = file
                     d1 = d
-    return search_url + best
+
+    if best is not None:
+        return search_url + best
+
+    return None
 
 
 def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 'ESA'):
