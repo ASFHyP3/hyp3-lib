@@ -70,15 +70,11 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
     time_stamps = re.split('_+', granule)[4:6]
 
     if provider.upper() == 'ESA':
-        delta = timedelta(seconds=60)
-        start_time = datetime.strptime(time_stamps[0], '%Y%m%dT%H%M%S') - delta
-        end_time = datetime.strptime(time_stamps[1], '%Y%m%dT%H%M%S') + delta
-
         params = {
             "product_type": orbit_type.upper(),
             "product_name__startswith": platform,
-            "validity_start__lt": start_time.strftime('%Y-%m-%dT%H:%M:%S'),
-            "validity_stop__gt": end_time.strftime('%Y-%m-%dT%H:%M:%S'),
+            "validity_start__lt": datetime.strptime(time_stamps[0], '%Y%m%dT%H%M%S').strftime('%Y-%m-%dT%H:%M:%S'),
+            "validity_stop__gt": datetime.strptime(time_stamps[1], '%Y%m%dT%H%M%S').strftime('%Y-%m-%dT%H:%M:%S'),
             "ordering": "-creation_date",
             "page_size": "1",
         }
