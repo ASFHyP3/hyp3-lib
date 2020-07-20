@@ -109,20 +109,23 @@ def _download_and_verify_orbit(url: str, directory: str = ''):
     return orbit_file
 
 
-def downloadSentinelOrbitFile(granule: str, directory: str = '', providers=('ESA', 'ASF')):
+def downloadSentinelOrbitFile(
+        granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB')
+):
     """Download a Sentinel-1 Orbit file
 
     Args:
         granule: Granule name to find an orbit file for
         directory: Directory to save the orbit files into
         providers: Iterable of providers to attempt to download the orbit file from, in order of preference
+        orbit_types: Iterable of orbit file types to attempt to download, in order of preference
 
     Returns: Tuple of:
         orbit_file: The downloaded orbit file
         provider: The provider used to download the orbit file from
 
     """
-    for orbit_type in ('AUX_POEORB', 'AUX_RESORB'):
+    for orbit_type in orbit_types:
         for provider in providers:
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
@@ -147,8 +150,12 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument('safe_files', help='Sentinel-1 SAFE file name(s)', nargs="*")
-    parser.add_argument('-p', '--provider', choices=['ESA', 'ASF'], nargs='*', default=['ESA', 'ASF'],
+    parser.add_argument('-p', '--provider', nargs='*', default=['ESA', 'ASF'],  choices=['ESA', 'ASF'],
                         help="Name(s) of the orbit file providers' organization, in order of preference")
+    parser.add_argument('-t', '--orbit-types', nargs='*', default=['AUX_POEORB', 'AUX_RESORB'],
+                        choices=['MPL_ORBPRE', 'AUX_POEORB', 'AUX_PREORB', 'AUX_RESORB', 'AUX_RESATT'],
+                        help="Name(s) of the orbit file providers' organization, in order of preference. "
+                             "See https://qc.sentinel1.eo.esa.int/")
     parser.add_argument('-d', '--directory', default=os.getcwd(), help='Download files to this directory')
     args = parser.parse_args()
 
@@ -161,7 +168,7 @@ def main():
     for safe in args.safe_files:
         try:
             orbit_file, provided_by = downloadSentinelOrbitFile(
-                safe, directory=args.directory, providers=tuple(args.provider)
+                safe, directory=args.directory, providers=args.provider, orbit_types=args.orbit_types
             )
             logging.info("Downloaded orbit file {} from {}".format(orbit_file, provided_by))
         except OrbitDownloadError as e:
