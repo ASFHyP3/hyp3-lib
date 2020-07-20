@@ -129,7 +129,7 @@ def downloadSentinelOrbitFile(granule: str, directory: str = '', providers=('ESA
                 orbit_file = _download_and_verify_orbit(url, directory=directory)
                 if orbit_file:
                     return orbit_file, provider
-            except (requests.RequestException, OrbitDownloadError) as e:
+            except (requests.RequestException, OrbitDownloadError):
                 logging.warning(
                     f'Error encountered fetching {orbit_type} orbit file from {provider}; looking for another',
                 )
