@@ -5,7 +5,7 @@ import logging
 import os
 import re
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import requests
 from lxml import html
