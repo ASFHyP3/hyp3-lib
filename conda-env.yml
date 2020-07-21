@@ -26,11 +26,11 @@ dependencies:
   - requests
   - scipy
   - six
+  - setuptools_scm
   - statsmodels
   - urllib3
   - pip:
     # for packaging and testing
     - s3pypi
-    - setuptools-scm[toml]
     - safety
 
