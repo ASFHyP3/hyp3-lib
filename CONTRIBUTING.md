@@ -6,7 +6,7 @@ We're excited you would like to contribute to HyP3! Whether you're finding bugs,
 
 ## Submitting an Issue
 
-If you have any questions or ideas, or notice any problems or bugs, first [search open issues](https://github.com/ASFHyP3/hyp3-lib) to see if the issue has already been submitted. We may already be working on the issue. If you think your issue is new, you're welcome to [create a new issue](https://github.com/ASFHyP3/hyp3-lib/issues/new).
+If you have any questions or ideas, or notice any problems or bugs, first [search open issues](https://github.com/ASFHyP3/hyp3-lib/issues) to see if the issue has already been submitted. We may already be working on the issue. If you think your issue is new, you're welcome to [create a new issue](https://github.com/ASFHyP3/hyp3-lib/issues/new).
 
 ## Pull Requests are welcome
 
