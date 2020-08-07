@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for considering to contribute and making custom on-demand SAR processing accessible!
+Thank you for your interest in helping make custom on-demand SAR processing accessible!
 
 We're excited you would like to contribute to HyP3! Whether you're finding bugs, adding new features, fixing anything broken, or improving documentation, get started by submitting an issue or pull request!
 
@@ -58,7 +58,7 @@ We ask that you follow these guidelines with your contributions
 
 ### Style
 
-We generally follow python community standards ([PEP8](https://pep8.org/)), expect we allow line lengths up to 120 characters. We recommend trying to keep lines 80--100 characters long, but allow up to 120 when it improves readability.
+We generally follow python community standards ([PEP8](https://pep8.org/)), except we allow line lengths up to 120 characters. We recommend trying to keep lines 80--100 characters long, but allow up to 120 when it improves readability.
 
 ### Documentation
 
