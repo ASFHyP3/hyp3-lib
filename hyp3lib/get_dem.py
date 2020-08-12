@@ -168,7 +168,7 @@ def get_corner_coordinates_from_gdal_info(info):
 
 def get_cc(tmpproj, post):
     shift = 0
-    info = subprocess.check_output('gdalinfo %s' % tmpproj, shell=True, universal_newlines=True)
+    info = subprocess.check_output(f'gdalinfo {tmpproj}', shell=True, universal_newlines=True)
     coords = get_corner_coordinates_from_gdal_info(info)
 
     easts = [c[0] for c in coords.values()]
@@ -291,7 +291,7 @@ def get_ll_dem(west, south, east, north, out_dem, post=None, processes=1, dem_na
 
 def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_name=None, leave=False):
     if post is not None:
-        logging.info("Snapping to grid at posting of %s meters" % post)
+        logging.info(f"Snapping to grid at posting of {post} meters")
 
     if y_min < -90 or y_max > 90:
         raise ValueError(f"Please use latitude in range (-90, 90) ({y_min}, {y_max})")
@@ -488,7 +488,7 @@ def clean_dem(in_dem, out_dem):
 
 def snap_to_grid(post, pixsize, infile, outfile):
     if post:
-        logging.info("Snapping file to grid at %s meters" % post)
+        logging.info(f"Snapping file to grid at {post} meters")
         (e_min, e_max, n_min, n_max) = get_cc(infile, post)
         bounds = [e_min, n_min, e_max, n_max]
         gdal.Warp(outfile, infile, xRes=pixsize, yRes=pixsize, outputBounds=bounds, resampleAlg="cubic",
