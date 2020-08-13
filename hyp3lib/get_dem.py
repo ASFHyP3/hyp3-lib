@@ -9,10 +9,8 @@ import shutil
 import subprocess
 import sys
 
-import boto3
 import lxml.etree as et
 import numpy as np
-from botocore.handlers import disable_signing
 from osgeo import gdal
 from osgeo import ogr
 from osgeo import osr
@@ -23,6 +21,7 @@ from hyp3lib import DemError
 from hyp3lib import dem2isce
 from hyp3lib import saa_func_lib as saa
 from hyp3lib.asf_geometry import raster_meta
+from hyp3lib.fetch import download_file
 
 
 def reproject_wkt(wkt, in_epsg, out_epsg):
@@ -44,13 +43,17 @@ def get_dem_list():
     config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
     config_file = os.path.join(config_dir, "get_dem.py.cfg")
     with open(config_file) as f:
-        dem_list = [
-            {
-                'name': line.split()[0],
-                'epsg': int(line.split()[2])
-            }
-            for line in f.readlines()
-        ]
+        config_content = f.readlines()
+
+    dem_list = []
+    for line in config_content:
+        name, location, epsg = line.split()
+        dem = {
+            'name': name,
+            'location': location,
+            'epsg': int(epsg),
+        }
+        dem_list.append(dem)
     return dem_list
 
 
@@ -99,7 +102,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
                 tile_list.append(tile)
 
         pct = coverage / total_area
-        logging.info(f"Totals: {dem} {coverage} {total_area} {pct}")
+        logging.info(f"Totals: {dem['name']} {coverage} {total_area} {pct}")
 
         if best_pct == 0 or pct > best_pct + 0.05:
             best_pct = pct
@@ -119,26 +122,18 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
 
 
 def get_tile_for(args):
-    demname, fi = args
-    cfgdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
-    myfile = os.path.join(cfgdir, "get_dem.py.cfg")
+    dem_name, tile_name = args
+    output_dir = 'DEM'
 
-    with open(myfile) as f:
-        content = f.readlines()
-        for item in content:
-            if demname in item.split()[0] and len(demname) == len(item.split()[0]):
-                (mydir, myfile) = os.path.split(item)
-                mydir = mydir.split()[1]
-                if "s3" in mydir:
-                    myfile = os.path.join(demname, fi) + ".tif"
-                    s3 = boto3.resource('s3')
-                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-                    mybucket = mydir.split("/")[-1]
-                    s3.Bucket(mybucket).download_file(myfile, f"DEM/{fi}.tif")
-                else:
-                    myfile = os.path.join(mydir, demname, "geotiff", fi) + ".tif"
-                    output = f"DEM/{fi}].tif"
-                    shutil.copy(myfile, output)
+    dem_list = get_dem_list()
+    for dem in dem_list:
+        if dem['name'] == dem_name:
+            source_file = os.path.join(dem['location'], tile_name) + '.tif'
+
+            if source_file.startswith('http'):
+                download_file(source_file, directory=output_dir)
+            else:
+                shutil.copy(source_file, output_dir)
 
 
 def _parse_gdal_coordinate_line(line):
