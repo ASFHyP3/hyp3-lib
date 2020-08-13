@@ -13,7 +13,7 @@ from hyp3lib.getSubSwath import get_bounding_box_file
 from hyp3lib.saa_func_lib import get_utm_proj
 
 
-def get_dem_file(infile, outfile: str, use_opentopo=False, in_utm=True, post=None, dem_name=None):
+def getDemFile(infile, outfile: str, use_opentopo=False, in_utm=True, post=None, dem_name=None):
     lat_max, lat_min, lon_max, lon_min = get_bounding_box_file(infile)
 
     if use_opentopo:
@@ -60,8 +60,8 @@ def main():
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info('Starting run')
 
-    outfile, demtype = get_dem_file(args.SAFEfile, args.outfile, use_opentopo=args.opentopo,
-                                    in_utm=args.latlon, post=args.post, dem_name=args.dem)
+    outfile, demtype = getDemFile(args.SAFEfile, args.outfile, use_opentopo=args.opentopo,
+                                  in_utm=args.latlon, post=args.post, dem_name=args.dem)
     logging.info(f'Wrote DEM file {outfile}')
 
 
