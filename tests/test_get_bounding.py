@@ -58,7 +58,7 @@ def test_annotation_file_sample():
 
 
 def test_annotation_file(safe_data):
-    with open(os.path.join(safe_data, 'annotation', 'test-swath-1.xml')) as f:
+    with open(os.path.join(safe_data, 'annotation', 'test-swath-001.xml')) as f:
         box_xml = f.read()
 
     truth = (37.11964, 38.78037, -112.54442, -111.184078)  # lat_min, lat_max, lon_min, lon_max
