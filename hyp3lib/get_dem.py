@@ -40,8 +40,8 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
 
 
 def get_dem_list():
-    config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
-    config_file = os.path.join(config_dir, "get_dem.py.cfg")
+    config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
+    config_file = os.path.join(config_dir, 'get_dem.py.cfg')
     with open(config_file) as f:
         config_content = f.readlines()
 
@@ -62,11 +62,11 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
     if dem_name:
         dem_list = [dem for dem in dem_list if dem['name'] == dem_name]
 
-    scene_wkt = f"POLYGON (({x_min} {y_min}, {x_max} {y_min}, {x_max} {y_max}, {x_min} {y_max}, {x_min} {y_min}))"
+    scene_wkt = f'POLYGON (({x_min} {y_min}, {x_max} {y_min}, {x_max} {y_max}, {x_min} {y_max}, {x_min} {y_min}))'
 
     best_pct = 0
-    best_name = ""
-    best_epsg = ""
+    best_name = ''
+    best_epsg = ''
     best_tile_list = []
     best_poly_list = []
 
@@ -78,12 +78,11 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             proj_wkt = scene_wkt
 
         driver = ogr.GetDriverByName('ESRI Shapefile')
-        shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
+        shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
         dataset = driver.Open(os.path.join(shpdir, dem['name'].lower() + '_coverage.shp'), 0)
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
         total_area = poly.GetArea()
         coverage = 0
-        tiles = ""
         tile_list = []
         poly_list = []
         layer = dataset.GetLayer()
@@ -96,9 +95,8 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             a = intersect.GetArea()
             if a > 0:
                 poly_list.append(wkt)
-                tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
+                tile = str(feature.GetFieldAsString(feature.GetFieldIndex('tile')))
                 coverage += a
-                tiles += "," + tile
                 tile_list.append(tile)
 
         pct = coverage / total_area
@@ -114,10 +112,10 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             break
 
     if best_pct < .20:
-        raise DemError("Unable to find a DEM file for that area")
+        raise DemError('Unable to find a DEM file for that area')
 
-    logging.info(f"Best DEM: {best_name}")
-    logging.info(f"Tile List: {best_tile_list}")
+    logging.info(f'Best DEM: {best_name}')
+    logging.info(f'Tile List: {best_tile_list}')
     return best_name, best_epsg, best_tile_list, best_poly_list
 
 
