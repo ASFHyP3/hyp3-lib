@@ -71,6 +71,17 @@ def test_get_best_dem_just_passing_coverage_threshold():
     ]
 
 
+def test_get_best_dem_antimeridian():
+    # alleutian islands
+    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=51.3, y_max=51.7, x_min=-179.5, x_max=179.5)
+    assert name == 'SRTMGL1'
+    assert projection == 4326
+    assert len(tile_list) == 241
+    for tile in tile_list:
+        assert tile.startswith('N51')
+    assert len(wkt_list) == 241
+
+
 def test_get_dem_no_coverage():
     with pytest.raises(DemError):
         get_dem(y_min=0, y_max=1, x_min=0, x_max=1, outfile='dem.tif', post=30.0)
