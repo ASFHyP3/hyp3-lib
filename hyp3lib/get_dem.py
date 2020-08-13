@@ -531,8 +531,10 @@ def main():
     else:
         dem_type = 'utm'
 
-    get_dem(args.x_min, args.y_min, args.x_max, args.y_max, args.outfile, post=args.posting,
-                   leave=args.keep, processes=args.threads, dem_name=args.dem, dem_type=dem_type)
+    get_dem(
+        args.x_min, args.y_min, args.x_max, args.y_max, args.outfile,
+        post=args.posting, leave=args.keep, processes=args.threads, dem_name=args.dem, dem_type=dem_type
+    )
 
 
 if __name__ == "__main__":
