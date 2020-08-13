@@ -40,26 +40,24 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
     return geom.ExportToWkt()
 
 
+def get_dem_list():
+    config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
+    config_file = os.path.join(config_dir, "get_dem.py.cfg")
+    with open(config_file) as f:
+        dem_list = [
+            {
+                'name': line.split()[0],
+                'epsg': int(line.split()[2])
+            }
+            for line in f.readlines()
+        ]
+    return dem_list
+
+
 def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
-    driver = ogr.GetDriverByName('ESRI Shapefile')
-    shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
-
-    # Read in the DEM list
-    dem_list = []
-    myfile = os.path.join(shpdir, "get_dem.py.cfg")
-    with open(myfile) as f:
-        content = f.readlines()
-        for item in content:
-            dem_list.append([item.split()[0], item.split()[2]])
-    logging.info(f"dem_list {dem_list}")
-
-    # If a dem is specified, use it instead of the list
+    dem_list = get_dem_list()
     if dem_name:
-        new_dem_list = []
-        for item in dem_list:
-            if dem_name in item[0] and len(dem_name) == len(item[0]):
-                new_dem_list.append([dem_name, item[1]])
-        dem_list = new_dem_list
+        dem_list = [dem for dem in dem_list if dem['name'] == dem_name]
 
     scene_wkt = f"POLYGON (({x_min} {y_min}, {x_max} {y_min}, {x_max} {y_max}, {x_min} {y_max}, {x_min} {y_min}))"
 
@@ -69,16 +67,16 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
     best_tile_list = []
     best_poly_list = []
 
-    for item in dem_list:
-        dem = item[0].lower()
-        dem_epsg = int(item[1])
-        if dem_epsg != 4326:
-            logging.info(f"Reprojecting corners into projection {dem_epsg}")
-            proj_wkt = reproject_wkt(scene_wkt, 4326, int(dem_epsg))
+    for dem in dem_list:
+        if dem['epsg'] != 4326:
+            logging.info(f"Reprojecting corners into projection {dem['epsg']}")
+            proj_wkt = reproject_wkt(scene_wkt, 4326, dem['epsg'])
         else:
             proj_wkt = scene_wkt
 
-        dataset = driver.Open(os.path.join(shpdir, dem + '_coverage.shp'), 0)
+        driver = ogr.GetDriverByName('ESRI Shapefile')
+        shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
+        dataset = driver.Open(os.path.join(shpdir, dem['name'].lower() + '_coverage.shp'), 0)
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
         total_area = poly.GetArea()
         coverage = 0
@@ -96,26 +94,21 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             if a > 0:
                 poly_list.append(wkt)
                 tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
-                # logging.info(f"Working on tile {tile}")
                 coverage += a
                 tiles += "," + tile
                 tile_list.append(tile)
 
-        logging.info(f"Totals: {dem} {coverage} {total_area} {coverage / total_area}")
         pct = coverage / total_area
-        if pct >= .99:
-            best_pct = pct
-            best_name = dem.upper()
-            best_tile_list = tile_list
-            best_epsg = dem_epsg
-            best_poly_list = poly_list
-            break
+        logging.info(f"Totals: {dem} {coverage} {total_area} {pct}")
+
         if best_pct == 0 or pct > best_pct + 0.05:
             best_pct = pct
-            best_name = dem.upper()
+            best_name = dem['name']
             best_tile_list = tile_list
-            best_epsg = dem_epsg
+            best_epsg = dem['epsg']
             best_poly_list = poly_list
+        if pct >= .99:
+            break
 
     if best_pct < .20:
         raise DemError("Unable to find a DEM file for that area")
