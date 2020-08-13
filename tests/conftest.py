@@ -17,3 +17,10 @@ def geotiff(tmp_path):
     geotiff_file = str(tmp_path / 'test_geotiff.tif')
     shutil.copy(os.path.join(_HERE, 'data', 'test_geotiff.tif'), geotiff_file)
     return geotiff_file
+
+
+@pytest.fixture()
+def golden_dem(tmp_path):
+    geotiff_file = str(tmp_path / 'test_dem.tif')
+    shutil.copy(os.path.join(_HERE, 'data', 'test_dem.tif'), geotiff_file)
+    return geotiff_file
