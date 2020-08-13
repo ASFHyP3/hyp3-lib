@@ -33,20 +33,17 @@ The basic steps are:
 3. Add this repository as an `upstream` remote
    ```
    git remote add upstream https://github.com/ASFHyP3/hyp3-lib.git
+   ```  
+4. Create a feature branch based on the upstream/develop branch
    ```
-4. Make sure your `develop` branch is up to date
+   git fetch --all --prune
+   git checkout --no-track -b [NAME] upstream/develop
    ```
-   git checkout develop
-   git fetch --all -prune
-   git merge --ff-only upstream/develop
-   git push -u origin develop
+5. Make your changes! Then push them to your fork
    ```
-5. Create a feature branch using a descriptive name
+   git push -u origin [NAME]
    ```
-   git checkout -b [NAME]
-   ```
-6. Make your changes!
-7. Propose your changes by opening a pull request to `ASFHyP3/hyp3-lib`'s `develop` branch
+6. Propose your changes by opening a pull request to `ASFHyP3/hyp3-lib`'s `develop` branch
 
    ![pr button](docs/imgs/fork-pr-button.png?raw=true)
 
