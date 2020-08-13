@@ -7,7 +7,7 @@ import shutil
 
 from osgeo import gdal
 
-from hyp3lib import get_dem
+from hyp3lib.get_dem import get_dem
 from hyp3lib.execute import execute
 from hyp3lib.getSubSwath import get_bounding_box_file
 from hyp3lib.saa_func_lib import get_utm_proj
@@ -15,6 +15,7 @@ from hyp3lib.saa_func_lib import get_utm_proj
 
 def get_dem_file(infile, outfile: str, use_opentopo=False, in_utm=True, post=None, dem_name=None):
     lat_max, lat_min, lon_max, lon_min = get_bounding_box_file(infile)
+
     if use_opentopo:
         demtype = None
         url = f'http://opentopo.sdsc.edu/otr/getdem' \
@@ -27,12 +28,12 @@ def get_dem_file(infile, outfile: str, use_opentopo=False, in_utm=True, post=Non
             gdal.Warp(tmpdem, outfile, dstSRS=proj, resampleAlg='cubic')
             shutil.move(tmpdem, outfile)
     else:
-        if in_utm:
-            demtype = get_dem.get_dem(lon_min, lat_min, lon_max, lat_max, outfile, post=post, dem_name=dem_name)
-            if not os.path.isfile(outfile):
-                logging.error(f'Unable to find output file {outfile}')
-        else:
-            demtype = get_dem.get_ll_dem(lon_min, lat_min, lon_max, lat_max, outfile, post=post, dem_name=dem_name)
+        dem_type = 'utm' if in_utm else 'latlon'
+        demtype = get_dem(
+            lon_min, lat_min, lon_max, lat_max, outfile, post=post, dem_name=dem_name, dem_type=dem_type
+        )
+        if not os.path.isfile(outfile):
+            logging.error(f'Unable to find output file {outfile}')
 
     return outfile, demtype
 

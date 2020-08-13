@@ -261,35 +261,7 @@ def write_vrt(dem_proj, nodata, tile_list, poly_list, out_file):
                                pretty_print=True))
 
 
-def get_ISCE_dem(west, south, east, north, dem_name, dem_xml_name):
-    """GET DEM file and convert into ISCE format"""
-    # Get the DEM file
-    chosen_dem = get_dem(west, south, east, north, "temp_dem.tif")
-
-    # Reproject DEM into Lat, Lon space
-    pixsize = 0.000277777777778
-    gdal.Warp(dem_name, "temp_dem.tif", format="ENVI", dstSRS="EPSG:4326", xRes=pixsize, yRes=pixsize,
-              resampleAlg="cubic", dstNodata=-32767)
-    ext = os.path.splitext(dem_name)[1]
-    hdr_name = dem_name.replace(ext, ".hdr")
-    dem2isce.dem2isce(dem_name, hdr_name, dem_xml_name)
-    return chosen_dem
-
-
-def get_ll_dem(west, south, east, north, out_dem, post=None, processes=1, dem_name=None, leave=False):
-    """GET DEM file and convert into lat,lon format"""
-    dem_type = get_dem(
-        west, south, east, north, "temp_dem.tif", post=post, processes=processes, dem_name=dem_name, leave=leave
-    )
-    pixsize = 0.000277777777778
-    gdal.Warp(
-        out_dem, "temp_dem.tif", dstSRS="EPSG:4326", xRes=pixsize, yRes=pixsize, resampleAlg="cubic", dstNodata=-32767
-    )
-    os.remove("temp_dem.tif")
-    return dem_type
-
-
-def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_name=None, leave=False):
+def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_name=None, leave=False, dem_type='utm'):
     if post is not None:
         logging.info(f"Snapping to grid at posting of {post} meters")
 
@@ -462,6 +434,28 @@ def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_nam
             os.remove(tmpproj)
 
     logging.info("Successful Completion!")
+    if dem_type.lower() == 'utm':
+        return demname
+
+    elif dem_type.lower() == 'latlon':
+        pixsize = 0.000277777777778
+        gdal.Warp(
+            "temp_dem.tif", outfile, dstSRS="EPSG:4326", xRes=pixsize, yRes=pixsize, resampleAlg="cubic",
+            dstNodata=-32767
+        )
+        shutil.move("temp_dem.tif", outfile)
+
+    elif dem_type.lower() == 'isce':
+        pixsize = 0.000277777777778
+        gdal.Warp("temp_dem.tif", outfile, format="ENVI", dstSRS="EPSG:4326", xRes=pixsize, yRes=pixsize,
+                  resampleAlg="cubic", dstNodata=-32767)
+        shutil.move("temp_dem.tif", outfile)
+        hdr_name = os.path.splitext(outfile)[0] + ".hdr"
+        dem2isce.dem2isce(outfile, hdr_name, f'{outfile}.xml')
+
+    else:
+        raise NotImplementedError(f'Cannot get DEM for unkown type {dem_type}')
+
     return demname
 
 
