@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import lxml.etree as et
 import numpy as np
@@ -40,10 +41,14 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
 
 
 def get_dem_list():
-    config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
-    config_file = os.path.join(config_dir, 'get_dem.cfg')
-    with open(config_file) as f:
-        config_content = f.readlines()
+    try:
+        config_file = Path.home() / '.hyp3' / 'get_dem.cfg'
+        with open(config_file) as f:
+            config_content = f.readlines()
+    except FileNotFoundError:
+        config_file = Path(hyp3lib.etc.__file__).parent / 'config' / 'get_dem.cfg'
+        with open(config_file) as f:
+            config_content = f.readlines()
 
     dem_list = []
     for line in config_content:
@@ -79,7 +84,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
 
         driver = ogr.GetDriverByName('ESRI Shapefile')
-        shape_file = os.path.join(dem['location'], 'Coverage', dem['name'].lower() + '_coverage.shp')
+        shape_file = os.path.join(dem['location'], 'Coverage', f'{dem["name"].lower()}_coverage.shp')
         if shape_file.startswith('http'):
             shape_file = '/vsicurl/' + shape_file
         dataset = driver.Open(shape_file, 0)
