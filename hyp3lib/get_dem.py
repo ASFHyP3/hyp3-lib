@@ -41,7 +41,7 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
 
 def get_dem_list():
     config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
-    config_file = os.path.join(config_dir, 'get_dem.py.cfg')
+    config_file = os.path.join(config_dir, 'get_dem.cfg')
     with open(config_file) as f:
         config_content = f.readlines()
 
