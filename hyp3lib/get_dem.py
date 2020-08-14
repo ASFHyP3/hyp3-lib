@@ -6,7 +6,6 @@ import math
 import multiprocessing as mp
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -139,41 +138,6 @@ def get_tile_for(args):
                 download_file(source_file, directory=output_dir)
             else:
                 shutil.copy(source_file, output_dir)
-
-
-def _parse_gdal_coordinate_line(line):
-    """returns (394560.0, 5922090.0) from a line like:
-        Upper Left  (  394560.000, 5922090.000) (  1d24'45.77"E, 53d26'14.23"N)
-    """
-    east, north = line.split('(')[1].strip().rstrip(')').split(',')
-    return float(east), float(north)
-
-
-def get_corner_coordinates_from_gdal_info(info):
-    coords = {}
-    keys = ['Upper Left', 'Lower Left', 'Upper Right', 'Lower Right']
-    for line in info.split('\n'):
-        for key in keys:
-            if key in line:
-                coords[key] = _parse_gdal_coordinate_line(line)
-    return coords
-
-
-def get_cc(tmpproj, post):
-    shift = 0
-    info = subprocess.check_output(f'gdalinfo {tmpproj}', shell=True, universal_newlines=True)
-    coords = get_corner_coordinates_from_gdal_info(info)
-
-    easts = [c[0] for c in coords.values()]
-    norths = [c[1] for c in coords.values()]
-
-    e_max = math.ceil(max(easts) / post) * post + shift
-    e_min = math.floor(min(easts) / post) * post - shift
-    n_max = math.ceil(max(norths) / post) * post + shift
-    n_min = math.floor(min(norths) / post) * post - shift
-
-    logging.info("New coordinates: %f %f %f %f" % (e_max, e_min, n_max, n_min))
-    return e_min, e_max, n_min, n_max
 
 
 def write_vrt(dem_proj, nodata, tile_list, poly_list, out_file):
@@ -476,8 +440,17 @@ def clean_dem(in_dem, out_dem):
 def snap_to_grid(post, pixsize, infile, outfile):
     if post:
         logging.info(f"Snapping file to grid at {post} meters")
-        (e_min, e_max, n_min, n_max) = get_cc(infile, post)
-        bounds = [e_min, n_min, e_max, n_max]
+        coords = gdal.Info(infile, format='json')['cornerCoordinates']
+
+        easts = np.array([c[0] for c in coords.values()])
+        norths = np.array([c[1] for c in coords.values()])
+
+        bounds = [np.floor(easts / post).min() * post,
+                  np.floor(norths / post).min() * post,
+                  np.ceil(easts / post).max() * post,
+                  np.ceil(norths / post).max() * post]
+        logging.info(f'New coordinate bounds: {bounds}')
+
         gdal.Warp(outfile, infile, xRes=pixsize, yRes=pixsize, outputBounds=bounds, resampleAlg="cubic",
                   dstNodata=-32767)
     else:
