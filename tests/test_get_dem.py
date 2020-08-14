@@ -51,6 +51,16 @@ def test_get_best_dem_ned2():
     ]
 
 
+def test_get_best_dem_specify_dem():
+    # utah, western united states, has both NED13 and SRTMGL1 coverage
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=38.2, y_max=38.8, x_min=-110.8, x_max=-110.2, dem_name='SRTMGL1')
+    assert name == 'SRTMGL1'
+
+    # democratic republic of the congo, southern africa, has SRTMGL1 coverage but not NED13 coverage
+    with pytest.raises(DemError):
+        get_best_dem(y_min=-6.8, y_max=-6.2, x_min=27.2, x_max=27.8, dem_name='NED13')
+
+
 def test_get_best_dem_just_missing_coverage_threshold():
     # northern russia
     with pytest.raises(DemError):

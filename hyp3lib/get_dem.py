@@ -6,13 +6,11 @@ import math
 import multiprocessing as mp
 import os
 import shutil
-import subprocess
 import sys
+from pathlib import Path
 
-import boto3
 import lxml.etree as et
 import numpy as np
-from botocore.handlers import disable_signing
 from osgeo import gdal
 from osgeo import ogr
 from osgeo import osr
@@ -23,6 +21,7 @@ from hyp3lib import DemError
 from hyp3lib import dem2isce
 from hyp3lib import saa_func_lib as saa
 from hyp3lib.asf_geometry import raster_meta
+from hyp3lib.fetch import download_file
 
 
 def reproject_wkt(wkt, in_epsg, out_epsg):
@@ -40,147 +39,105 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
     return geom.ExportToWkt()
 
 
-def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
-    driver = ogr.GetDriverByName('ESRI Shapefile')
-    shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
+def get_dem_list():
+    try:
+        config_file = Path.home() / '.hyp3' / 'get_dem.cfg'
+        with open(config_file) as f:
+            config_content = f.readlines()
+    except FileNotFoundError:
+        config_file = Path(hyp3lib.etc.__file__).parent / 'config' / 'get_dem.cfg'
+        with open(config_file) as f:
+            config_content = f.readlines()
 
-    # Read in the DEM list
     dem_list = []
-    myfile = os.path.join(shpdir, "get_dem.py.cfg")
-    with open(myfile) as f:
-        content = f.readlines()
-        for item in content:
-            dem_list.append([item.split()[0], item.split()[2]])
-    logging.info(f"dem_list {dem_list}")
+    for line in config_content:
+        name, location, epsg = line.split()
+        shape_file = os.path.join(location, 'coverage', f'{name.lower()}_coverage.shp')
+        if shape_file.startswith('http'):
+            shape_file = '/vsicurl/' + shape_file
+        dem = {
+            'name': name,
+            'location': location,
+            'epsg': int(epsg),
+            'coverage': shape_file,
+        }
+        dem_list.append(dem)
+    return dem_list
 
-    # If a dem is specified, use it instead of the list
+
+def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
+    dem_list = get_dem_list()
     if dem_name:
-        new_dem_list = []
-        for item in dem_list:
-            if dem_name in item[0] and len(dem_name) == len(item[0]):
-                new_dem_list.append([dem_name, item[1]])
-        dem_list = new_dem_list
+        dem_list = [dem for dem in dem_list if dem['name'] == dem_name]
 
-    scene_wkt = f"POLYGON (({x_min} {y_min}, {x_max} {y_min}, {x_max} {y_max}, {x_min} {y_max}, {x_min} {y_min}))"
+    scene_wkt = f'POLYGON (({x_min} {y_min}, {x_max} {y_min}, {x_max} {y_max}, {x_min} {y_max}, {x_min} {y_min}))'
 
     best_pct = 0
-    best_name = ""
-    best_epsg = ""
+    best_name = ''
+    best_epsg = ''
     best_tile_list = []
     best_poly_list = []
-
-    for item in dem_list:
-        dem = item[0].lower()
-        dem_epsg = int(item[1])
-        if dem_epsg != 4326:
-            logging.info(f"Reprojecting corners into projection {dem_epsg}")
-            proj_wkt = reproject_wkt(scene_wkt, 4326, int(dem_epsg))
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+    for dem in dem_list:
+        if dem['epsg'] != 4326:
+            logging.info(f"Reprojecting corners into projection {dem['epsg']}")
+            proj_wkt = reproject_wkt(scene_wkt, 4326, dem['epsg'])
         else:
             proj_wkt = scene_wkt
-
-        dataset = driver.Open(os.path.join(shpdir, dem + '_coverage.shp'), 0)
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
-        total_area = poly.GetArea()
+
+        dataset = driver.Open(dem['coverage'], 0)
+        layer = dataset.GetLayer()
+
         coverage = 0
-        tiles = ""
         tile_list = []
         poly_list = []
-        layer = dataset.GetLayer()
-        for i in range(layer.GetFeatureCount()):
-            feature = layer.GetFeature(i)
-            wkt = feature.GetGeometryRef().ExportToWkt()
+        while True:
+            feature = layer.GetNextFeature()
+            if not feature:
+                break
 
-            tile_poly = ogr.CreateGeometryFromWkt(wkt)
-            intersect = tile_poly.Intersection(poly)
-            a = intersect.GetArea()
-            if a > 0:
-                poly_list.append(wkt)
-                tile = str(feature.GetFieldAsString(feature.GetFieldIndex("tile")))
-                # logging.info(f"Working on tile {tile}")
-                coverage += a
-                tiles += "," + tile
-                tile_list.append(tile)
+            intersection = feature.geometry().Intersection(poly)
+            area = intersection.GetArea()
+            if area > 0:
+                coverage += area
+                tile_list.append(feature['tile'])
+                poly_list.append(feature.geometry().ExportToWkt())
 
-        logging.info(f"Totals: {dem} {coverage} {total_area} {coverage / total_area}")
+        total_area = poly.GetArea()
         pct = coverage / total_area
-        if pct >= .99:
-            best_pct = pct
-            best_name = dem.upper()
-            best_tile_list = tile_list
-            best_epsg = dem_epsg
-            best_poly_list = poly_list
-            break
+        logging.info(f"Totals: {dem['name']} {coverage} {total_area} {pct}")
+
         if best_pct == 0 or pct > best_pct + 0.05:
             best_pct = pct
-            best_name = dem.upper()
+            best_name = dem['name']
             best_tile_list = tile_list
-            best_epsg = dem_epsg
+            best_epsg = dem['epsg']
             best_poly_list = poly_list
+        if pct >= 0.99:
+            break
 
-    if best_pct < .20:
-        raise DemError("Unable to find a DEM file for that area")
+    if best_pct < 0.20:
+        raise DemError('Unable to find a DEM file for that area')
 
-    logging.info(f"Best DEM: {best_name}")
-    logging.info(f"Tile List: {best_tile_list}")
+    logging.info(f'Best DEM: {best_name}')
+    logging.info(f'Tile List: {best_tile_list}')
     return best_name, best_epsg, best_tile_list, best_poly_list
 
 
 def get_tile_for(args):
-    demname, fi = args
-    cfgdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
-    myfile = os.path.join(cfgdir, "get_dem.py.cfg")
+    dem_name, tile_name = args
+    output_dir = 'DEM'
 
-    with open(myfile) as f:
-        content = f.readlines()
-        for item in content:
-            if demname in item.split()[0] and len(demname) == len(item.split()[0]):
-                (mydir, myfile) = os.path.split(item)
-                mydir = mydir.split()[1]
-                if "s3" in mydir:
-                    myfile = os.path.join(demname, fi) + ".tif"
-                    s3 = boto3.resource('s3')
-                    s3.meta.client.meta.events.register('choose-signer.s3.*', disable_signing)
-                    mybucket = mydir.split("/")[-1]
-                    s3.Bucket(mybucket).download_file(myfile, f"DEM/{fi}.tif")
-                else:
-                    myfile = os.path.join(mydir, demname, "geotiff", fi) + ".tif"
-                    output = f"DEM/{fi}].tif"
-                    shutil.copy(myfile, output)
+    dem_list = get_dem_list()
+    for dem in dem_list:
+        if dem['name'] == dem_name:
+            source_file = os.path.join(dem['location'], tile_name) + '.tif'
 
-
-def _parse_gdal_coordinate_line(line):
-    """returns (394560.0, 5922090.0) from a line like:
-        Upper Left  (  394560.000, 5922090.000) (  1d24'45.77"E, 53d26'14.23"N)
-    """
-    east, north = line.split('(')[1].strip().rstrip(')').split(',')
-    return float(east), float(north)
-
-
-def get_corner_coordinates_from_gdal_info(info):
-    coords = {}
-    keys = ['Upper Left', 'Lower Left', 'Upper Right', 'Lower Right']
-    for line in info.split('\n'):
-        for key in keys:
-            if key in line:
-                coords[key] = _parse_gdal_coordinate_line(line)
-    return coords
-
-
-def get_cc(tmpproj, post):
-    shift = 0
-    info = subprocess.check_output(f'gdalinfo {tmpproj}', shell=True, universal_newlines=True)
-    coords = get_corner_coordinates_from_gdal_info(info)
-
-    easts = [c[0] for c in coords.values()]
-    norths = [c[1] for c in coords.values()]
-
-    e_max = math.ceil(max(easts) / post) * post + shift
-    e_min = math.floor(min(easts) / post) * post - shift
-    n_max = math.ceil(max(norths) / post) * post + shift
-    n_min = math.floor(min(norths) / post) * post - shift
-
-    logging.info("New coordinates: %f %f %f %f" % (e_max, e_min, n_max, n_min))
-    return e_min, e_max, n_min, n_max
+            if source_file.startswith('http'):
+                download_file(source_file, directory=output_dir)
+            else:
+                shutil.copy(source_file, output_dir)
 
 
 def write_vrt(dem_proj, nodata, tile_list, poly_list, out_file):
@@ -483,8 +440,17 @@ def clean_dem(in_dem, out_dem):
 def snap_to_grid(post, pixsize, infile, outfile):
     if post:
         logging.info(f"Snapping file to grid at {post} meters")
-        (e_min, e_max, n_min, n_max) = get_cc(infile, post)
-        bounds = [e_min, n_min, e_max, n_max]
+        coords = gdal.Info(infile, format='json')['cornerCoordinates']
+
+        easts = np.array([c[0] for c in coords.values()])
+        norths = np.array([c[1] for c in coords.values()])
+
+        bounds = [np.floor(easts / post).min() * post,
+                  np.floor(norths / post).min() * post,
+                  np.ceil(easts / post).max() * post,
+                  np.ceil(norths / post).max() * post]
+        logging.info(f'New coordinate bounds: {bounds}')
+
         gdal.Warp(outfile, infile, xRes=pixsize, yRes=pixsize, outputBounds=bounds, resampleAlg="cubic",
                   dstNodata=-32767)
     else:
