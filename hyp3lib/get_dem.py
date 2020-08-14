@@ -76,29 +76,29 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             proj_wkt = reproject_wkt(scene_wkt, 4326, dem['epsg'])
         else:
             proj_wkt = scene_wkt
+        poly = ogr.CreateGeometryFromWkt(proj_wkt)
 
         driver = ogr.GetDriverByName('ESRI Shapefile')
         shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
         dataset = driver.Open(os.path.join(shpdir, dem['name'].lower() + '_coverage.shp'), 0)
-        poly = ogr.CreateGeometryFromWkt(proj_wkt)
-        total_area = poly.GetArea()
+        layer = dataset.GetLayer()
+
         coverage = 0
         tile_list = []
         poly_list = []
-        layer = dataset.GetLayer()
-        for i in range(layer.GetFeatureCount()):
-            feature = layer.GetFeature(i)
-            wkt = feature.GetGeometryRef().ExportToWkt()
+        while True:
+            feature = layer.GetNextFeature()
+            if not feature:
+                break
 
-            tile_poly = ogr.CreateGeometryFromWkt(wkt)
-            intersect = tile_poly.Intersection(poly)
-            a = intersect.GetArea()
-            if a > 0:
-                poly_list.append(wkt)
-                tile = str(feature.GetFieldAsString(feature.GetFieldIndex('tile')))
-                coverage += a
-                tile_list.append(tile)
+            intersection = feature.geometry().Intersection(poly)
+            area = intersection.GetArea()
+            if area > 0:
+                coverage += area
+                tile_list.append(feature['tile'])
+                poly_list.append(feature.geometry().ExportToWkt())
 
+        total_area = poly.GetArea()
         pct = coverage / total_area
         logging.info(f"Totals: {dem['name']} {coverage} {total_area} {pct}")
 
@@ -108,10 +108,10 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             best_tile_list = tile_list
             best_epsg = dem['epsg']
             best_poly_list = poly_list
-        if pct >= .99:
+        if pct >= 0.99:
             break
 
-    if best_pct < .20:
+    if best_pct < 0.20:
         raise DemError('Unable to find a DEM file for that area')
 
     logging.info(f'Best DEM: {best_name}')
