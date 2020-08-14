@@ -53,10 +53,14 @@ def get_dem_list():
     dem_list = []
     for line in config_content:
         name, location, epsg = line.split()
+        shape_file = os.path.join(location, 'coverage', f'{name.lower()}_coverage.shp')
+        if shape_file.startswith('http'):
+            shape_file = '/vsicurl/' + shape_file
         dem = {
             'name': name,
             'location': location,
             'epsg': int(epsg),
+            'coverage': shape_file,
         }
         dem_list.append(dem)
     return dem_list
@@ -74,7 +78,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
     best_epsg = ''
     best_tile_list = []
     best_poly_list = []
-
+    driver = ogr.GetDriverByName('ESRI Shapefile')
     for dem in dem_list:
         if dem['epsg'] != 4326:
             logging.info(f"Reprojecting corners into projection {dem['epsg']}")
@@ -83,11 +87,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             proj_wkt = scene_wkt
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
 
-        driver = ogr.GetDriverByName('ESRI Shapefile')
-        shape_file = os.path.join(dem['location'], 'coverage', f'{dem["name"].lower()}_coverage.shp')
-        if shape_file.startswith('http'):
-            shape_file = '/vsicurl/' + shape_file
-        dataset = driver.Open(shape_file, 0)
+        dataset = driver.Open(dem['coverage'], 0)
         layer = dataset.GetLayer()
 
         coverage = 0
