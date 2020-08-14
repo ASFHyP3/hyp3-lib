@@ -8,6 +8,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import lxml.etree as et
 import numpy as np
@@ -40,18 +41,26 @@ def reproject_wkt(wkt, in_epsg, out_epsg):
 
 
 def get_dem_list():
-    config_dir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
-    config_file = os.path.join(config_dir, 'get_dem.py.cfg')
-    with open(config_file) as f:
-        config_content = f.readlines()
+    try:
+        config_file = Path.home() / '.hyp3' / 'get_dem.cfg'
+        with open(config_file) as f:
+            config_content = f.readlines()
+    except FileNotFoundError:
+        config_file = Path(hyp3lib.etc.__file__).parent / 'config' / 'get_dem.cfg'
+        with open(config_file) as f:
+            config_content = f.readlines()
 
     dem_list = []
     for line in config_content:
         name, location, epsg = line.split()
+        shape_file = os.path.join(location, 'coverage', f'{name.lower()}_coverage.shp')
+        if shape_file.startswith('http'):
+            shape_file = '/vsicurl/' + shape_file
         dem = {
             'name': name,
             'location': location,
             'epsg': int(epsg),
+            'coverage': shape_file,
         }
         dem_list.append(dem)
     return dem_list
@@ -69,7 +78,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
     best_epsg = ''
     best_tile_list = []
     best_poly_list = []
-
+    driver = ogr.GetDriverByName('ESRI Shapefile')
     for dem in dem_list:
         if dem['epsg'] != 4326:
             logging.info(f"Reprojecting corners into projection {dem['epsg']}")
@@ -78,9 +87,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             proj_wkt = scene_wkt
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
 
-        driver = ogr.GetDriverByName('ESRI Shapefile')
-        shpdir = os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), 'config'))
-        dataset = driver.Open(os.path.join(shpdir, dem['name'].lower() + '_coverage.shp'), 0)
+        dataset = driver.Open(dem['coverage'], 0)
         layer = dataset.GetLayer()
 
         coverage = 0
