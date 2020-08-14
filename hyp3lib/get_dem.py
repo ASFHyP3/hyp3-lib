@@ -84,7 +84,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
         poly = ogr.CreateGeometryFromWkt(proj_wkt)
 
         driver = ogr.GetDriverByName('ESRI Shapefile')
-        shape_file = os.path.join(dem['location'], 'Coverage', f'{dem["name"].lower()}_coverage.shp')
+        shape_file = os.path.join(dem['location'], 'coverage', f'{dem["name"].lower()}_coverage.shp')
         if shape_file.startswith('http'):
             shape_file = '/vsicurl/' + shape_file
         dataset = driver.Open(shape_file, 0)
