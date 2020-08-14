@@ -442,9 +442,13 @@ def snap_to_grid(post, pixsize, infile, outfile):
         logging.info(f"Snapping file to grid at {post} meters")
         coords = gdal.Info(infile, format='json')['cornerCoordinates']
 
-        easts = (np.array([c[0] for c in coords.values()]) // post) * post
-        norths = (np.array([c[1] for c in coords.values()]) // post) * post
-        bounds = [easts.min(), norths.min(), easts.max() + post, norths.max() + post]
+        easts = np.array([c[0] for c in coords.values()]) / post
+        norths = np.array([c[1] for c in coords.values()]) / post
+
+        bounds = [np.floor(easts).min() * post,
+                  np.floor(norths).min() * post,
+                  np.ceil(easts).max() * post,
+                  np.ceil(norths).max() * post]
         logging.info(f'New coordinate bounds: {bounds}')
 
         gdal.Warp(outfile, infile, xRes=pixsize, yRes=pixsize, outputBounds=bounds, resampleAlg="cubic",
