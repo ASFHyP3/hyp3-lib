@@ -6,7 +6,6 @@ import math
 import multiprocessing as mp
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -139,7 +138,6 @@ def get_tile_for(args):
                 download_file(source_file, directory=output_dir)
             else:
                 shutil.copy(source_file, output_dir)
-
 
 
 def write_vrt(dem_proj, nodata, tile_list, poly_list, out_file):
