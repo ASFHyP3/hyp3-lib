@@ -6,6 +6,7 @@ import math
 import multiprocessing as mp
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -76,7 +77,6 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
     best_name = ''
     best_epsg = ''
     best_tile_list = []
-    best_poly_list = []
     driver = ogr.GetDriverByName('ESRI Shapefile')
     for dem in dem_list:
         if dem['epsg'] != 4326:
@@ -91,7 +91,6 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
 
         coverage = 0
         tile_list = []
-        poly_list = []
         while True:
             feature = layer.GetNextFeature()
             if not feature:
@@ -102,7 +101,6 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             if area > 0:
                 coverage += area
                 tile_list.append(feature['tile'])
-                poly_list.append(feature.geometry().ExportToWkt())
 
         total_area = poly.GetArea()
         pct = coverage / total_area
@@ -113,7 +111,6 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
             best_name = dem['name']
             best_tile_list = tile_list
             best_epsg = dem['epsg']
-            best_poly_list = poly_list
         if pct >= 0.99:
             break
 
@@ -122,7 +119,7 @@ def get_best_dem(y_min, y_max, x_min, x_max, dem_name=None):
 
     logging.info(f'Best DEM: {best_name}')
     logging.info(f'Tile List: {best_tile_list}')
-    return best_name, best_epsg, best_tile_list, best_poly_list
+    return best_name, best_epsg, best_tile_list
 
 
 def get_tile_for(args):
@@ -138,84 +135,6 @@ def get_tile_for(args):
                 download_file(source_file, directory=output_dir)
             else:
                 shutil.copy(source_file, output_dir)
-
-
-def write_vrt(dem_proj, nodata, tile_list, poly_list, out_file):
-    # Get dimensions and pixel size from first DEM in tile ListCommand
-    dem_file = os.path.join('DEM', f'{tile_list[0]}.tif')
-    spatial_ref, gt, shape, pixel = raster_meta(dem_file)
-    rows, cols = shape
-    pix_size = gt[1]
-
-    # Determine coverage
-    min_lon = 360
-    max_lon = -180
-    min_lat = 90
-    max_lat = -90
-    for poly in poly_list:
-        polygon = ogr.CreateGeometryFromWkt(poly)
-        envelope = polygon.GetEnvelope()
-        if envelope[0] < min_lon:
-            min_lon = envelope[0]
-        if envelope[1] > max_lon:
-            max_lon = envelope[1]
-        if envelope[2] < min_lat:
-            min_lat = envelope[2]
-        if envelope[3] > max_lat:
-            max_lat = envelope[3]
-
-    raster_x_size = np.int(np.rint((max_lon - min_lon) / pix_size)) + 1
-    raster_y_size = np.int(np.rint((max_lat - min_lat) / pix_size)) + 1
-
-    # Determine offsets
-    offset_x = []
-    offset_y = []
-    for poly in poly_list:
-        polygon = ogr.CreateGeometryFromWkt(poly)
-        envelope = polygon.GetEnvelope()
-        offset_x.append(np.int(np.rint((envelope[0] - min_lon) / pix_size)))
-        offset_y.append(np.int(np.rint((max_lat - envelope[3]) / pix_size)))
-
-    # Generate XML structure
-    vrt = et.Element('VRTDataset', rasterXSize=str(raster_x_size),
-                     rasterYSize=str(raster_y_size))
-    srs = osr.SpatialReference()
-    srs.ImportFromEPSG(dem_proj)
-    et.SubElement(vrt, 'SRS').text = srs.ExportToWkt()
-    geo_trans = f'{min_lon:.16f}, {pix_size:.16f}, 0.0, {max_lat:.16f}, 0.0, {-pix_size:.16f}'
-    et.SubElement(vrt, 'GeoTransform').text = geo_trans
-    bands = et.SubElement(vrt, 'VRTRasterBand', dataType='Float32', band='1')
-    et.SubElement(bands, 'NoDataValue').text = '-32768'
-    et.SubElement(bands, 'ColorInterp').text = 'Gray'
-    tile_count = len(tile_list)
-    for ii in range(tile_count):
-        source = et.SubElement(bands, 'ComplexSource')
-        dem_file = os.path.join('DEM', f'{tile_list[ii]}.tif')
-        et.SubElement(source, 'SourceFilename', relativeToVRT='1').text = \
-            dem_file
-        et.SubElement(source, 'SourceBand').text = '1'
-        properties = et.SubElement(source, 'SourceProperties')
-        properties.set('RasterXSize', str(cols))
-        properties.set('RasterYSize', str(rows))
-        properties.set('DataType', 'Float32')
-        properties.set('BlockXSize', str(cols))
-        properties.set('BlockYSize', '1')
-        src = et.SubElement(source, 'SrcRect')
-        src.set('xOff', '0')
-        src.set('yOff', '0')
-        src.set('xSize', str(cols))
-        src.set('ySize', str(rows))
-        dst = et.SubElement(source, 'DstRect')
-        dst.set('xOff', str(offset_x[ii]))
-        dst.set('yOff', str(offset_y[ii]))
-        dst.set('xSize', str(cols))
-        dst.set('ySize', str(rows))
-        et.SubElement(source, 'NODATA').text = f"{nodata}"
-
-    # Write VRT file
-    with open(out_file, 'wb') as outF:
-        outF.write(et.tostring(vrt, xml_declaration=False, encoding='utf-8',
-                               pretty_print=True))
 
 
 def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_name=None, leave=False, dem_type='utm'):
@@ -234,7 +153,7 @@ def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_nam
         (y_min, y_max) = (y_max, y_min)
 
     # Figure out which DEM and get the tile list
-    (demname, demproj, tile_list, poly_list) = get_best_dem(y_min, y_max, x_min, x_max, dem_name=dem_name)
+    demname, demproj, tile_list = get_best_dem(y_min, y_max, x_min, x_max, dem_name=dem_name)
     demproj = int(demproj)
     logging.info(f"demproj is {demproj}")
 
@@ -260,19 +179,8 @@ def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_nam
     p.close()
     p.join()
 
-    # os.system("gdalbuildvrt temp.vrt DEM/*.tif")
-    if "SRTMGL" in demname:
-        nodata = -32768
-    elif "GIMP" in demname:
-        nodata = None
-    elif "REMA" in demname:
-        nodata = 0
-    elif "NED" in demname or "EU_DEM_V11" in demname:
-        nodata = -3.4028234663852886e+38
-    else:
-        raise DemError(f'Unable to determine NoData value for DEM {demname}')
-
-    write_vrt(demproj, nodata, tile_list, poly_list, 'temp.vrt')
+    tiles = [f'DEM/{tile}.tif' for tile in tile_list]
+    subprocess.check_call(['gdalbuildvrt', 'temp.vrt'] + tiles)
 
     #
     # Set the output projection to either NPS, SPS, or UTM
