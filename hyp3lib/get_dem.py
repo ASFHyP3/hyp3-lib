@@ -10,7 +10,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import lxml.etree as et
 import numpy as np
 from osgeo import gdal
 from osgeo import ogr
@@ -21,7 +20,6 @@ import hyp3lib.etc
 from hyp3lib import DemError
 from hyp3lib import dem2isce
 from hyp3lib import saa_func_lib as saa
-from hyp3lib.asf_geometry import raster_meta
 from hyp3lib.fetch import download_file
 
 
