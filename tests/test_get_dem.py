@@ -92,6 +92,20 @@ def test_get_best_dem_antimeridian():
     assert len(wkt_list) == 241
 
 
+def test_get_best_dem_antimeridian_shifted():
+    # alleutian islands
+    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=51.3, y_max=51.7, x_min=179.5, x_max=180.5)
+    assert name == 'SRTMGL1'
+    assert projection == 4326
+    assert tile_list == ['N51E179', 'N51W180']
+    assert wkt_list == [
+        'POLYGON ((178.999861 52.000139,180.000138777786 52.000139,180.000138777786 50.9998612222142,'
+        '178.999861 50.9998612222142,178.999861 52.000139))',
+        'POLYGON ((179.999861 52.000139,181.000138777786 52.000139,181.000138777786 50.9998612222142,'
+        '179.999861 50.9998612222142,179.999861 52.000139))',
+    ]
+
+
 def test_get_dem_no_coverage():
     with pytest.raises(DemError):
         get_dem(y_min=0, y_max=1, x_min=0, x_max=1, outfile='dem.tif', post=30.0)
