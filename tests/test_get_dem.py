@@ -111,10 +111,19 @@ def test_get_dem_no_coverage():
         get_dem(y_min=0, y_max=1, x_min=0, x_max=1, outfile='dem.tif', post=30.0)
 
 
-def test_get_dem_srtmgl1(tmp_path, golden_dem):
+def test_get_dem_ned13(tmp_path, test_data_folder):
     chdir(tmp_path)
     output_file = tmp_path / 'dem.tif'
-    name = get_dem(y_min=-6.8, y_max=-6.79, x_min=27.79, x_max=27.8, outfile=str(output_file), post=30.0)
+    name = get_dem(y_min=37.99, y_max=37.999, x_min=-123.02, x_max=-123.01, outfile=str(output_file), post=30.0)
+    assert name == 'NED13'
+    assert output_file.exists()
+    assert cmp(output_file, test_data_folder / 'test_ned13_dem.tif')
+
+
+def test_get_dem_srtmgl1_antimeridian(tmp_path, test_data_folder):
+    chdir(tmp_path)
+    output_file = tmp_path / 'dem.tif'
+    name = get_dem(y_min=-18.415, y_max=-18.41, x_min=179.99, x_max=180.01, outfile=str(output_file), post=30.0)
     assert name == 'SRTMGL1'
     assert output_file.exists()
-    assert cmp(output_file, golden_dem)
+    assert cmp(output_file, test_data_folder / 'test_srtmgl1_antimeridian_dem.tif')
