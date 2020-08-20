@@ -15,7 +15,7 @@ def test_get_best_dem_no_coverage():
 
 def test_get_best_dem_ned13():
     # utah, western united states
-    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=38.2, y_max=38.8, x_min=-110.8, x_max=-110.2)
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=38.2, y_max=38.8, x_min=-110.8, x_max=-110.2)
     assert name == 'NED13'
     assert projection == 4269
     assert tile_list == ['n39w111']
@@ -27,7 +27,7 @@ def test_get_best_dem_ned13():
 
 def test_get_best_dem_srtmgl1():
     # democratic republic of the congo, southern africa
-    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=-6.8, y_max=-6.2, x_min=27.2, x_max=27.8)
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=-6.8, y_max=-6.2, x_min=27.2, x_max=27.8)
     assert name == 'SRTMGL1'
     assert projection == 4326
     assert tile_list == ['S07E027']
@@ -39,7 +39,7 @@ def test_get_best_dem_srtmgl1():
 
 def test_get_best_dem_ned2():
     # alaska
-    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=67.9, y_max=68.1, x_min=-155.6, x_max=-155.4)
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=67.9, y_max=68.1, x_min=-155.6, x_max=-155.4)
     assert name == 'NED2'
     assert projection == 4269
     assert tile_list == ['n68w156', 'n69w156']
@@ -69,7 +69,7 @@ def test_get_best_dem_just_missing_coverage_threshold():
 
 def test_get_best_dem_just_passing_coverage_threshold():
     # northern russia
-    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=59.975, y_max=60.1, x_min=99.5, x_max=100.5)
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=59.975, y_max=60.1, x_min=99.5, x_max=100.5)
     assert name == 'SRTMGL1'
     assert projection == 4326
     assert tile_list == ['N59E099', 'N59E100']
@@ -82,8 +82,8 @@ def test_get_best_dem_just_passing_coverage_threshold():
 
 
 def test_get_best_dem_antimeridian():
-    # alleutian islands
-    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=51.3, y_max=51.7, x_min=-179.5, x_max=179.5)
+    # aleutian islands
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=51.3, y_max=51.7, x_min=-179.5, x_max=179.5)
     assert name == 'SRTMGL1'
     assert projection == 4326
     assert len(tile_list) == 241
@@ -93,8 +93,8 @@ def test_get_best_dem_antimeridian():
 
 
 def test_get_best_dem_antimeridian_shifted():
-    # alleutian islands
-    (name, projection, tile_list, wkt_list) = get_best_dem(y_min=51.3, y_max=51.7, x_min=179.5, x_max=180.5)
+    # aleutian islands
+    name, projection, tile_list, wkt_list = get_best_dem(y_min=51.3, y_max=51.7, x_min=179.5, x_max=180.5)
     assert name == 'SRTMGL1'
     assert projection == 4326
     assert tile_list == ['N51E179', 'N51W180']
