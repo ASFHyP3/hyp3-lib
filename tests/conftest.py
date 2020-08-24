@@ -1,6 +1,7 @@
 import os
 import shutil
 import pytest
+from pathlib import Path
 
 _HERE = os.path.dirname(__file__)
 
@@ -17,3 +18,8 @@ def geotiff(tmp_path):
     geotiff_file = str(tmp_path / 'test_geotiff.tif')
     shutil.copy(os.path.join(_HERE, 'data', 'test_geotiff.tif'), geotiff_file)
     return geotiff_file
+
+
+@pytest.fixture()
+def test_data_folder():
+    return Path(_HERE) / 'data'

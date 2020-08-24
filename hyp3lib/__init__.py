@@ -16,12 +16,11 @@ from hyp3lib.exceptions import (
 try:
     __version__ = version(__name__)
 except PackageNotFoundError:
-    # package is not installed!
-    # Install in editable/develop mode via (from the top of this repo):
-    #    pip install -e .
-    # Or, to just get the version number use:
-    #    python setup.py --version
-    pass
+    print('package is not installed!\n'
+          'Install in editable/develop mode via (from the top of this repo):\n'
+          '   pip install -e .\n'
+          'Or, to just get the version number use:\n'
+          '   python setup.py --version')
 
 __all__ = [
     '__version__',
