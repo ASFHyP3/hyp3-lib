@@ -9,7 +9,7 @@ from hyp3lib import fetch
 
 
 @responses.activate
-def test_download_file(safe_data):
+def test_download_file(safe_data, tmp_path):
     with open(os.path.join(safe_data, 'granule_name.txt')) as f:
         text = f.read()
 
@@ -18,16 +18,16 @@ def test_download_file(safe_data):
         status=200,
     )
 
-    download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt')
+    download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path)
 
-    assert download_path == 'foobar.txt'
+    assert download_path == str(tmp_path / 'foobar.txt')
     assert os.path.exists(download_path)
     with open(download_path) as f:
         assert f.read() == text
 
 
 @responses.activate
-def test_download_file_in_chunks(safe_data):
+def test_download_file_in_chunks(safe_data, tmp_path):
     with open(os.path.join(safe_data, 'granule_name.txt')) as f:
         text = f.read()
 
@@ -36,9 +36,9 @@ def test_download_file_in_chunks(safe_data):
         status=200,
     )
 
-    download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', chunk_size=1)
+    download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path, chunk_size=1)
 
-    assert download_path == 'foobar.txt'
+    assert download_path == str(tmp_path / 'foobar.txt')
     assert os.path.exists(download_path)
     with open(download_path) as f:
         assert f.read() == text
