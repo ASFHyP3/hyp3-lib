@@ -11,7 +11,6 @@ dependencies:
   - pytest-console-scripts
   - pytest-cov
   # For running
-  - boto3
   - gdal
   - imageio
   - importlib_metadata
