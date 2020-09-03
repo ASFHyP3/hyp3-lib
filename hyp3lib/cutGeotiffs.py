@@ -118,8 +118,8 @@ def cut_files(files):
 
     # Find the overlap between all scenes
     coords = get_corners(files[0])
-    for x in range (len(files) - 1):
-        coords = get_overlap(coords,files[x+1])
+    for x in range(len(files) - 1):
+        coords = get_overlap(coords, files[x+1])
     
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))
@@ -139,10 +139,11 @@ def cut_files(files):
     print("Pixsize : x = {} y = {}".format(pix_size, -1 * pix_size))
     for x in range(len(files)):
         file1 = files[x]
-        file1_new = file1.replace('.tif','_clip.tif')
+        file1_new = file1.replace('.tif', '_clip.tif')
         print("    clipping file {} to create file {}".format(file1, file1_new))
         #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pix_size,yRes=pix_size,creationOptions = ['COMPRESS=LZW'])
-        gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pix_size,yRes=-1*pix_size,creationOptions = ['COMPRESS=LZW'])
+        gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pix_size,yRes=-1*pix_size,
+                  creationOptions = ['COMPRESS=LZW'])
 
 
 def main():
