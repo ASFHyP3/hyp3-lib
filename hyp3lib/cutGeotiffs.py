@@ -154,7 +154,7 @@ def main():
     )
     parser.add_argument(
         "infiles", nargs='+',
-        help="Geotiff files to clip; output will be have _clip appended to the file name"
+        help="Cut geotiffs to common overlap, reprojecting to median UTM zone if necessary"
     )
     args = parser.parse_args()
 
