@@ -85,7 +85,7 @@ def cut_files(files):
 
     if len(files) == 1:
         print("Nothing to do!!!  Exiting...")
-        return 0 
+        return 0
 
     # Find the largest pixel size of all scenes
     pix_size = get_max_pixel_size(files)
