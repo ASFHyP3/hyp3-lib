@@ -97,33 +97,30 @@ def cut_files(files):
     pix_size = get_max_pixel_size(files)
     print(f"Maximum pixel size {pix_size}")
 
-    # Make sure that UTM projections match
-    ptr = p1.find("UTM zone ")
-    if ptr != -1:
-        (zone1,hemi) = [t(s) for t,s in zip((int,str), re.search("(\d+)(.)",p1[ptr:]).groups())]
-        for x in range(len(files)-1):
-            file2 = files[x+1]
-
-            # Open up file2, get projection 
-            dst2 = gdal.Open(file2)
-            p2 = dst2.GetProjection()
-
-            # Cut the UTM zone out of projection2 
-            ptr = p2.find("UTM zone ")
-            zone2 = re.search("(\d+)",p2[ptr:]).groups()
-            zone2 = int(zone2[0])
-
-            if zone1 != zone2:
-                print("Projections don't match... Reprojecting %s" % file2)
-                if hemi == "N":
-                    proj = ('EPSG:326%02d' % int(zone1))
-                else:
-                    proj = ('EPSG:327%02d' % int(zone1))
-                print("    reprojecting post image")
-                print("    proj is %s" % proj)
-                name = file2.replace(".tif","_reproj.tif")
-                gdal.Warp(name,file2,dstSRS=proj,xRes=pix_size,yRes=pix_size)
-                files[x+1] = name
+    # Get the median UTM zone and hemisphere
+    home_zone = np.median(parse_zones(files))
+    print(f"Home zone is {home_zone}")
+    hemi = get_hemisphere(files[0])
+    print(f"Hemisphere is {hemi}")
+ 
+    # Reproject files as needed
+    print("Checking projections")
+    new_files = []
+    for fi in files:
+        my_zone = get_zone_from_proj(fi)
+        name = fi.replace(".tif", "_reproj.tif")
+        if my_zone != home_zone:
+            print(f"Reprojecting {fi} to {name}")
+            if hemi == "N":
+                proj = ('EPSG:326%02d' % int(home_zone))
+            else:
+                proj = ('EPSG:327%02d' % int(home_zone))
+            gdal.Warp(name, fi, dstSRS=proj, xRes=pix_size, yRes=pix_size, targetAlignedPixels=True)
+            new_files.append(name)
+        else:
+            os.symlink(fi,name)   
+            new_files.append(name)
+            print(f"Linking {fi} to {name}")
 
     # Find the overlap between all scenes
     coords = get_corners(files[0])
