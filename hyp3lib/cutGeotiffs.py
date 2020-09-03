@@ -87,12 +87,6 @@ def cut_files(files):
         print("Nothing to do!!!  Exiting...")
         return(0)
 
-    file1 = files[0]
-   
-    # Open file1, get projection and pixsize
-    dst1 = gdal.Open(file1)
-    p1 = dst1.GetProjection()
-
     # Find the largest pixel size of all scenes
     pix_size = get_max_pixel_size(files)
     print(f"Maximum pixel size {pix_size}")
