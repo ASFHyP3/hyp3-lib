@@ -6,6 +6,7 @@ from hyp3lib import saa_func_lib as saa
 import re
 import os
 import argparse
+import numpy as np
 from osgeo import gdal
 
 
@@ -49,6 +50,34 @@ def get_overlap(coords, fi):
     lrlon = min(lrlon1, lrlon2)
 
     return ullon, ullat, lrlon, lrlat
+
+def get_zone_from_proj(fi):
+    zone = None
+    dst = gdal.Open(fi)
+    p1 = dst.GetProjection()
+    ptr = p1.find("UTM zone ")
+    if ptr != -1:
+        (zone, hemi) = [t(s) for t, s in zip((int, str), re.search("(\d+)(.)", p1[ptr:]).groups())]
+    return zone
+
+
+def get_hemisphere(fi):
+    hemi = None
+    dst = gdal.Open(fi)
+    p1 = dst.GetProjection()
+    ptr = p1.find("UTM zone ")
+    if ptr != -1:
+        (zone, hemi) = [t(s) for t, s in zip((int, str), re.search('(\d+)(.)', p1[ptr:]).groups())]
+    return hemi
+
+def parse_zones(files):
+    zones = []
+    for fi in files:
+        zone = get_zone_from_proj(fi)
+        if zone:
+            zones.append(zone)
+    return np.asarray(zones, dtype=np.int8)
+
 
 
 def cut_files(arg):
