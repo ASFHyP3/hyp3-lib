@@ -27,7 +27,7 @@ def get_corners(fi):
     ullat = t1[3]
     lrlon = t1[0] + x_pix * t1[1]
     lrlat = t1[3] + y_pix * t1[5]
-    return (ullon, ullat, lrlon, lrlat)
+    return ullon, ullat, lrlon, lrlat
 
 
 def get_overlap(coords, fi):
@@ -48,7 +48,7 @@ def get_overlap(coords, fi):
     lrlat = max(lrlat1, lrlat2)
     lrlon = min(lrlon1, lrlon2)
 
-    return (ullon, ullat, lrlon, lrlat)
+    return ullon, ullat, lrlon, lrlat
 
 
 def cut_files(arg):
