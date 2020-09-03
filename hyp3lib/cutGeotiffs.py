@@ -20,17 +20,18 @@ def get_max_pixel_size(files):
         Exception("No valid pixel sizes found")
     return pix_size
 
+
 def get_corners(fi):
-    (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
+    (x1, y1, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
     ullon1 = t1[0]
     ullat1 = t1[3]
     lrlon1 = t1[0] + x1*t1[1]
     lrlat1 = t1[3] + y1*t1[5]
-    return (ullon1,ullat1,lrlon1,lrlat1)
+    return (ullon1, ullat1, lrlon1, lrlat1)
 
 
 def get_overlap(coords,fi):
-    (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
+    (x1, y1, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
 
     ullon1 = t1[0]
     ullat1 = t1[3]
@@ -42,12 +43,12 @@ def get_overlap(coords,fi):
     lrlon2 = coords[2]
     lrlat2 = coords[3]
 
-    ullat = min(ullat1,ullat2)
-    ullon = max(ullon1,ullon2)
-    lrlat = max(lrlat1,lrlat2)
-    lrlon = min(lrlon1,lrlon2)
+    ullat = min(ullat1, ullat2)
+    ullon = max(ullon1, ullon2)
+    lrlat = max(lrlat1, lrlat2)
+    lrlon = min(lrlon1, lrlon2)
 
-    return (ullon,ullat,lrlon,lrlat)
+    return (ullon, ullat, lrlon, lrlat)
 
 
 def cut_files(arg):
