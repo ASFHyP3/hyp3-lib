@@ -25,8 +25,8 @@ def get_corners(fi):
     (x1, y1, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
     ullon1 = t1[0]
     ullat1 = t1[3]
-    lrlon1 = t1[0] + x1*t1[1]
-    lrlat1 = t1[3] + y1*t1[5]
+    lrlon1 = t1[0] + x1 * t1[1]
+    lrlat1 = t1[3] + y1 * t1[5]
     return (ullon1, ullat1, lrlon1, lrlat1)
 
 
@@ -35,8 +35,8 @@ def get_overlap(coords,fi):
 
     ullon1 = t1[0]
     ullat1 = t1[3]
-    lrlon1 = t1[0] + x1*t1[1]
-    lrlat1 = t1[3] + y1*t1[5]
+    lrlon1 = t1[0] + x1 * t1[1]
+    lrlat1 = t1[3] + y1 * t1[5]
 
     ullon2 = coords[0]
     ullat2 = coords[1]
