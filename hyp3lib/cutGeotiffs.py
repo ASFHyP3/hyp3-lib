@@ -9,6 +9,17 @@ import argparse
 from osgeo import gdal
 
 
+def get_max_pixel_size(files):
+    pix_size = -999
+    for fi in files:
+        (x1, y1, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
+        tmp = t1[1]
+        pix_size = max(pix_size, tmp)
+
+    if pix_size == -999:
+        Exception("No valid pixel sizes found")
+    return pix_size
+
 def getPixSize(fi):
     (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
     return (t1[1])
@@ -57,10 +68,8 @@ def cutFiles(arg):
     p1 = dst1.GetProjection()
 
     # Find the largest pixel size of all scenes
-    pixSize = getPixSize(arg[0])
-    for x in range(len(arg) - 1):
-        tmp = getPixSize(arg[x + 1])
-        pixSize = max(pixSize, tmp)
+    pix_size = get_max_pixel_size(files)
+    print(f"Maximum pixel size {pix_size}")
 
     # Make sure that UTM projections match
     ptr = p1.find("UTM zone ")
@@ -87,7 +96,7 @@ def cutFiles(arg):
                 print("    reprojecting post image")
                 print("    proj is %s" % proj)
                 name = file2.replace(".tif","_reproj.tif")
-                gdal.Warp(name,file2,dstSRS=proj,xRes=pixSize,yRes=pixSize)
+                gdal.Warp(name,file2,dstSRS=proj,xRes=pix_size,yRes=pix_size)
                 arg[x+1] = name
 
     # Find the overlap between all scenes
@@ -97,8 +106,8 @@ def cutFiles(arg):
     
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))
-    diff1 = (coords[2] - coords[0]) / pixSize
-    diff2 = (coords[3] - coords[1]) / pixSize * -1.0
+    diff1 = (coords[2] - coords[0]) / pix_size
+    diff2 = (coords[3] - coords[1]) / pix_size * -1.0
     print("Found overlap size of {}x{}".format(int(diff1), int(diff2)))
     if diff1 < 1 or diff2 < 1:
          print("ERROR:  There was no overlap between scenes")
@@ -109,13 +118,13 @@ def cutFiles(arg):
     lst[3] = lst[1]
     lst[1] = tmp
     coords = tuple(lst)
-    print("Pixsize : x = {} y = {}".format(pixSize,-1*pixSize))
+    print("Pixsize : x = {} y = {}".format(pix_size,-1*pix_size))
     for x in range (len(arg)):
         file1 = arg[x]
         file1_new = file1.replace('.tif','_clip.tif')
         print("    clipping file {} to create file {}".format(file1, file1_new))
-        #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pixSize,yRes=pixSize,creationOptions = ['COMPRESS=LZW'])
-        gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pixSize,yRes=-1*pixSize,creationOptions = ['COMPRESS=LZW'])
+        #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pix_size,yRes=pix_size,creationOptions = ['COMPRESS=LZW'])
+        gdal.Warp(file1_new,file1,outputBounds=coords,xRes=pix_size,yRes=-1*pix_size,creationOptions = ['COMPRESS=LZW'])
 
 
 def main():
