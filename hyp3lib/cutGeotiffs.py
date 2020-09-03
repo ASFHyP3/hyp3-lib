@@ -30,13 +30,13 @@ def get_corners(fi):
     return (ullon, ullat, lrlon, lrlat)
 
 
-def get_overlap(coords,fi):
-    (x1, y1, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
+def get_overlap(coords, fi):
+    (x_pix, y_pix, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
 
     ullon1 = t1[0]
     ullat1 = t1[3]
-    lrlon1 = t1[0] + x1 * t1[1]
-    lrlat1 = t1[3] + y1 * t1[5]
+    lrlon1 = t1[0] + x_pix * t1[1]
+    lrlat1 = t1[3] + y_pix * t1[5]
 
     ullon2 = coords[0]
     ullat2 = coords[1]
