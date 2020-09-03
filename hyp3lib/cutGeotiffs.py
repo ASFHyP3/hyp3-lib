@@ -51,6 +51,7 @@ def get_overlap(coords, fi):
 
     return ullon, ullat, lrlon, lrlat
 
+
 def get_zone_from_proj(fi):
     zone = None
     dst = gdal.Open(fi)
@@ -70,6 +71,7 @@ def get_hemisphere(fi):
         (zone, hemi) = [t(s) for t, s in zip((int, str), re.search('(\d+)(.)', p1[ptr:]).groups())]
     return hemi
 
+
 def parse_zones(files):
     zones = []
     for fi in files:
@@ -79,14 +81,13 @@ def parse_zones(files):
     return np.asarray(zones, dtype=np.int8)
 
 
+def cut_files(files):
 
-def cut_files(arg):
-
-    if len(arg) == 1:
+    if len(files) == 1:
         print("Nothing to do!!!  Exiting...")
         return(0)
 
-    file1 = arg[0]
+    file1 = files[0]
    
     # Open file1, get projection and pixsize
     dst1 = gdal.Open(file1)
@@ -100,8 +101,8 @@ def cut_files(arg):
     ptr = p1.find("UTM zone ")
     if ptr != -1:
         (zone1,hemi) = [t(s) for t,s in zip((int,str), re.search("(\d+)(.)",p1[ptr:]).groups())]
-        for x in range(len(arg)-1):
-            file2 = arg[x+1]
+        for x in range(len(files)-1):
+            file2 = files[x+1]
 
             # Open up file2, get projection 
             dst2 = gdal.Open(file2)
@@ -122,12 +123,12 @@ def cut_files(arg):
                 print("    proj is %s" % proj)
                 name = file2.replace(".tif","_reproj.tif")
                 gdal.Warp(name,file2,dstSRS=proj,xRes=pix_size,yRes=pix_size)
-                arg[x+1] = name
+                files[x+1] = name
 
     # Find the overlap between all scenes
-    coords = get_corners(arg[0])
-    for x in range (len(arg)-1):
-        coords = get_overlap(coords,arg[x+1])
+    coords = get_corners(files[0])
+    for x in range (len(files)-1):
+        coords = get_overlap(coords,files[x+1])
     
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))
@@ -144,8 +145,8 @@ def cut_files(arg):
     lst[1] = tmp
     coords = tuple(lst)
     print("Pixsize : x = {} y = {}".format(pix_size,-1*pix_size))
-    for x in range (len(arg)):
-        file1 = arg[x]
+    for x in range (len(files)):
+        file1 = files[x]
         file1_new = file1.replace('.tif','_clip.tif')
         print("    clipping file {} to create file {}".format(file1, file1_new))
         #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pix_size,yRes=pix_size,creationOptions = ['COMPRESS=LZW'])
