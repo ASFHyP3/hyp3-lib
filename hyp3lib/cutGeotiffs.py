@@ -20,7 +20,7 @@ def get_max_pixel_size(files):
         Exception("No valid pixel sizes found")
     return pix_size
 
-def getCorners(fi):
+def get_corners(fi):
     (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
     ullon1 = t1[0]
     ullat1 = t1[3]
@@ -29,7 +29,7 @@ def getCorners(fi):
     return (ullon1,ullat1,lrlon1,lrlat1)
 
 
-def getOverlap(coords,fi):
+def get_overlap(coords,fi):
     (x1,y1,t1,p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
 
     ullon1 = t1[0]
@@ -50,7 +50,7 @@ def getOverlap(coords,fi):
     return (ullon,ullat,lrlon,lrlat)
 
 
-def cutFiles(arg):
+def cut_files(arg):
 
     if len(arg) == 1:
         print("Nothing to do!!!  Exiting...")
@@ -95,9 +95,9 @@ def cutFiles(arg):
                 arg[x+1] = name
 
     # Find the overlap between all scenes
-    coords = getCorners(arg[0])
+    coords = get_corners(arg[0])
     for x in range (len(arg)-1):
-        coords = getOverlap(coords,arg[x+1])
+        coords = get_overlap(coords,arg[x+1])
     
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))
@@ -135,7 +135,7 @@ def main():
     )
     args = parser.parse_args()
 
-    cutFiles(args.infiles)
+    cut_files(args.infiles)
 
 
 if __name__ == "__main__":
