@@ -141,8 +141,7 @@ def cut_files(files):
         file1 = files[x]
         file1_new = file1.replace('.tif', '_clip.tif')
         print("    clipping file {} to create file {}".format(file1, file1_new))
-        #        dst_d1 = gdal.Translate(file1_new,file1,projWin=coords,xRes=pix_size,yRes=pix_size,creationOptions = ['COMPRESS=LZW'])
-        gdal.Warp(file1_new, file1, outputBounds=coords, xRes=pix_size, yRes=-1*pix_size,
+        gdal.Warp(file1_new, file1, outputBounds=coords, xRes=pix_size, yRes=-1 * pix_size,
                   creationOptions = ['COMPRESS=LZW'])
 
 
