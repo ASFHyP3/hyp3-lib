@@ -22,12 +22,12 @@ def get_max_pixel_size(files):
 
 
 def get_corners(fi):
-    (x1, y1, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
-    ullon1 = t1[0]
-    ullat1 = t1[3]
-    lrlon1 = t1[0] + x1 * t1[1]
-    lrlat1 = t1[3] + y1 * t1[5]
-    return (ullon1, ullat1, lrlon1, lrlat1)
+    (x_pix, y_pix, t1, p1) = saa.read_gdal_file_geo(saa.open_gdal_file(fi))
+    ullon = t1[0]
+    ullat = t1[3]
+    lrlon = t1[0] + x_pix * t1[1]
+    lrlat = t1[3] + y_pix * t1[5]
+    return (ullon, ullat, lrlon, lrlat)
 
 
 def get_overlap(coords,fi):
