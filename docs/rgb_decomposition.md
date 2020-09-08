@@ -37,11 +37,13 @@ P<sub>R</sub> = P<sub>r</sub> M<sub>R</sub>
 
 Finally, the intensity values for each band are multiplied by specific scalars to appropriately stretch the dynamic range of each band to create an RGB:
 
-a<sub>R</sub> = 2 (P<sub>R</sub>) <sup>0.5</sup>
+z = arctan ( 2 (S<sub>CP</sub> -  S<sub>XP</sub>) <sup>0.5</sup> ) 2 / 𝜋
 
-a<sub>G</sub> = 3 / 2 (P<sub>v</sub>) <sup>0.5</sup>
+a<sub>R</sub> = 254 ( 2 (P<sub>R</sub>) <sup>0.5</sup> + z ) + 1 
 
-a<sub>B</sub> = 5 (P<sub>B</sub>) <sup>0.5</sup>
+a<sub>G</sub> = 254 ( 3 / 2 (P<sub>v</sub>) <sup>0.5</sup> + 2z ) + 1
+
+a<sub>B</sub> = 254 ( 2 (P<sub>B</sub>) <sup>0.5</sup> + 5z) + 1 
 
 
 
