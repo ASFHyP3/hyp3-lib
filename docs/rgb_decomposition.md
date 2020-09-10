@@ -27,9 +27,9 @@ Pixels with invalid crosspol data will also be masked out (M<sub>X</sub>):
 
 M<sub>X</sub> = S<sub>XP</sub> > 0
 
-The mask pixels are assigned values of 1 for true and 0 for false. 
+In all three cases (M<sub>B</sub>, M<sub>R</sub>, M<sub>X</sub>), the mask pixels are assigned values of 1 for true and 0 for false. 
 
-Then the surface scattering (P<sub>s</sub>) component of the data is calculated as follows:
+The surface scattering (P<sub>s</sub>) component of the data is calculated as follows:
 
 P<sub>s</sub> = S<sub>CP</sub> - 3 S<sub>XP</sub>
 
@@ -41,17 +41,23 @@ P<sub>B</sub> = -P<sub>s</sub>
 
 Any negative P<sub>R</sub> or P<sub>B</sub> values should be set to zero.
 
-The spatial masks are applied to the intensity values for each band, which then are augmented by multiples of the inverse tangent (z):
+The difference between the co- and cross-pol values (S<sub>d</sub>) is calculated: 
 
-z = M<sub>B</sub> arctan( (S<sub>CP</sub> -  S<sub>XP</sub>) <sup>0.5</sup> ) 2 / 𝜋
+S<sub>d</sub> = (S<sub>CP</sub> -  S<sub>XP</sub>)
+
+Any negative S<sub>d</sub> values should be set to zero.
+
+The spatial masks and specific scalars are applied to the intensity values of each band:
+
+z = M<sub>B</sub> (arctan (S<sub>d</sub> <sup>0.5</sup>) 2 / 𝜋)
 
 i<sub>R</sub> = 2 M<sub>R</sub> (P<sub>R</sub>) <sup>0.5</sup> + z
 
 i<sub>G</sub> = 3 M<sub>R</sub> (S<sub>XP</sub>) <sup>0.5</sup> + 2z
 
-i<sub>B</sub> = 2 M<sub>B</sub> (P<sub>B</sub>) <sup>0.5</sup> + 5z
+i<sub>B</sub> = 2 (P<sub>B</sub>) <sup>0.5</sup> + 5z
 
-Finally, the values are multiplied by specific scalars to appropriately stretch the dynamic range of each band from 1 to 255, and invalid pixels masked out.
+A correction is applied to appropriately stretch the dynamic range of each band from 1 to 255:
 
 a<sub>R</sub> = 254 M<sub>X</sub> i<sub>R</sub> + 1
 
@@ -59,4 +65,4 @@ a<sub>G</sub> = 254 M<sub>X</sub> i<sub>G</sub> + 1
 
 a<sub>B</sub> = 254 M<sub>X</sub> i<sub>B</sub> + 1
 
-Any values greater than 255 are set to 255, then the a<sub>RGB</sub> bands are combined to generate an RGB image in 8-bit unsigned integer format.
+Any values greater than 255 in any of the bands (a<sub>R</sub>, a<sub>G</sub>, a<sub>B</sub>) are set to 255, then the a<sub>RGB</sub> bands are combined to generate an RGB image in 8-bit unsigned integer format.
