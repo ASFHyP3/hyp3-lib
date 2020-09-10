@@ -49,7 +49,7 @@ i<sub>R</sub> = 2 M<sub>R</sub> (P<sub>R</sub>) <sup>0.5</sup> + z
 
 i<sub>G</sub> = 3 M<sub>R</sub> (S<sub>XP</sub>) <sup>0.5</sup> + 2z
 
-i<sub>B</sub> = 2 M<sub>B</sub> (P<sub>B</sub>) <sup>0.5</sup> + 5z
+i<sub>B</sub> = 2 (P<sub>B</sub>) <sup>0.5</sup> + 5z
 
 Finally, the values are multiplied by specific scalars to appropriately stretch the dynamic range of each band from 1 to 255, and invalid pixels masked out.
 
