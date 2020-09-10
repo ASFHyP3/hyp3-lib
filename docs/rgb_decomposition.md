@@ -47,22 +47,14 @@ S<sub>d</sub> = (S<sub>CP</sub> -  S<sub>XP</sub>)
 
 Any negative S<sub>d</sub> values should be set to zero.
 
-The spatial masks and specific scalars are applied to the intensity values of each band:
+Finally, the spatial masks and specific scalars are applied to the intensity values to appropriately stretch the dynamic range of each band from 1 to 255:
 
 z = M<sub>B</sub> (arctan (S<sub>d</sub> <sup>0.5</sup>) 2 / 𝜋)
 
-i<sub>R</sub> = 2 M<sub>R</sub> (P<sub>R</sub>) <sup>0.5</sup> + z
+a<sub>R</sub> = 254 M<sub>X</sub> (2 M<sub>R</sub> (P<sub>R</sub>) <sup>0.5</sup> + z) + 1
 
-i<sub>G</sub> = 3 M<sub>R</sub> (S<sub>XP</sub>) <sup>0.5</sup> + 2z
+a<sub>G</sub> = 254 M<sub>X</sub> (3 M<sub>R</sub> (S<sub>XP</sub>) <sup>0.5</sup> + 2z) + 1
 
-i<sub>B</sub> = 2 (P<sub>B</sub>) <sup>0.5</sup> + 5z
-
-A correction is applied to appropriately stretch the dynamic range of each band from 1 to 255:
-
-a<sub>R</sub> = 254 M<sub>X</sub> i<sub>R</sub> + 1
-
-a<sub>G</sub> = 254 M<sub>X</sub> i<sub>G</sub> + 1
-
-a<sub>B</sub> = 254 M<sub>X</sub> i<sub>B</sub> + 1
+a<sub>B</sub> = 254 M<sub>X</sub> (2 (P<sub>B</sub>) <sup>0.5</sup> + 5z) + 1
 
 Any values greater than 255 in any of the bands (a<sub>R</sub>, a<sub>G</sub>, a<sub>B</sub>) are set to 255, then the a<sub>RGB</sub> bands are combined to generate an RGB image in 8-bit unsigned integer format.
