@@ -49,7 +49,7 @@ Any negative S<sub>d</sub> values should be set to zero.
 
 Finally, the spatial masks and specific scalars are applied to the intensity values to appropriately stretch the dynamic range of each band from 1 to 255:
 
-z = M<sub>B</sub> (arctan (S<sub>d</sub> <sup>0.5</sup>) 2 / 𝜋)
+z = 2 / 𝜋 M<sub>B</sub> arctan(S<sub>d</sub> <sup>0.5</sup>)
 
 a<sub>R</sub> = 254 M<sub>X</sub> (2 M<sub>R</sub> (P<sub>R</sub>) <sup>0.5</sup> + z) + 1
 
