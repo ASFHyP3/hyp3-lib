@@ -44,4 +44,6 @@ def download_file(url: str, directory: str = '', chunk_size=None, retries=2, bac
             for chunk in s.iter_content(chunk_size=chunk_size):
                 if chunk:
                     f.write(chunk)
+    session.close()
+
     return download_path
