@@ -6,8 +6,8 @@ import os
 import numpy as np
 from osgeo import gdal, osr, gdalconst
 
-import hyp3lib.saa_func_lib as saa
-from hyp3lib.execute import execute
+import hyp3lib.depreciated.saa_func_lib as saa
+from hyp3lib.depreciated.execute import execute
 
 
 def utm2dem(inDem,outDem,demPar,dataType="float"):
@@ -67,7 +67,7 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
     pix_size = pix_east
     print("approximate DEM latitude pixel spacing (m): {}".format(pix_size))
 
-    # Create the input file for create_dem_par    
+    # Create the input file for create_dem_par
     f = open(demParIn,"w")
     f.write("UTM\n")
     f.write("WGS84\n")
@@ -88,7 +88,7 @@ def utm2dem(inDem,outDem,demPar,dataType="float"):
     f.close()
 
     # Create a new dem par file
-    if os.path.isfile(demPar): 
+    if os.path.isfile(demPar):
         os.remove(demPar)
     execute("create_dem_par {} < {}".format(demPar,demParIn),logfile=log)
 

@@ -1,6 +1,7 @@
 import pytest
 
-from hyp3lib import GranuleError, metadata
+from hyp3lib import GranuleError
+from hyp3lib.depreciated import metadata
 
 
 def test_add_esa_citation(tmp_path):

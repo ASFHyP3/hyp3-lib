@@ -10,8 +10,8 @@ from typing import Union
 import numpy as np
 from osgeo import gdal, osr
 
-import hyp3lib.saa_func_lib as saa
-from hyp3lib.execute import execute
+import hyp3lib.depreciated.saa_func_lib as saa
+from hyp3lib.depreciated.execute import execute
 from hyp3lib.system import gamma_version
 
 

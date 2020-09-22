@@ -12,7 +12,7 @@ def getBursts(mydir,make_tab_flag=True):
         f1 = open(burst_tab,"w")
         os.chdir(os.path.join(mydir,"annotation"))
         for name in ['001.xml','002.xml','003.xml']:
-            for myfile in os.listdir("."):
+            for myfile in os.listdir(".."):
                 if name in myfile:
                     root = etree.parse(myfile)
                     for count in root.iter('burstList'):
@@ -20,6 +20,6 @@ def getBursts(mydir,make_tab_flag=True):
                     f1.write("1 {}\n".format(total_bursts))
         f1.close()
         os.chdir(back)
-    return burst_tab 
+    return burst_tab
 
 

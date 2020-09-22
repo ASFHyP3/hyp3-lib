@@ -7,7 +7,7 @@ import sys
 
 from osgeo import gdal
 
-from hyp3lib.resample_geotiff import resample_geotiff
+from hyp3lib.image import resample_geotiff
 
 
 def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False, width: int = 2048):

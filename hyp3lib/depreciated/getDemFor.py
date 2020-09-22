@@ -7,10 +7,10 @@ import shutil
 
 from osgeo import gdal
 
-from hyp3lib.get_dem import get_dem
-from hyp3lib.execute import execute
-from hyp3lib.getSubSwath import get_bounding_box_file
-from hyp3lib.saa_func_lib import get_utm_proj
+from hyp3lib.depreciated.get_dem import get_dem
+from hyp3lib.depreciated.execute import execute
+from hyp3lib.depreciated.getSubSwath import get_bounding_box_file
+from hyp3lib.depreciated.saa_func_lib import get_utm_proj
 
 
 def getDemFile(infile, outfile: str, use_opentopo=False, in_utm=True, post=None, dem_name=None):

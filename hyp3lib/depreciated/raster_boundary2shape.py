@@ -5,8 +5,8 @@ import os
 
 from scipy import ndimage
 
-from hyp3lib.asf_geometry import geotiff2boundary_mask, data_geometry2shape
-from hyp3lib.asf_time_series import raster_metadata
+from hyp3lib.depreciated.asf_geometry import geotiff2boundary_mask, data_geometry2shape
+from hyp3lib.depreciated.asf_time_series import raster_metadata
 
 
 def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fill_holes = False,
@@ -26,7 +26,7 @@ def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fil
     (rows, cols) = data.shape
 
     print("After geotiff2boundary_mask origin {x},{y}".format(x=geoTrans[0],y=geoTrans[3]))
- 
+
     if fill_holes:
       data = ndimage.binary_fill_holes(data).astype(bool)
 
@@ -42,7 +42,7 @@ def raster_boundary2shape(inFile, threshold, outShapeFile, use_closing=True, fil
           top = maxy - (geoTrans[5]/2)
 
           values[0]['originX'] = left
-          values[0]['originY'] = top 
+          values[0]['originY'] = top
 
     print("After pixel_shift origin {x},{y}".format(x=values[0]['originX'],y=values[0]['originY']))
 

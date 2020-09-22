@@ -6,7 +6,7 @@ import os
 import re
 import zipfile
 
-from hyp3lib.execute import execute
+from hyp3lib.depreciated.execute import execute
 
 
 def prepare_files(csv_file):
@@ -19,7 +19,7 @@ def prepare_files(csv_file):
     cmd = "get_asf.py %s" % csv_file
     execute(cmd)
     os.rmdir("download")
-    for myfile in os.listdir("."):
+    for myfile in os.listdir(".."):
         if ".zip" in myfile:
             try:
                 zip_ref = zipfile.ZipFile(myfile, 'r')
@@ -42,7 +42,7 @@ def get_file_list():
 
     # Set up the list of files to process
     i = 0
-    for myfile in os.listdir("."):
+    for myfile in os.listdir(".."):
         if ".SAFE" in myfile and os.path.isdir(myfile):
             t = re.split('_+', myfile)
             m = [myfile, t[4][0:15]]
@@ -53,7 +53,7 @@ def get_file_list():
     files.sort(key=lambda row: row[1])
     print(files)
 
-    for i in range(len(files)): 
+    for i in range(len(files)):
         filenames.append(files[i][0])
         filedates.append(files[i][1])
 

@@ -15,7 +15,7 @@ from urllib3.util.retry import Retry
 
 from hyp3lib import OrbitDownloadError
 from hyp3lib.fetch import download_file
-from hyp3lib.verify_opod import verify_opod
+from hyp3lib.depreciated.verify_opod import verify_opod
 
 
 def _get_asf_orbit_url(orbit_type, platform, timestamp):

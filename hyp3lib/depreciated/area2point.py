@@ -2,7 +2,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import glob
 import os
-from hyp3lib import saa_func_lib as saa
+from hyp3lib.depreciated import saa_func_lib as saa
 from osgeo import gdal
 
 

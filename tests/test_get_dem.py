@@ -4,7 +4,7 @@ from os import chdir
 import pytest
 
 from hyp3lib import DemError
-from hyp3lib.get_dem import get_dem, get_best_dem
+from hyp3lib.depreciated.get_dem import get_dem, get_best_dem
 
 
 def test_get_best_dem_no_coverage():

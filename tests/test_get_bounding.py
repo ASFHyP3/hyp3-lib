@@ -3,7 +3,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import os
 import numpy as np
 
-from hyp3lib import get_bounding
+from hyp3lib.depreciated import get_bounding
 
 
 def test_simple_box():

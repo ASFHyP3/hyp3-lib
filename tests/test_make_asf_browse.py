@@ -4,7 +4,7 @@ import os
 from osgeo import gdal
 from PIL import Image
 
-from hyp3lib.makeAsfBrowse import makeAsfBrowse
+from hyp3lib.depreciated.makeAsfBrowse import makeAsfBrowse
 
 
 def test_width_smaller(geotiff):

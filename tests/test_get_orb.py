@@ -1,6 +1,6 @@
 import os
 
-from hyp3lib import get_orb
+from hyp3lib.depreciated import get_orb
 
 _GRANULE = 'S1A_IW_SLC__1SSV_20150621T120220_20150621T120232_006471_008934_72D8'
 

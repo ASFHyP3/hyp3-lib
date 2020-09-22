@@ -4,7 +4,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import os
 import argparse
-from hyp3lib import saa_func_lib as saa
+from hyp3lib.depreciated import saa_func_lib as saa
 from osgeo import gdal
 
 
@@ -25,7 +25,7 @@ def copy_metadata(infile, outfile):
         ds1 = gdal.Translate('',ds,format='MEM',metadataOptions = ['{}={}'.format(item,md[item])])
         ds = ds1
     gdal.Translate(outfile,ds1)
- 
+
 
 def main():
     """Main entrypoint"""

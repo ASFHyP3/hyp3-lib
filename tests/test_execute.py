@@ -2,7 +2,8 @@ import logging
 
 import pytest
 
-from hyp3lib import ExecuteError, execute
+from hyp3lib import ExecuteError
+from hyp3lib.depreciated import execute
 
 
 def test_execute_cmd():

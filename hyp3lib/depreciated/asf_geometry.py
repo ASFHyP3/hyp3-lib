@@ -7,7 +7,7 @@ from osgeo.gdalconst import GA_ReadOnly
 from scipy import ndimage
 
 from hyp3lib import GeometryError
-from hyp3lib.saa_func_lib import get_zone
+from hyp3lib.depreciated.saa_func_lib import get_zone
 
 
 # Determine the boundary polygon of a GeoTIFF file

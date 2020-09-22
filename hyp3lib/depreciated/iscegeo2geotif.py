@@ -7,7 +7,7 @@ import zipfile
 import shutil
 from lxml import etree
 from osgeo import gdal
-from hyp3lib.execute import execute
+from hyp3lib.depreciated.execute import execute
 import argparse
 
 
@@ -31,18 +31,18 @@ def makeKMZ(infile,outfile):
     pngfile = infile + ".png"
     outpng = outfile + ".png"
     lrgfile = outfile + "_large.png"
-    
+
     # Create the colorized kml file and png image
     cmd = "mdx.py {0} -kml {1}".format(infile,kmlfile)
     execute(cmd)
-    
+
     #fix the name in the kml file!!!
     fixKmlName(kmlfile,lrgfile)
 
     # scale the PNG image to browse size
     gdal.Translate("temp.png",pngfile,format="PNG",width=0,height=1024)
     gdal.Translate("tmpl.png",pngfile,format="PNG",width=0,height=2048)
-    
+
     shutil.move("temp.png",pngfile)
     shutil.move("tmpl.png",lrgfile)
 
@@ -81,7 +81,7 @@ def convert_files(s1aFlag,proj=None,res=30):
     # Create the phase image
     if proj is None:
         gdal.Translate("phase.tif","filt_topophase.unw.geo",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
-        shutil.copy("phase.tif",gcsname)        
+        shutil.copy("phase.tif",gcsname)
     else:
         print("Creating tmp.tif")
         gdal.Translate("tmp.tif","filt_topophase.unw.geo.vrt",bandList=[2],creationOptions = ['COMPRESS=PACKBITS'])
@@ -108,7 +108,7 @@ def convert_files(s1aFlag,proj=None,res=30):
         gdal.Translate("tmp.tif","filt_topophase.unw.geo.vrt",bandList=[1],creationOptions = ['COMPRESS=PACKBITS'])
         gdal.Warp("amp.tif","tmp.tif",dstSRS=proj,xRes=res,yRes=res,resampleAlg="cubic",dstNodata=0,creationOptions = ['COMPRESS=LZW'])
         os.remove("tmp.tif")
-    
+
     # Create the coherence image
     if proj is None:
         gdal.Translate("coherence.tif","phsig.cor.geo",creationOptions = ['COMPRESS=PACKBITS'])

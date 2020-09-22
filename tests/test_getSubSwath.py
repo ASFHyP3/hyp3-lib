@@ -1,4 +1,4 @@
-from hyp3lib.getSubSwath import get_bounding_box_file
+from hyp3lib.depreciated.getSubSwath import get_bounding_box_file
 
 
 def test_get_bounding_box_file(safe_data):
