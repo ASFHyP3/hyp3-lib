@@ -122,8 +122,8 @@ def calculate_color_channel(copol_data: np.ndarray, crosspol_data: np.ndarray, t
     return color_channel
 
 
-def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], threshold: float, out_tif: Union[str, Path],
-              cleanup=False, teal=False, amp=False, real=False):
+def rgb_decomp(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], threshold: float, out_tif: Union[str, Path],
+               cleanup=False, teal=False, amp=False, real=False):
     """RGB decomposition of a dual-pol RTC
 
     Args:
@@ -195,38 +195,3 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     del blue
 
     out_raster = None  # How to close because gdal is weird
-
-
-def main():
-    """Main entrypoint"""
-
-    parser = argparse.ArgumentParser(
-        prog=os.path.basename(__file__),
-        description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-    parser.add_argument('copol', help='the co-pol RTC GeoTIF')
-    parser.add_argument('crosspol', help='the cross-pol GeoTIF')
-    parser.add_argument('threshold', type=float, help='decomposition threshold value in dB')
-    parser.add_argument('geotiff', help='the output color GeoTIFF file name')
-    parser.add_argument('-c', '-cleanup', '--cleanup', action='store_true',
-                        help='cleanup artifacts using a -48 db power threshold')
-    parser.add_argument('-t', '-teal', '--teal', action='store_true',
-                        help='combine green and blue channels because the volume to simple scattering ratio is high')
-    parser.add_argument('-a', '-amp', '--amp', action='store_true', help='input is amplitude, not powerscale')
-    parser.add_argument('-r', '-real', '--real', action='store_true',
-                        help='output real (floating point) values instead of RGB scaled (0--255) ints')
-    args = parser.parse_args()
-
-    out = logging.StreamHandler(stream=sys.stdout)
-    out.addFilter(lambda record: record.levelno <= logging.INFO)
-    err = logging.StreamHandler()
-    err.setLevel(logging.WARNING)
-    logging.basicConfig(format='%(message)s', level=logging.INFO, handlers=(out, err))
-
-    rtc2color(args.copol, args.crosspol, args.threshold, args.geotiff,
-              args.cleanup, args.teal, args.amp, args.real)
-
-
-if __name__ == '__main__':
-    main()
