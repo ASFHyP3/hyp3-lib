@@ -5,7 +5,7 @@ import os
 from hyp3lib import OrbitDownloadError
 from hyp3lib.depreciated.execute import execute
 from hyp3lib.depreciated.getParameter import getParameter
-from hyp3lib.depreciated.get_orb import downloadSentinelOrbitFile
+from hyp3lib.orbits import downloadSentinelOrbitFile
 
 
 def make_cmd(swath, acquisition_date, out_dir, pol=None):
