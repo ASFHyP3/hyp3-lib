@@ -6,7 +6,7 @@ from hyp3lib import OrbitDownloadError
 from hyp3lib.depreciated.SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
 from hyp3lib.depreciated.execute import execute
 from hyp3lib.depreciated.getBursts import getBursts
-from hyp3lib.orbits import download_orbit_file
+from hyp3lib.sentinel1.orbits import download_orbit_file
 from hyp3lib.depreciated.par_s1_slc_single import par_s1_slc_single
 
 
