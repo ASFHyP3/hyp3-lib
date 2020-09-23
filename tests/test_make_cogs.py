@@ -2,7 +2,7 @@ import os
 import shutil
 import requests
 
-from hyp3lib.depreciated.make_cogs import cogify_dir, cogify_file
+from hyp3lib.image.tiff import cogify_dir, cogify_file
 
 
 def _is_cog(filename):

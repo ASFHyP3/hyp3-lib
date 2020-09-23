@@ -1,9 +1,13 @@
 """Tools for manipulating GeoTIFFs"""
 import glob
+import logging
 import math
 import os
+import shutil
 import zipfile
+from glob import glob
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import numpy as np
 from lxml import etree as et
@@ -192,3 +196,30 @@ def byte_sigma_scale(geotiff: Path, out_file: Path, std_deviations: int = 2):
     # mask3 = mask ^ mask2
     # data[mask3==True] = 1
     # saa.write_gdal_file_byte(outfile,trans,proj,data,nodata=0)
+
+
+def cogify_dir(directory: str, file_pattern: str = '*.tif'):
+    """
+    Convert all found GeoTIFF files to a Cloud Optimized GeoTIFF inplace
+    Args:
+        directory: directory to search through
+        file_pattern: the pattern for finding GeoTIFFs
+    """
+    path_expression = os.path.join(directory, file_pattern)
+    logging.info(f'Converting files to COGs for {path_expression}')
+    for filename in glob(path_expression):
+        cogify_file(filename)
+
+
+def cogify_file(filename: str):
+    """
+    Convert a GeoTIFF to a Cloud Optimized GeoTIFF inplace
+
+    Args:
+        filename: GeoTIFF file to convert
+    """
+    logging.info(f'Converting {filename} to COG')
+    creation_options = ['TILED=YES', 'COMPRESS=DEFLATE']
+    with NamedTemporaryFile() as temp_file:
+        shutil.copy(filename, temp_file.name)
+        gdal.Translate(filename, temp_file.name, format='GTiff', creationOptions=creation_options, noData=0)
