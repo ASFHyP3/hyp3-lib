@@ -3,10 +3,12 @@ import glob
 import math
 import os
 import zipfile
+from pathlib import Path
 
+import numpy as np
 from lxml import etree as et
 from osgeo import gdal
-from osgeo.gdalconst import GRIORA_NearestNeighbour, GRIORA_Cubic
+from osgeo.gdalconst import GRIORA_NearestNeighbour, GRIORA_Cubic, GRIORA_Average
 
 
 def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
@@ -163,3 +165,30 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
   if resampleFile2 is not None:
     for myfile in glob.glob("{0}*".format(resampleFile2)):
       os.remove(myfile)
+
+
+def byte_sigma_scale(geotiff: Path, out_file: Path, std_deviations: int = 2):
+    """Create a GeoTIFF scaled by some multiple of its standard deviation around the mean"""
+    raster = gdal.Open(str(geotiff))
+
+    data = np.ma.masked_less_equal(raster.ReadAsArray(), 0.0)
+    np.clip(data, None, np.percentile(data, 99), out=data)
+
+    src_min = data.mean() - std_deviations * data.std()
+    src_max = data.mean() + std_deviations * data.std()
+
+    gdal.Translate(
+        str(out_file), raster, outputType=gdal.GDT_Byte, noData=0,
+        scaleParams=[[src_min, src_max, 1, 255]], resampleAlg=GRIORA_Average
+    )
+
+    # TODO: Do we still need this?
+    # # For some reason, I'm still getting zeros in my byte images eventhough I'm using 1,255 scaling!
+    # # The following in an attempt to fix that!
+    # (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(infile))
+    # mask = (data>0).astype(bool)
+    # (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(outfile))
+    # mask2 = (data>0).astype(bool)
+    # mask3 = mask ^ mask2
+    # data[mask3==True] = 1
+    # saa.write_gdal_file_byte(outfile,trans,proj,data,nodata=0)
