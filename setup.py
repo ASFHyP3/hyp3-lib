@@ -38,6 +38,7 @@ setup(
     python_requires='~=3.6',
 
     install_requires=[
+        'boto3',
         'gdal',
         'imageio',
         'importlib_metadata',
@@ -57,6 +58,7 @@ setup(
 
     extras_require={
         'develop': [
+            'botocore',
             'pytest',
             'pytest-cov',
             'pytest-console-scripts',
