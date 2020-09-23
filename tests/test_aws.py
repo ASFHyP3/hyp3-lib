@@ -73,4 +73,3 @@ def test_upload_file_to_s3_with_prefix(tmp_path, s3_stubber):
     file_to_upload = tmp_path / 'myFile.txt'
     file_to_upload.touch()
     aws.upload_file_to_s3(file_to_upload, 'myBucket', 'myPrefix')
-
