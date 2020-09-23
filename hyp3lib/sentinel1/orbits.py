@@ -5,12 +5,11 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 import requests
-from lxml import html
+from lxml import html, etree
 from requests.adapters import HTTPAdapter
 from urllib3 import Retry
 
 from hyp3lib import OrbitDownloadError
-from hyp3lib.depreciated.verify_opod import verify_opod
 from hyp3lib.fetch import download_file
 
 
@@ -131,3 +130,27 @@ def download_orbit_file(
                 continue
 
     raise OrbitDownloadError(f'Unable to find a valid orbit file from providers: {providers}')
+
+
+def verify_opod(fi):
+    logging.info("Verifying state vector file")
+    root = etree.parse(fi)
+    check = 0
+    for item in root.iter('File_Description'):
+        if "Orbit File" not in item.text:
+            raise ValueError("Not an orbit file!")
+        else:
+            logging.info("...Found orbit file")
+            check += 1
+    for item in root.iter('File_Type'):
+        if "AUX_POEORB" not in item.text and "AUX_PREORB" not in item.text and "AUX_RESORB" not in item.text:
+            raise ValueError("Unknown file type!")
+        else:
+            logging.info("...Found file type {}".format(item.text))
+            check += 1
+
+    if not check:
+        raise ValueError("Not a valid state vector file: {}".format(fi))
+
+    else:
+        logging.info("State vector file verified")
