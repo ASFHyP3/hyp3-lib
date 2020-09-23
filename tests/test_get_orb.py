@@ -6,7 +6,7 @@ _GRANULE = 'S1A_IW_SLC__1SSV_20150621T120220_20150621T120232_006471_008934_72D8'
 
 
 def test_download_sentinel_orbit_file_esa():
-    orbit_file, provider = hyp3lib.orbits.downloadSentinelOrbitFile(_GRANULE, providers=('ESA',))
+    orbit_file, provider = hyp3lib.orbits.download_orbit_file(_GRANULE, providers=('ESA',))
 
     assert provider == 'ESA'
     assert os.path.exists(orbit_file)

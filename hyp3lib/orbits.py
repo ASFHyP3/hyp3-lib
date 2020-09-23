@@ -101,7 +101,7 @@ def _download_and_verify_orbit(url: str, directory: str = ''):
     return orbit_file
 
 
-def downloadSentinelOrbitFile(
+def download_orbit_file(
         granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB')
 ):
     """Download a Sentinel-1 Orbit file
