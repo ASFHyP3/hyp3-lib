@@ -40,11 +40,11 @@ def get_content_type(file_location: Union[Path, str]) -> str:
 
 
 def upload_file_to_s3(path_to_file: Path, bucket: str, prefix: str = ''):
-    key = Path(prefix) / path_to_file.name
+    key = str(Path(prefix) / path_to_file.name)
     extra_args = {'ContentType': get_content_type(key)}
 
     logging.info(f'Uploading s3://{bucket}/{key}')
-    S3_CLIENT.upload_file(path_to_file, bucket, key, extra_args)
+    S3_CLIENT.upload_file(str(path_to_file), bucket, key, extra_args)
 
     tag_set = get_tag_set(path_to_file.name)
 

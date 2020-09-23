@@ -19,10 +19,10 @@ def write_credentials_to_netrc_file(username: str, password: str,
         logging.warning(f'Using existing .netrc file: {netrc_file}')
     else:
         with open(netrc_file, 'a') as f:
-            f.write(f'machine {domain} login {username} password {password}')
+            f.write(f'machine {domain} login {username} password {password}\n')
 
 
-def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1):
+def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1) -> str:
     """Download a file
 
     Args:
@@ -60,4 +60,4 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
                     f.write(chunk)
     session.close()
 
-    return download_path
+    return str(download_path)
