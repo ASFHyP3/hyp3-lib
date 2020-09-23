@@ -93,7 +93,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
 def _download_and_verify_orbit(url: str, directory: str = ''):
     orbit_file = download_file(url, directory=directory)
     try:
-        verify_opod(orbit_file)
+        _verify_pod_orbit_file(orbit_file)
     except ValueError:
         raise OrbitDownloadError(f'Downloaded an invalid orbit file {orbit_file}')
 
@@ -132,9 +132,10 @@ def download_orbit_file(
     raise OrbitDownloadError(f'Unable to find a valid orbit file from providers: {providers}')
 
 
-def verify_opod(fi):
-    logging.info("Verifying state vector file")
-    root = etree.parse(fi)
+def _verify_pod_orbit_file(orbit_file):
+    """Verify orbit file is a Precise Orbit Determination (POD) file"""
+    logging.info("Verifying POD orbit file")
+    root = etree.parse(orbit_file)
     check = 0
     for item in root.iter('File_Description'):
         if "Orbit File" not in item.text:
@@ -150,7 +151,7 @@ def verify_opod(fi):
             check += 1
 
     if not check:
-        raise ValueError("Not a valid state vector file: {}".format(fi))
+        raise ValueError("Not a valid state vector file: {}".format(orbit_file))
 
     else:
         logging.info("State vector file verified")
