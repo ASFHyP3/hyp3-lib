@@ -1,4 +1,4 @@
-from hyp3lib import scene
+from hyp3lib.sentinel1 import scene
 
 
 def test_get_download_url():
