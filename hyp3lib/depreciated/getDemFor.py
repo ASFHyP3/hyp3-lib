@@ -7,7 +7,7 @@ import shutil
 
 from osgeo import gdal
 
-from hyp3lib.depreciated.get_dem import get_dem
+from hyp3lib.dem import get_dem
 from hyp3lib.depreciated.execute import execute
 from hyp3lib.depreciated.getSubSwath import get_bounding_box_file
 from hyp3lib.depreciated.saa_func_lib import get_utm_proj
