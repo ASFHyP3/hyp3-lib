@@ -44,7 +44,7 @@ def get_dem_list():
         with open(config_file) as f:
             config_content = f.readlines()
     except FileNotFoundError:
-        config_file = Path(hyp3lib.etc.__file__).parent / 'config' / 'get_dem.cfg'
+        config_file = Path(hyp3lib.etc.__file__).parent / 'get_dem.cfg'
         with open(config_file) as f:
             config_content = f.readlines()
 
