@@ -3,11 +3,11 @@ import os
 import shutil
 
 from hyp3lib import OrbitDownloadError
-from hyp3lib.depreciated.SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
+from hyp3lib.depreciated.gamma.SLC_copy_S1_fullSW import SLC_copy_S1_fullSW
 from hyp3lib.depreciated.execute import execute
 from hyp3lib.depreciated.getBursts import getBursts
 from hyp3lib.sentinel1.orbits import download_orbit_file
-from hyp3lib.depreciated.par_s1_slc_single import par_s1_slc_single
+from hyp3lib.depreciated.gamma.par_s1_slc_single import par_s1_slc_single
 
 
 def ingest_S1_granule(safe_dir: str, pol: str, looks: int, out_file: str, orbit_file: str = None):
@@ -56,7 +56,7 @@ def ingest_S1_granule(safe_dir: str, pol: str, looks: int, out_file: str, orbit_
         # Mosaic the swaths together and copy SLCs over
         back = os.getcwd()
         os.chdir(date)
-        SLC_copy_S1_fullSW('../', date, 'SLC_TAB', burst_tab, mode=2, raml=looks * 5, azml=looks)
+        SLC_copy_S1_fullSW('../../', date, 'SLC_TAB', burst_tab, mode=2, raml=looks * 5, azml=looks)
         os.chdir(back)
 
         shutil.move(f'{date}.mli', out_file)

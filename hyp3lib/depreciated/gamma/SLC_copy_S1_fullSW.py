@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import logging
 import argparse
 from hyp3lib.depreciated.execute import execute
-from hyp3lib.depreciated.getParameter import getParameter
+from hyp3lib.depreciated.gamma.getParameter import getParameter
 import os
 import shutil
 
@@ -71,7 +71,7 @@ def SLC_copy_S1_fullSW(path,slcname,tabin,burst_tab,mode=2,dem=None,dempath=None
         cmd = "gc_map ../{SLC}.mli.par - {DP}/{DEM}.par 1 demseg.par demseg map_to_rdc 2 2 pwr_sim_map - - inc_flat".format(SLC=slcname,DP=dempath,DEM=dem)
         execute(cmd,uselogging=True)
 
-        os.chdir("../..")
+        os.chdir("../../..")
 
     shutil.copy(tabin,"SLC{}_tab".format(mode))
     os.chdir(wrk)

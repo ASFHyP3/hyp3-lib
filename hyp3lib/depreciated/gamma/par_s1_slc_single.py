@@ -4,7 +4,7 @@ import os
 
 from hyp3lib import OrbitDownloadError
 from hyp3lib.depreciated.execute import execute
-from hyp3lib.depreciated.getParameter import getParameter
+from hyp3lib.depreciated.gamma.getParameter import getParameter
 from hyp3lib.sentinel1.orbits import download_orbit_file
 
 

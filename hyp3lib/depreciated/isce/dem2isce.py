@@ -2,12 +2,19 @@
 
 import argparse
 import os
+import shutil
 
 import lxml.etree as et
 from osgeo import osr, gdal
 
 
-def dem2isce(demFile, hdrFile, xmlFile):
+def dem2isce(demFile):
+  pixsize = 0.000277777777778
+  gdal.Warp("temp_dem.tif", demFile, format="ENVI", dstSRS="EPSG:4326", xRes=pixsize, yRes=pixsize,
+            resampleAlg="cubic", dstNodata=-32767)
+  shutil.move("temp_dem.tif", demFile)
+  hdrFile = os.path.splitext(demFile)[0] + ".hdr"
+  xmlFile = f'{demFile}.xml'
 
   # Read metadata from the DEM
   raster = gdal.Open(demFile, gdal.GA_ReadOnly)
@@ -94,10 +101,10 @@ def dem2isce(demFile, hdrFile, xmlFile):
   element_property = et.SubElement(component, 'property', name='size')
   et.SubElement(element_property, 'value').text = str(raster.RasterYSize)
   et.SubElement(element_property, 'doc').text = 'Coordinate size.'
-  
+
   # Write the tree structure to file
   with open(xmlFile, 'wb') as outF:
-    outF.write(et.tostring(isce, encoding='UTF-8', xml_declaration=True, 
+    outF.write(et.tostring(isce, encoding='UTF-8', xml_declaration=True,
       pretty_print=True))
   outF.close()
   lines = None

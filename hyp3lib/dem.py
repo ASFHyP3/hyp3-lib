@@ -18,7 +18,7 @@ from pyproj import Transformer
 
 import hyp3lib.etc
 from hyp3lib import DemError
-from hyp3lib.depreciated import dem2isce, saa_func_lib as saa
+from hyp3lib.depreciated import saa_func_lib as saa
 from hyp3lib.depreciated.asf_geometry import raster_meta
 from hyp3lib.fetch import download_file
 
@@ -400,15 +400,6 @@ def get_dem(x_min, y_min, x_max, y_max, outfile, post=None, processes=1, dem_nam
             dstNodata=-32767
         )
         shutil.move("temp_dem.tif", outfile)
-
-    elif dem_type.lower() == 'isce':
-        pixsize = 0.000277777777778
-        gdal.Warp("temp_dem.tif", outfile, format="ENVI", dstSRS="EPSG:4326", xRes=pixsize, yRes=pixsize,
-                  resampleAlg="cubic", dstNodata=-32767)
-        shutil.move("temp_dem.tif", outfile)
-        hdr_name = os.path.splitext(outfile)[0] + ".hdr"
-        dem2isce.dem2isce(outfile, hdr_name, f'{outfile}.xml')
-
     else:
         raise NotImplementedError(f'Cannot get DEM for unkown type {dem_type}')
 
