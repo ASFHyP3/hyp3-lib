@@ -14,6 +14,8 @@ from lxml import etree as et
 from osgeo import gdal
 from osgeo.gdalconst import GRIORA_NearestNeighbour, GRIORA_Cubic, GRIORA_Average
 
+from hyp3lib.depreciated import saa_func_lib as saa
+
 
 def resample_geotiff(geotiff, width, outFormat, outFile, use_nn = False):
 
@@ -223,3 +225,23 @@ def cogify_file(filename: str):
     with NamedTemporaryFile() as temp_file:
         shutil.copy(filename, temp_file.name)
         gdal.Translate(filename, temp_file.name, format='GTiff', creationOptions=creation_options, noData=0)
+
+
+def copy_metadata(infile, outfile):
+    """Copy metadata from one tif to another"""
+    ds = saa.open_gdal_file(infile)
+    md = ds.GetMetadata()
+    print(md)
+
+    # ds = saa.open_gdal_file(outfile)
+    # ds.SetMetadata(md)
+
+    # outfile2 = "tmp_outfile.tif"
+    # gdal.Translate(outfile2,outfile, metadataOptions = md)
+    # shutil.move(outfile2,outfile)
+
+    ds = saa.open_gdal_file(outfile)
+    for item in md:
+        ds1 = gdal.Translate('',ds,format='MEM',metadataOptions = ['{}={}'.format(item,md[item])])
+        ds = ds1
+    gdal.Translate(outfile,ds1)

@@ -4,27 +4,8 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import os
 import argparse
-from hyp3lib.depreciated import saa_func_lib as saa
-from osgeo import gdal
 
-
-def copy_metadata(infile, outfile):
-    ds = saa.open_gdal_file(infile)
-    md = ds.GetMetadata()
-    print(md)
-
-    # ds = saa.open_gdal_file(outfile)
-    # ds.SetMetadata(md)
-
-    # outfile2 = "tmp_outfile.tif"
-    # gdal.Translate(outfile2,outfile, metadataOptions = md)
-    # shutil.move(outfile2,outfile)
-
-    ds = saa.open_gdal_file(outfile)
-    for item in md:
-        ds1 = gdal.Translate('',ds,format='MEM',metadataOptions = ['{}={}'.format(item,md[item])])
-        ds = ds1
-    gdal.Translate(outfile,ds1)
+from hyp3lib.image.tiff import copy_metadata
 
 
 def main():
