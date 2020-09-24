@@ -54,7 +54,7 @@ def get_water_mask(upper_left, lower_right, res, gcs=True, mask_value=1):
     return mask
 
 
-def apply_wb_mask(tiffile, outfile, maskval=0, gcs=True):
+def apply_wb_mask(tiffile, outfile, maskval=0, gcs=True, band=1):
     """
     Given a tiffile input, create outfile, filling in all water areas with the
     maskval.
@@ -66,7 +66,7 @@ def apply_wb_mask(tiffile, outfile, maskval=0, gcs=True):
     lower_right = tif_info['cornerCoordinates']['lowerRight']
 
     src_ds = gdal.Open(tiffile)
-    data = src_ds.GetRasterBand(1).ReadAsArray()
+    data = src_ds.GetRasterBand(band).ReadAsArray()
     proj = src_ds.GetProjection()
     trans = src_ds.GetGeoTransform()
     del src_ds
@@ -76,7 +76,7 @@ def apply_wb_mask(tiffile, outfile, maskval=0, gcs=True):
     data[mask == 0] = maskval
 
     dst_ds = gdal.GetDriverByName('GTiff').Create(
-        outfile, data.shape[1], data.shape[0], 1, gdal.GDT_Float32
+        outfile, data.shape[1], data.shape[0], band, gdal.GDT_Float32
     )
     dst_ds.SetProjection(proj)
     dst_ds.SetGeoTransform(trans)
