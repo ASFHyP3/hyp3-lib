@@ -1,87 +1,88 @@
 """Create a water body mask wherein all water is 0 and land is 1"""
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import os
-# import numpy as np
-import scipy.misc
 import argparse
 import logging
-from osgeo import gdal
-from hyp3lib.create_wb_mask import create_wb_mask
-from hyp3lib import saa_func_lib as saa
+import os
+from tempfile import NamedTemporaryFile
 
-import hyp3lib.etc
+from osgeo import gdal, ogr
 
 
-def create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=True):
+def get_water_mask(upper_left, lower_right, res, gcs=True, mask_value=1):
+    mask_location = '/vsicurl/https://asf-dem-east.s3.amazonaws.com/WATER_MASK'
 
-    cfgdir =os.path.abspath(os.path.join(os.path.dirname(hyp3lib.etc.__file__), "config"))
-    myfile = os.path.join(cfgdir,"shapefile_dir.txt")
-    f = open(myfile,"r")
-    for line in f.readlines():
-        cfgdir = line.strip()
+    xmin, ymax = upper_left
+    xmax, ymin = lower_right
 
     if gcs:
+        shpfile = f'{mask_location}/GSHHG/GSHHS_f_L1.shp'
+        src_ds = ogr.Open(shpfile)
+        src_lyr = src_ds.GetLayer()
 
-        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L1.shp".format(cfgdir)
-        mask1 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask1.png")
+        logging.info("Using xmin, xmax {} {}, ymin, ymax {} {}".format(xmin, xmax, ymin, ymax))
 
-#        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L2.shp".format(cfgdir)
-#        mask2 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask2.png")
-#        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L3.shp".format(cfgdir)
-#        mask3 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask3.png")
-#        shpfile = "{}/GSHHG_shp/f/GSHHS_f_L4.shp".format(cfgdir)
-#        mask4 = create_wb_mask(shpfile,xmin,ymin,xmax,ymax,res,outFile="mask4.png")
-#
-#        mask2 = np.logical_not(mask2)
-#        mask3 = np.logical_not(mask3)
-#        mask4 = np.logical_not(mask4)
-#
-#        final_mask = np.logical_and(mask1,mask2)
-#        final_mask = np.logical_and(final_mask,mask3)
-#        final_mask = np.logical_and(final_mask,mask4)
+        ncols = int((xmax - xmin) / res + 0.5)
+        nrows = int((ymax - ymin) / res + 0.5)
 
-        final_mask = mask1
-        scipy.misc.imsave("final_mask.png",final_mask)
+        logging.info("Creating water body mask of size {} x {} (lxs) using {}".format(nrows, ncols, shpfile))
+
+        geotransform = (xmin, res, 0, ymax, 0, -res)
+        dst_ds = gdal.GetDriverByName('MEM').Create('', ncols, nrows, 1, gdal.GDT_Byte)
+        dst_rb = dst_ds.GetRasterBand(1)
+        dst_rb.Fill(0)
+        dst_rb.SetNoDataValue(0)
+        dst_ds.SetGeoTransform(geotransform)
+
+        _ = gdal.RasterizeLayer(dst_ds, [mask_value], src_lyr)
+        dst_ds.FlushCache()
+        mask = dst_ds.GetRasterBand(1).ReadAsArray()
+        del dst_ds
 
     else:
         if ymin > 0:
-            mask_file = "{}/WB_MASKS/Antimeridian_UTM1N_WaterMask1.tif".format(cfgdir)
+            mask_file = f'{mask_location}/Antimeridian_UTM1N_WaterMask1.tif'
         else:
-            mask_file = "{}/WB_MASKS/Antimeridian_UTM1S_WaterMask1.tif".format(cfgdir)
-        tmpfile = "water_mask.tif"
+            mask_file = f'{mask_location}/Antimeridian_UTM1S_WaterMask1.tif'
 
-        coords = [xmin,ymax,xmax,ymin]
-        gdal.Translate(tmpfile,mask_file,projWin=coords,xRes=res,yRes=res)
-        x,y,trans,proj,data = saa.read_gdal_file(saa.open_gdal_file(tmpfile))
-        final_mask = data
-        # os.remove(tmpfile)
+        coords = [xmin, ymax, xmax, ymin]
+        with NamedTemporaryFile() as tmpfile:
+            gdal.Translate(tmpfile.name, mask_file, projWin=coords, xRes=res, yRes=res)
+            srs_ds = gdal.Open(tmpfile.name)
+            mask = srs_ds.GetRasterBand(1).ReadAsArray()
+            del srs_ds
 
-    return(final_mask)
+    return mask
 
 
-def apply_wb_mask(tiffile,outfile,maskval=0,gcs=True):
+def apply_wb_mask(tiffile, outfile, maskval=0, gcs=True):
     """
     Given a tiffile input, create outfile, filling in all water areas with the
     maskval.
     """
 
-    logging.info("Using mask value of {}".format(maskval))
-    (x,y,trans,proj,data) = saa.read_gdal_file(saa.open_gdal_file(tiffile))    
+    logging.info(f"Using mask value of {maskval}")
+    tif_info = gdal.Info(tiffile, format='json')
+    upper_left = tif_info['cornerCoordinates']['upperLeft']
+    lower_right = tif_info['cornerCoordinates']['lowerRight']
 
-    res = trans[1]
-    xmin,xmax,ymin,ymax = saa.getCorners(tiffile)
+    src_ds = gdal.Open(tiffile)
+    data = src_ds.GetRasterBand(1).ReadAsArray()
+    proj = src_ds.GetProjection()
+    trans = src_ds.GetGeoTransform()
+    del src_ds
 
-    # Get the mask array
     logging.info("Applying water body mask")
-    mask_arr = create_wb_mask_file(xmin,ymin,xmax,ymax,res,gcs=gcs)
-    
-    saa.write_gdal_file_byte("final_mask.tif",trans,proj,mask_arr)
-    
-    # Apply the mask to the data
-    data[mask_arr==0] = maskval
-    saa.write_gdal_file_float(outfile,trans,proj,data,nodata=maskval)
+    mask = get_water_mask(upper_left, lower_right, trans[1], gcs=gcs)
+    data[mask == 0] = maskval
+
+    dst_ds = gdal.GetDriverByName('GTiff').Create(
+        outfile, data.shape[1], data.shape[0], 1, gdal.GDT_Float32
+    )
+    dst_ds.SetProjection(proj)
+    dst_ds.SetGeoTransform(trans)
+    dst_ds.GetRasterBand(1).WriteArray(data)
+    dst_ds.GetRasterBand(1).SetNoDataValue(maskval)
+    del dst_ds
 
 
 def main():
@@ -91,18 +92,18 @@ def main():
         prog=os.path.basename(__file__),
         description=__doc__,
     )
-    parser.add_argument('tiffile',help='Name of tif file to mask')
-    parser.add_argument('outfile',help='Name of output masked file')
-    parser.add_argument('-m','--maskval',help='Mask value to apply; default 0',type=float,default=0)
+    parser.add_argument('tiffile', help='Name of tif file to mask')
+    parser.add_argument('outfile', help='Name of output masked file')
+    parser.add_argument('-m', '--maskval', help='Mask value to apply; default 0', type=float, default=0)
     args = parser.parse_args()
 
-    logFile = "apply_wb_mask_{}_log.txt".format(os.getpid())
-    logging.basicConfig(filename=logFile,format='%(asctime)s - %(levelname)s - %(message)s',
-                        datefmt='%m/%d/%Y %I:%M:%S %p',level=logging.DEBUG)
+    log_file = "apply_wb_mask_{}_log.txt".format(os.getpid())
+    logging.basicConfig(filename=log_file, format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     logging.getLogger().addHandler(logging.StreamHandler())
     logging.info("Starting run")
 
-    apply_wb_mask(args.tiffile,args.outfile,maskval=args.maskval)
+    apply_wb_mask(args.tiffile, args.outfile, maskval=args.maskval)
 
 
 if __name__ == '__main__':
