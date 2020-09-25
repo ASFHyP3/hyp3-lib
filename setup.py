@@ -39,14 +39,13 @@ setup(
 
     install_requires=[
         'boto3',
-        'botocore',
+        'gdal',
         'imageio',
         'importlib_metadata',
         'lxml',
         'matplotlib',
         'netCDF4',
         'numpy',
-        'gdal',
         'pillow',
         'pyproj~=2.0',
         'pyshp',
@@ -59,6 +58,7 @@ setup(
 
     extras_require={
         'develop': [
+            'botocore',
             'pytest',
             'pytest-cov',
             'pytest-console-scripts',

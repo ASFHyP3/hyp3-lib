@@ -23,3 +23,10 @@ def geotiff(tmp_path):
 @pytest.fixture()
 def test_data_folder():
     return Path(_HERE) / 'data'
+
+
+@pytest.fixture()
+def png_image(tmp_path):
+    image = tmp_path / 'test.png'
+    shutil.copy(os.path.join(_HERE, 'data', 'test.png'), str(image))
+    return image
