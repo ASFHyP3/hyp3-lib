@@ -1,10 +1,11 @@
 """Tools for working with AWS"""
 
-import boto3
 import logging
 from mimetypes import guess_type
 from pathlib import Path
 from typing import Union
+
+import boto3
 
 S3_CLIENT = boto3.client('s3')
 
