@@ -11,7 +11,7 @@ Calm water generally has very low returns in all polarizations, and areas with v
 
 The green band is determined by the magnitude of the cross-pol returns, which indicates the extent of volume scattering. One of the most common volume scatterers is vegetation, and areas with high cross-pol returns appear more green in the decomposition. There are other volume scatterers, such as glacial ice; areas where the volume to surface scattering ratio is larger than expected for vegetation will display in teal.
 
-The red channel is used to indicate areas that are neither water nor vegetation. Urban areas and other locations with relatively low levels of volume scattering will appear more red in this decomposition.
+The red channel is used to indicate areas that are neither water nor vegetation. Urban areas and other locations with relatively low levels of volume scattering, but higher surface scatter returns than water, will appear more red in this decomposition.
 
 ### Decomposition Calculations
 
