@@ -1,6 +1,6 @@
 """Tools for working with Sentinel-1 scenes"""
 
-SENTINEL_DISTRIBUTION_URL = 'https://d2jcx4uuy4zbnt.cloudfront.net'
+SENTINEL_DISTRIBUTION_URL = 'https://dy4owt9f80bz7.cloudfront.net'
 
 
 def get_download_url(scene):
