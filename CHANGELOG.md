@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.1](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.0...v1.6.1)
+
+### Changed
+* Revised the description of the red band in the RGB Decomposition readme
+* Updated `scene.SENTINEL_DISTRIBUTION_URL` with new CloudFront domain name
+
 ## [1.6.0](https://github.com/ASFHyP3/hyp3-lib/compare/v1.5.0...v1.6.0)
 
 ### Added
