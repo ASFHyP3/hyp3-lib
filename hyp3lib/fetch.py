@@ -46,7 +46,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
     retry_strategy = Retry(
         total=retries,
         backoff_factor=backoff_factor,
-        status_forcelist=[429, 500, 503, 504],
+        status_forcelist=[429, 500, 502, 503, 504],
     )
 
     session.mount('https://', HTTPAdapter(max_retries=retry_strategy))
