@@ -53,7 +53,7 @@ def test_get_best_dem_ned2():
 
 def test_get_best_dem_specify_dem():
     # utah, western united states, has both NED13 and SRTMGL1 coverage
-    name, projection, tile_list, wkt_list = get_best_dem(y_min=38.2, y_max=38.8, x_min=-110.8, x_max=-110.2, dem_name='SRTMGL1')
+    name, _, _, _ = get_best_dem(y_min=38.2, y_max=38.8, x_min=-110.8, x_max=-110.2, dem_name='SRTMGL1')
     assert name == 'SRTMGL1'
 
     # democratic republic of the congo, southern africa, has SRTMGL1 coverage but not NED13 coverage
@@ -117,7 +117,7 @@ def test_get_dem_ned13(tmp_path, test_data_folder):
     name = get_dem(y_min=37.99, y_max=37.999, x_min=-123.02, x_max=-123.01, outfile=str(output_file), post=30.0)
     assert name == 'NED13'
     assert output_file.exists()
-    assert cmp(output_file, test_data_folder / 'test_ned13_dem.tif')
+    assert cmp(output_file, test_data_folder / 'test_ned13_dem.tif', shallow=False)
 
 
 def test_get_dem_srtmgl1_antimeridian(tmp_path, test_data_folder):
@@ -126,4 +126,4 @@ def test_get_dem_srtmgl1_antimeridian(tmp_path, test_data_folder):
     name = get_dem(y_min=-18.415, y_max=-18.41, x_min=179.99, x_max=180.01, outfile=str(output_file), post=30.0)
     assert name == 'SRTMGL1'
     assert output_file.exists()
-    assert cmp(output_file, test_data_folder / 'test_srtmgl1_antimeridian_dem.tif')
+    assert cmp(output_file, test_data_folder / 'test_srtmgl1_antimeridian_dem.tif', shallow=False)
