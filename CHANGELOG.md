@@ -10,6 +10,8 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 * `fetch.download_file` will now retry on `HTTP 502` responses
+* `hyp3lib.get_dem` is now configured to pull from DEM heap in the us-west-2 AWS region by default.
+  * Defaults may still be overridden providing a custom config file at `~/.hyp3/get_dem.cfg`.
 
 ## [1.6.1](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.0...v1.6.1)
 
