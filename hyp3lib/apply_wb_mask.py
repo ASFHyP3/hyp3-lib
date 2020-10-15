@@ -9,7 +9,7 @@ from osgeo import gdal, ogr
 
 
 def get_water_mask(upper_left, lower_right, res, gcs=True, mask_value=1):
-    mask_location = '/vsicurl/https://asf-dem-east.s3.amazonaws.com/WATER_MASK'
+    mask_location = '/vsicurl/https://asf-dem-west.s3.amazonaws.com/WATER_MASK'
 
     xmin, ymax = upper_left
     xmax, ymin = lower_right
