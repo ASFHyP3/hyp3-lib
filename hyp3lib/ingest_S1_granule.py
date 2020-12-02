@@ -40,7 +40,7 @@ def ingest_S1_granule(safe_dir: str, pol: str, looks: int, out_file: str, orbit_
             logging.warning('Unable to fetch precision state vectors... continuing')
 
         if looks > 1.0:
-            cmd = f'multi_look_MLI {pol}.grd {pol}.grd.par {out_file} {out_file}.par {looks} {looks}'
+            cmd = f'multi_look_MLI {pol}.grd {pol}.grd.par {out_file} {out_file}.par {looks} {looks} - - - 1''
             execute(cmd, uselogging=True)
         else:
             shutil.copy(f'{pol}.grd', out_file)
