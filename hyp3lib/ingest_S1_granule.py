@@ -40,7 +40,7 @@ def ingest_S1_granule(safe_dir: str, pol: str, looks: int, out_file: str, orbit_
             logging.warning('Unable to fetch precision state vectors... continuing')
 
         if looks > 1.0:
-            cmd = f'multi_look_MLI {pol}.grd {pol}.grd.par {out_file} {out_file}.par {looks} {looks}'
+            cmd = f'multi_look_MLI {pol}.grd {pol}.grd.par {out_file} {out_file}.par {looks} {looks} - - - 1'
             execute(cmd, uselogging=True)
         else:
             shutil.copy(f'{pol}.grd', out_file)
@@ -53,7 +53,7 @@ def ingest_S1_granule(safe_dir: str, pol: str, looks: int, out_file: str, orbit_
         burst_tab = getBursts(safe_dir, make_tab_flag=True)
         shutil.copy(burst_tab, date)
 
-        # Mosaic the swaths together and copy SLCs over        
+        # Mosaic the swaths together and copy SLCs over
         back = os.getcwd()
         os.chdir(date)
         SLC_copy_S1_fullSW('../', date, 'SLC_TAB', burst_tab, mode=2, raml=looks * 5, azml=looks)
