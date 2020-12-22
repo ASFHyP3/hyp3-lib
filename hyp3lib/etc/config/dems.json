@@ -1,0 +1,17 @@
+[
+  {
+    "name": "SRTMGL1",
+    "coverage": "/vsis3/asj-hyp3-dev/dems/srtmgl1_coverage.geojson",
+    "vrt": "/vsis3/asj-hyp3-dev/dems/srtmgl1.vrt"
+  },
+  {
+    "name": "NED13",
+    "coverage": "/vsis3/asj-hyp3-dev/dems/ned13_coverage.geojson",
+    "vrt": "/vsis3/asj-hyp3-dev/dems/ned13.vrt"
+  },
+  {
+    "name": "COP30",
+    "coverage": "/vsis3/asj-hyp3-dev/dems/cop_coverage.geojson",
+    "vrt": ""
+  }
+]
