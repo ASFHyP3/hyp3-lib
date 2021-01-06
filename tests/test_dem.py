@@ -7,9 +7,8 @@ from hyp3lib.dem import get_best_dem, utm_from_lat_lon, get_coverage_geometry
 
 
 def test_get_best_dem():
-    # assert get_best_dem(y_min=38.2, y_max=38.8, x_min=-110.8, x_max=-110.2) == 'NED13'
+    assert get_best_dem(y_min=37.0, y_max=38.0, x_min=-118.0, x_max=-117.0) == 'COP30'
     assert get_best_dem(y_min=-6.8, y_max=-6.2, x_min=27.2, x_max=27.8) == 'SRTMGL1'
-    # assert get_best_dem(y_min=67.9, y_max=68.1, x_min=-155.6, x_max=-155.4) == 'NED2'
     assert get_best_dem(y_min=59.975, y_max=60.1, x_min=99.5, x_max=100.5) == 'COP30'
     assert get_best_dem(y_min=59.976, y_max=60.1, x_min=99.5, x_max=100.5) == 'COP30'
 

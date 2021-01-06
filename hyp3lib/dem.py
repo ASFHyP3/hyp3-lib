@@ -58,7 +58,6 @@ def get_best_dem(y_min, y_max, x_min, x_max, threshold=0.2):
     if best_pct < threshold:
         raise DemError('Unable to find a DEM file for that area')
 
-    logging.info(f'Best DEM: {best_dem}')
     return best_dem
 
 
