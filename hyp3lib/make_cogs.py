@@ -32,7 +32,7 @@ def cogify_file(filename: str):
         filename: GeoTIFF file to convert
     """
     logging.info(f'Converting {filename} to COG')
-    creation_options = ['TILED=YES', 'COMPRESS=DEFLATE']
+    creation_options = ['TILED=YES', 'COMPRESS=DEFLATE', 'NUM_THREADS=ALL_CPUS']
     with NamedTemporaryFile() as temp_file:
         shutil.copy(filename, temp_file.name)
         gdal.Translate(filename, temp_file.name, format='GTiff', creationOptions=creation_options, noData=0)
