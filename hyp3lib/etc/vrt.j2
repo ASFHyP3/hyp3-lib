@@ -1,0 +1,22 @@
+<VRTDataset rasterXSize="{{ raster_width }}" rasterYSize="{{ raster_height }}">
+  <SRS dataAxisToSRSAxisMapping="{{ axis_mapping[0] }},{{ axis_mapping[1] }}">{{ projection_wkt }}</SRS>
+  <GeoTransform>{{ min_x }}, {{ pixel_width }}, 0.0, {{ max_y }}, 0.0, -{{ pixel_height }}</GeoTransform>
+  <Metadata>
+    <MDI key="AREA_OR_POINT">{{ area_or_point }}</MDI>
+  </Metadata>
+  <VRTRasterBand dataType="{{ data_type }}" band="1">
+    <ColorInterp>{{ color_interp }}</ColorInterp>
+    {% if no_data_value %}
+    <NoDataValue>{{ no_data_value }}</NoDataValue>
+    {% endif %}
+    {% for tile in tiles %}
+    <SimpleSource>
+      <SourceFilename relativeToVRT="0">{{ tile['location'] }}</SourceFilename>
+      <SourceBand>{{ tile.source_band }}</SourceBand>
+      <SourceProperties RasterXSize="{{ tile['width'] }}" RasterYSize="{{ tile['height'] }}" DataType="{{ data_type }}" BlockXSize="{{ tile['block_size'][0] }}" BlockYSize="{{ tile['block_size'][1] }}" />
+      <SrcRect xOff="0" yOff="0" xSize="{{ tile['width'] }}" ySize="{{ tile['height'] }}" />
+      <DstRect xOff="{{ tile['x_offset'] }}" yOff="{{ tile['y_offset'] }}" xSize="{{ tile['dst_width'] }}" ySize="{{ tile['dst_height'] }}" />
+    </SimpleSource>
+    {% endfor %}
+  </VRTRasterBand>
+</VRTDataset>

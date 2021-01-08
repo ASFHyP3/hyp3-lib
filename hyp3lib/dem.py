@@ -4,6 +4,7 @@ import json
 import logging
 from pathlib import Path
 
+import jinja2
 from osgeo import gdal, ogr
 
 import hyp3lib.etc
@@ -11,6 +12,61 @@ from hyp3lib import DemError
 
 gdal.UseExceptions()
 ogr.UseExceptions()
+
+
+def build_vrt(info_list):
+    pixel_width = min([abs(item['geoTransform'][1]) for item in info_list])
+    pixel_height = min([abs(item['geoTransform'][5]) for item in info_list])
+    min_x = min([item['geoTransform'][0] for item in info_list])
+    max_x = max([item['cornerCoordinates']['lowerRight'][0] for item in info_list])
+    min_y = min([item['cornerCoordinates']['lowerRight'][1] for item in info_list])
+    max_y = max([item['geoTransform'][3] for item in info_list])
+    raster_width = round((max_x - min_x) / pixel_width + 1)
+    raster_height = round((max_y - min_y) / pixel_height + 1)
+
+    payload = {
+        'pixel_width': pixel_width,
+        'pixel_height': pixel_height,
+        'min_x': min_x,
+        'max_y': max_y,
+        'raster_width': raster_width,
+        'raster_height': raster_height,
+        # assumed to be the same across all tiles
+        'projection_wkt': info_list[0]['coordinateSystem']['wkt'].replace('\n', ''),
+        'axis_mapping': info_list[0]['coordinateSystem']['dataAxisToSRSAxisMapping'],
+        'area_or_point': info_list[0]['metadata'][''].get('AREA_OR_POINT'),
+        'data_type': info_list[0]['bands'][0]['type'],
+        'color_interp': info_list[0]['bands'][0]['colorInterpretation'],
+        'no_data_value': info_list[0]['bands'][0].get('noDataValue'),
+        'tiles': [
+            {
+                'location': tile['description'],
+                'x_offset': (tile['geoTransform'][0] - min_x) / pixel_width,
+                'y_offset': (max_y - tile['geoTransform'][3]) / pixel_height - 1,
+                'pixel_width': abs(tile['geoTransform'][1]),
+                'pixel_height': abs(tile['geoTransform'][5]),
+                'width': tile['size'][0],
+                'height': tile['size'][1],
+                'dst_width': round(tile['size'][0] * abs(tile['geoTransform'][1]) / pixel_width),
+                'dst_height': round(tile['size'][1] * abs(tile['geoTransform'][5]) / pixel_height),
+                'source_band': 1,
+                'block_size': tile['bands'][0]['block'],
+            } for tile in info_list
+        ]
+    }
+
+    template_file = Path(hyp3lib.etc.__file__).parent / 'vrt.j2'
+    with open(template_file) as f:
+        template_text = f.read()
+    template = jinja2.Template(
+        template_text,
+        undefined=jinja2.StrictUndefined,
+        trim_blocks=True,
+        lstrip_blocks=True,
+        keep_trailing_newline=True,
+    )
+    rendered = template.render(payload)
+    return rendered
 
 
 def get_dem_list():

@@ -42,6 +42,7 @@ setup(
         'gdal',
         'imageio',
         'importlib_metadata',
+        'jinja2',
         'lxml',
         'matplotlib',
         'netCDF4',
