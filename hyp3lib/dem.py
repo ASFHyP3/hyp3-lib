@@ -14,6 +14,30 @@ gdal.UseExceptions()
 ogr.UseExceptions()
 
 
+def build_geojson(info_list):
+    features = [
+        {
+            "type": "Feature",
+            "properties": {},
+            "id": 0,
+            "geometry": tile['wgs84Extent']
+        }
+        for tile in info_list
+    ]
+
+    geojson = {
+        "type": "FeatureCollection",
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": "EPSG:4326"
+            }
+        },
+        "features": features
+    }
+    return geojson
+
+
 def build_vrt(info_list):
     pixel_width = min([abs(item['geoTransform'][1]) for item in info_list])
     pixel_height = min([abs(item['geoTransform'][5]) for item in info_list])
