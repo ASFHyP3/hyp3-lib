@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import jinja2
 from lxml import etree
