@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Tuple
 
 import jinja2
 from lxml import etree
@@ -156,13 +156,17 @@ def utm_from_lon_lat(lon: float, lat: float) -> int:
     return hemisphere + zone
 
 
-def get_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, epsg_code: int = 4326,
-            buffer: float = 0.15, pixel_size: float = 30.0) -> str:
+def subset_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, epsg_code: Optional[int] = None,
+               buffer: float = 0.15, pixel_size: float = 30.0) -> str:
     dem_list = get_dem_list()
     vrt = [dem['vrt'] for dem in dem_list if dem['name'] == dem_name][0]
 
     min_x, max_x, min_y, max_y = polygon.Buffer(buffer).GetEnvelope()
     output_bounds = (min_x, min_y, max_x, max_y)
+
+    if epsg_code is None:
+        centroid = polygon.Centroid()
+        epsg_code = utm_from_lon_lat(centroid.GetX(), centroid.GetY())
 
     gdal.Warp(output_file, vrt, outputBounds=output_bounds, outputBoundsSRS='EPSG:4326', dstSRS=f'EPSG:{epsg_code}',
               xRes=pixel_size, yRes=pixel_size, targetAlignedPixels=True, resampleAlg='cubic', multithread=True)
@@ -172,14 +176,10 @@ def get_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, epsg_code: i
     return output_file
 
 
-def subset_dem_for_rtc(output_file: str, manifest_file: str, pixel_size: float = 30.0):
+def subset_dem_for_rtc(output_file: str, manifest_file: str, pixel_size: float = 30.0) -> Tuple[str, str]:
     polygon = get_polygon_from_manifest(manifest_file)
     # TODO deal with antimeridian
 
     dem_name = get_best_dem(polygon, threshold=0.2)
-
-    centroid = polygon.Centroid()
-    epsg_code = utm_from_lon_lat(centroid.GetX(), centroid.GetY())
-
-    dem_tiff = get_dem(polygon, output_file, dem_name, epsg_code, buffer=0.15, pixel_size=pixel_size)
+    dem_tiff = subset_dem(polygon, output_file, dem_name, buffer=0.15, pixel_size=pixel_size)
     return dem_tiff, dem_name
