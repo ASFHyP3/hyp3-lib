@@ -19,23 +19,23 @@ ogr.UseExceptions()
 def build_geojson(gdal_info: List[dict]) -> dict:
     features = [
         {
-            "type": "Feature",
-            "properties": {},
-            "id": 0,
-            "geometry": tile['wgs84Extent']
+            'type': 'Feature',
+            'properties': {},
+            'id': 0,
+            'geometry': tile['wgs84Extent']
         }
         for tile in gdal_info
     ]
 
     geojson = {
-        "type": "FeatureCollection",
-        "crs": {
-            "type": "name",
-            "properties": {
-                "name": "EPSG:4326"
+        'type': 'FeatureCollection',
+        'crs': {
+            'type': 'name',
+            'properties': {
+                'name': 'EPSG:4326'
             }
         },
-        "features": features
+        'features': features
     }
     return geojson
 
