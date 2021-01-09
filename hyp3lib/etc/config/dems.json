@@ -1,10 +1,10 @@
 {
   "COP30": {
-    "coverage": "/vsis3/asf-dem-west/cop_coverage.geojson",
-    "vrt": "/vsis3/asf-dem-west/cop30.vrt"
+    "coverage": "/vsis3/asf-dem-west/v2/cop_coverage.geojson",
+    "vrt": "/vsis3/asf-dem-west/v2/cop30.vrt"
   },
   "SRTMGL1": {
-    "coverage": "/vsis3/asj-hyp3-dev/dems/srtmgl1_coverage.geojson",
-    "vrt": "/vsis3/asj-hyp3-dev/dems/srtmgl1.vrt"
+    "coverage": "/vsis3/asf-dem-west/v2/srtmgl1_coverage.geojson",
+    "vrt": "/vsis3/asf-dem-west/v2/srtmgl1.vrt"
   }
 }
