@@ -1,12 +1,10 @@
-[
-  {
-    "name": "COP30",
-    "coverage": "/vsis3/asj-hyp3-dev/dems/cop_coverage.geojson",
-    "vrt": "/vsis3/asj-hyp3-dev/dems/cop30.vrt"
+{
+  "COP30": {
+    "coverage": "/vsis3/asf-dem-west/cop_coverage.geojson",
+    "vrt": "/vsis3/asf-dem-west/cop30.vrt"
   },
-  {
-    "name": "SRTMGL1",
+  "SRTMGL1": {
     "coverage": "/vsis3/asj-hyp3-dev/dems/srtmgl1_coverage.geojson",
     "vrt": "/vsis3/asj-hyp3-dev/dems/srtmgl1.vrt"
   }
-]
+}

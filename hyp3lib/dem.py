@@ -95,7 +95,7 @@ def build_vrt(gdal_info: List[dict]) -> str:
     return rendered
 
 
-def get_dem_list():
+def get_dem_config():
     try:
         config_file = Path.home() / '.hyp3' / 'dems.json'
         with open(config_file) as f:
@@ -129,20 +129,20 @@ def get_coverage_geometry(coverage_geojson):
 
 
 def get_best_dem(polygon: ogr.Geometry, threshold: float = 0.2) -> str:
-    dem_list = get_dem_list()
+    dem_config = get_dem_config()
     best_pct = 0
     best_dem = ''
-    for dem in dem_list:
-        coverage = get_coverage_geometry(dem['coverage'])
+    for dem_name in dem_config:
+        coverage = get_coverage_geometry(dem_config[dem_name]['coverage'])
 
         covered_area = polygon.Intersection(coverage).GetArea()
         total_area = polygon.GetArea()
         pct = covered_area / total_area
-        logging.info(f"{dem['name']}: {pct*100:.2f}% coverage ({covered_area:.2f}/{total_area:.2f})")
+        logging.debug(f"{dem_name}: {pct*100:.2f}% coverage ({covered_area:.2f}/{total_area:.2f})")
 
         if best_pct == 0 or pct > best_pct + 0.05:
             best_pct = pct
-            best_dem = dem['name']
+            best_dem = dem_name
 
     if best_pct < threshold:
         raise DemError('Unable to find a DEM file for that area')
@@ -158,8 +158,8 @@ def utm_from_lon_lat(lon: float, lat: float) -> int:
 
 def subset_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, buffer: float = 0.15,
                pixel_size: float = 30.0) -> str:
-    dem_list = get_dem_list()
-    vrt = [dem['vrt'] for dem in dem_list if dem['name'] == dem_name][0]
+    dem_config = get_dem_config()
+    vrt = dem_config[dem_name]['vrt']
 
     min_x, max_x, min_y, max_y = polygon.Buffer(buffer).GetEnvelope()
     output_bounds = (min_x, min_y, max_x, max_y)
