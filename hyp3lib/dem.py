@@ -3,8 +3,10 @@
 import json
 import logging
 from pathlib import Path
+from typing import List
 
 import jinja2
+from lxml import etree
 from osgeo import gdal, ogr
 
 import hyp3lib.etc
@@ -14,7 +16,7 @@ gdal.UseExceptions()
 ogr.UseExceptions()
 
 
-def build_geojson(info_list):
+def build_geojson(gdal_info: List[dict]) -> dict:
     features = [
         {
             "type": "Feature",
@@ -22,7 +24,7 @@ def build_geojson(info_list):
             "id": 0,
             "geometry": tile['wgs84Extent']
         }
-        for tile in info_list
+        for tile in gdal_info
     ]
 
     geojson = {
@@ -38,13 +40,13 @@ def build_geojson(info_list):
     return geojson
 
 
-def build_vrt(info_list):
-    pixel_width = min([abs(item['geoTransform'][1]) for item in info_list])
-    pixel_height = min([abs(item['geoTransform'][5]) for item in info_list])
-    min_x = min([item['geoTransform'][0] for item in info_list])
-    max_x = max([item['cornerCoordinates']['lowerRight'][0] for item in info_list])
-    min_y = min([item['cornerCoordinates']['lowerRight'][1] for item in info_list])
-    max_y = max([item['geoTransform'][3] for item in info_list])
+def build_vrt(gdal_info: List[dict]) -> str:
+    pixel_width = min([abs(item['geoTransform'][1]) for item in gdal_info])
+    pixel_height = min([abs(item['geoTransform'][5]) for item in gdal_info])
+    min_x = min([item['geoTransform'][0] for item in gdal_info])
+    max_x = max([item['cornerCoordinates']['lowerRight'][0] for item in gdal_info])
+    min_y = min([item['cornerCoordinates']['lowerRight'][1] for item in gdal_info])
+    max_y = max([item['geoTransform'][3] for item in gdal_info])
     raster_width = round((max_x - min_x) / pixel_width + 1)
     raster_height = round((max_y - min_y) / pixel_height + 1)
 
@@ -56,12 +58,12 @@ def build_vrt(info_list):
         'raster_width': raster_width,
         'raster_height': raster_height,
         # assumed to be the same across all tiles
-        'projection_wkt': info_list[0]['coordinateSystem']['wkt'].replace('\n', ''),
-        'axis_mapping': info_list[0]['coordinateSystem']['dataAxisToSRSAxisMapping'],
-        'area_or_point': info_list[0]['metadata'][''].get('AREA_OR_POINT'),
-        'data_type': info_list[0]['bands'][0]['type'],
-        'color_interp': info_list[0]['bands'][0]['colorInterpretation'],
-        'no_data_value': info_list[0]['bands'][0].get('noDataValue'),
+        'projection_wkt': gdal_info[0]['coordinateSystem']['wkt'].replace('\n', ''),
+        'axis_mapping': gdal_info[0]['coordinateSystem']['dataAxisToSRSAxisMapping'],
+        'area_or_point': gdal_info[0]['metadata'][''].get('AREA_OR_POINT'),
+        'data_type': gdal_info[0]['bands'][0]['type'],
+        'color_interp': gdal_info[0]['bands'][0]['colorInterpretation'],
+        'no_data_value': gdal_info[0]['bands'][0].get('noDataValue'),
         'tiles': [
             {
                 'location': tile['description'],
@@ -75,7 +77,7 @@ def build_vrt(info_list):
                 'dst_height': round(tile['size'][1] * abs(tile['geoTransform'][5]) / pixel_height),
                 'source_band': 1,
                 'block_size': tile['bands'][0]['block'],
-            } for tile in info_list
+            } for tile in gdal_info
         ]
     }
 
@@ -105,6 +107,16 @@ def get_dem_list():
     return dem_list
 
 
+def get_polygon_from_manifest(manifest_file: str) -> ogr.Geometry:
+    root = etree.parse(manifest_file)
+    coordinates_string = root.find('//gml:coordinates', namespaces={'gml': 'http://www.opengis.net/gml'}).text
+    points = [point.split(',') for point in coordinates_string.split(' ')]
+    wkt = ','.join([f'{p[1]} {p[0]}' for p in points])
+    wkt = f'POLYGON(({wkt}))'
+    print(wkt)
+    return ogr.CreateGeometryFromWkt(wkt)
+
+
 def get_coverage_geometry(coverage_geojson):
     ds = ogr.Open(coverage_geojson)
     layer = ds.GetLayer()
@@ -116,11 +128,8 @@ def get_coverage_geometry(coverage_geojson):
     return ogr.CreateGeometryFromWkt(geom.ExportToWkt())
 
 
-def get_best_dem(y_min, y_max, x_min, x_max, threshold=0.2):
+def get_best_dem(polygon: ogr.Geometry, threshold: float = 0.2) -> str:
     dem_list = get_dem_list()
-    wkt = f'POLYGON(({x_min} {y_min}, {x_max} {y_min}, {x_max} {y_max}, {x_min} {y_max}, {x_min} {y_min}))'
-    polygon = ogr.CreateGeometryFromWkt(wkt)
-
     best_pct = 0
     best_dem = ''
     for dem in dem_list:
@@ -141,21 +150,23 @@ def get_best_dem(y_min, y_max, x_min, x_max, threshold=0.2):
     return best_dem
 
 
-def utm_from_lat_lon(lat, lon):
+def utm_from_lat_lon(lat: float, lon: float) -> int:
     hemisphere = 32600 if lat >= 0 else 32700
-    zone = (lon // 6 + 30) % 60 + 1
+    zone = int(lon // 6 + 30) % 60 + 1
     return hemisphere + zone
 
 
-def get_dem(outfile, dem_name, y_min, y_max, x_min, x_max, buffer=0.0, res=30.0):
+def get_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, epsg_code: int = 4326,
+            buffer: float = 0.15, pixel_size: float = 30.0) -> str:
     dem_list = get_dem_list()
     vrt = [dem['vrt'] for dem in dem_list if dem['name'] == dem_name][0]
-    output_bounds = [x_min - buffer, y_min - buffer, x_max + buffer, y_max + buffer]
-    epsg_code = utm_from_lat_lon((y_min + y_max) / 2, (x_min + x_max) / 2)
 
-    gdal.Warp(outfile, vrt, outputBounds=output_bounds, outputBoundsSRS='EPSG:4326', dstSRS=f'EPSG:{epsg_code}',
-              xRes=res, yRes=res, targetAlignedPixels=True, resampleAlg='cubic', dstNodata=-32767, multithread=True)
+    min_x, max_x, min_y, max_y = polygon.Buffer(buffer).GetEnvelope()
+    output_bounds = (min_x, min_y, max_x, max_y)
+
+    gdal.Warp(output_file, vrt, outputBounds=output_bounds, outputBoundsSRS='EPSG:4326', dstSRS=f'EPSG:{epsg_code}',
+              xRes=pixel_size, yRes=pixel_size, targetAlignedPixels=True, resampleAlg='cubic', multithread=True)
 
     #TODO pixel as point?
 
-    return outfile
+    return output_file
