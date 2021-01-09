@@ -47,16 +47,14 @@ def build_vrt(gdal_info: List[dict]) -> str:
     max_x = max([item['cornerCoordinates']['lowerRight'][0] for item in gdal_info])
     min_y = min([item['cornerCoordinates']['lowerRight'][1] for item in gdal_info])
     max_y = max([item['geoTransform'][3] for item in gdal_info])
-    raster_width = round((max_x - min_x) / pixel_width + 1)
-    raster_height = round((max_y - min_y) / pixel_height + 1)
 
     payload = {
         'pixel_width': pixel_width,
         'pixel_height': pixel_height,
         'min_x': min_x,
         'max_y': max_y,
-        'raster_width': raster_width,
-        'raster_height': raster_height,
+        'raster_width': round((max_x - min_x) / pixel_width + 1),
+        'raster_height': round((max_y - min_y) / pixel_height + 1),
         # assumed to be the same across all tiles
         'projection_wkt': gdal_info[0]['coordinateSystem']['wkt'].replace('\n', ''),
         'axis_mapping': gdal_info[0]['coordinateSystem']['dataAxisToSRSAxisMapping'],
