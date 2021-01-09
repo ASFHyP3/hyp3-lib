@@ -156,17 +156,16 @@ def utm_from_lon_lat(lon: float, lat: float) -> int:
     return hemisphere + zone
 
 
-def subset_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, epsg_code: Optional[int] = None,
-               buffer: float = 0.15, pixel_size: float = 30.0) -> str:
+def subset_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, buffer: float = 0.15,
+               pixel_size: float = 30.0) -> str:
     dem_list = get_dem_list()
     vrt = [dem['vrt'] for dem in dem_list if dem['name'] == dem_name][0]
 
     min_x, max_x, min_y, max_y = polygon.Buffer(buffer).GetEnvelope()
     output_bounds = (min_x, min_y, max_x, max_y)
 
-    if epsg_code is None:
-        centroid = polygon.Centroid()
-        epsg_code = utm_from_lon_lat(centroid.GetX(), centroid.GetY())
+    centroid = polygon.Centroid()
+    epsg_code = utm_from_lon_lat(centroid.GetX(), centroid.GetY())
 
     gdal.Warp(output_file, vrt, outputBounds=output_bounds, outputBoundsSRS='EPSG:4326', dstSRS=f'EPSG:{epsg_code}',
               xRes=pixel_size, yRes=pixel_size, targetAlignedPixels=True, resampleAlg='cubic', multithread=True)
