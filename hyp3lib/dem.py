@@ -111,9 +111,9 @@ def get_polygon_from_manifest(manifest_file: str) -> ogr.Geometry:
     root = etree.parse(manifest_file)
     coordinates_string = root.find('//gml:coordinates', namespaces={'gml': 'http://www.opengis.net/gml'}).text
     points = [point.split(',') for point in coordinates_string.split(' ')]
+    points.append(points[0])
     wkt = ','.join([f'{p[1]} {p[0]}' for p in points])
     wkt = f'POLYGON(({wkt}))'
-    print(wkt)
     return ogr.CreateGeometryFromWkt(wkt)
 
 
@@ -150,7 +150,7 @@ def get_best_dem(polygon: ogr.Geometry, threshold: float = 0.2) -> str:
     return best_dem
 
 
-def utm_from_lat_lon(lat: float, lon: float) -> int:
+def utm_from_lon_lat(lon: float, lat: float) -> int:
     hemisphere = 32600 if lat >= 0 else 32700
     zone = int(lon // 6 + 30) % 60 + 1
     return hemisphere + zone
@@ -170,3 +170,16 @@ def get_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, epsg_code: i
     #TODO pixel as point?
 
     return output_file
+
+
+def subset_dem_for_rtc(output_file: str, manifest_file: str, pixel_size: float = 30.0):
+    polygon = get_polygon_from_manifest(manifest_file)
+    # TODO deal with antimeridian
+
+    dem_name = get_best_dem(polygon, threshold=0.2)
+
+    centroid = polygon.Centroid()
+    epsg_code = utm_from_lon_lat(centroid.GetX(), centroid.GetY())
+
+    dem_tiff = get_dem(polygon, output_file, dem_name, epsg_code, buffer=0.15, pixel_size=pixel_size)
+    return dem_tiff, dem_name
