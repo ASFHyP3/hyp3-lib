@@ -1,6 +1,6 @@
 {
   "COP30": {
-    "coverage": "/vsis3/asf-dem-west/v2/cop_coverage.geojson",
+    "coverage": "/vsis3/asf-dem-west/v2/cop30_coverage.geojson",
     "vrt": "/vsis3/asf-dem-west/v2/cop30.vrt"
   },
   "SRTMGL1": {

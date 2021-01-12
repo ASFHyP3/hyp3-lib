@@ -1,18 +1,34 @@
 import json
 
 import pytest
+from osgeo import ogr
 
 from hyp3lib import DemError, dem
 
 
-# def test_get_best_dem():
-#     assert dem.get_best_dem(y_min=37.0, y_max=38.0, x_min=-118.0, x_max=-117.0) == 'COP30'
-#     assert dem.get_best_dem(y_min=-6.8, y_max=-6.2, x_min=27.2, x_max=27.8) == 'SRTMGL1'
-#     assert dem.get_best_dem(y_min=59.975, y_max=60.1, x_min=99.5, x_max=100.5) == 'COP30'
-#     assert dem.get_best_dem(y_min=59.976, y_max=60.1, x_min=99.5, x_max=100.5) == 'COP30'
-#
-#     with pytest.raises(DemError):
-#         dem.get_best_dem(y_min=0, y_max=1, x_min=0, x_max=1)
+def _get_geometry_from_bbox(south, north, west, east):
+    wkt = f'POLYGON(({west} {south}, {west} {north}, {east} {north}, {east} {south}, {west} {south}))'
+    return ogr.CreateGeometryFromWkt(wkt)
+
+
+def test_get_best_dem():
+    polygon = _get_geometry_from_bbox(37.0, 38.0, -118.0, 117.0)
+    assert dem.get_best_dem(polygon) == 'COP30'
+
+    polygon = _get_geometry_from_bbox(-6.8, -6.2, 27.2, 27.8)
+    assert dem.get_best_dem(polygon) == 'SRTMGL1'
+
+    polygon = _get_geometry_from_bbox(59.975, 60.1, 99.5, 100.5)
+    assert dem.get_best_dem(polygon) == 'COP30'
+
+    polygon = _get_geometry_from_bbox(59.976, 60.1, 99.5, 100.5)
+    assert dem.get_best_dem(polygon) == 'COP30'
+
+    # TODO test threshold parameter
+
+    polygon = _get_geometry_from_bbox(0, 1, 0, 1)
+    with pytest.raises(DemError):
+        dem.get_best_dem(polygon)
 
 
 def test_get_polygon_from_manifest(test_data_folder):
