@@ -148,6 +148,21 @@ def get_best_dem(polygon: ogr.Geometry, threshold: float = 0.2) -> str:
     return best_dem
 
 
+def crosses_antimeridian(polygon: ogr.Geometry) -> bool:
+    min_x, max_x, _, _ = polygon.GetEnvelope()
+    return min_x < -170 and 170 < max_x
+
+
+def update_for_antimeridian(polygon):
+    geojson = json.loads(polygon.ExportToJson())
+    for feature in geojson['coordinates']:
+        for point in feature:
+            if point[0] < -170:
+                point[0] += 360
+    new_polygon = ogr.CreateGeometryFromJson(json.dumps(geojson))
+    return new_polygon
+
+
 def utm_from_lon_lat(lon: float, lat: float) -> int:
     hemisphere = 32600 if lat >= 0 else 32700
     zone = int(lon // 6 + 30) % 60 + 1
@@ -175,7 +190,8 @@ def subset_dem(polygon: ogr.Geometry, output_file: str, dem_name: str, buffer: f
 
 def subset_dem_for_rtc(output_file: str, manifest_file: str, pixel_size: float = 30.0) -> Tuple[str, str]:
     polygon = get_polygon_from_manifest(manifest_file)
-    # TODO deal with antimeridian
+    if crosses_antimeridian(polygon):
+        polygon = update_for_antimeridian(polygon)
 
     dem_name = get_best_dem(polygon, threshold=0.2)
     dem_tiff = subset_dem(polygon, output_file, dem_name, buffer=0.15, pixel_size=pixel_size)

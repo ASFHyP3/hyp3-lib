@@ -7,8 +7,13 @@ from hyp3lib import DemError, dem
 
 
 def _get_geometry_from_bbox(south, north, west, east):
-    wkt = f'POLYGON(({west} {south}, {west} {north}, {east} {north}, {east} {south}, {west} {south}))'
-    return ogr.CreateGeometryFromWkt(wkt)
+    geojson = {
+        'type': 'Polygon',
+        'coordinates': [[
+            [west, south], [west, north], [east, north], [east, south], [west, south]
+        ]]
+    }
+    return ogr.CreateGeometryFromJson(json.dumps(geojson))
 
 
 def test_get_best_dem():
@@ -46,6 +51,36 @@ def test_utm_from_lat_lon():
     assert dem.utm_from_lon_lat(182, 1) == 32601
     assert dem.utm_from_lon_lat(-182, 1) == 32660
     assert dem.utm_from_lon_lat(-360, -1) == 32731
+
+
+def test_crosses_antimeridian():
+    polygon = _get_geometry_from_bbox(60, 80, -179, 179)
+    assert dem.crosses_antimeridian(polygon)
+
+    polygon = _get_geometry_from_bbox(60, 80, 179, -179)
+    assert dem.crosses_antimeridian(polygon)
+
+    polygon = _get_geometry_from_bbox(-80, -60, -170.01, 170.01)
+    assert dem.crosses_antimeridian(polygon)
+
+    polygon = _get_geometry_from_bbox(0, 1, 0, 1)
+    assert not dem.crosses_antimeridian(polygon)
+
+    polygon = _get_geometry_from_bbox(0, 1, -170, 170)
+    assert not dem.crosses_antimeridian(polygon)
+
+    polygon = _get_geometry_from_bbox(0, 1, -170.01, 170)
+    assert not dem.crosses_antimeridian(polygon)
+
+    polygon = _get_geometry_from_bbox(0, 1, -170, 170.01)
+    assert not dem.crosses_antimeridian(polygon)
+
+
+# def test_update_for_antimeridian():
+#     polygon = _get_geometry_from_bbox(60, 80, -179, 179)
+#     polygon = dem.update_for_antimeridian(polygon)
+#     geojson = json.loads(polygon.ExportToJson())
+#     assert geojson['coordinates'] == [[]]
 
 
 def test_get_coverage_geometry(tmp_path):
