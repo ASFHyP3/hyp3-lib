@@ -2,6 +2,7 @@
 
 import json
 import logging
+from math import ceil
 from pathlib import Path
 from typing import List, Tuple
 
@@ -41,11 +42,11 @@ def build_geojson(gdal_info: List[dict]) -> dict:
 
 
 def build_vrt(gdal_info: List[dict]) -> str:
-    pixel_width = min([abs(item['geoTransform'][1]) for item in gdal_info])
-    pixel_height = min([abs(item['geoTransform'][5]) for item in gdal_info])
+    pixel_width = min([abs(item['geoTransform'][1]) for item in gdal_info]) / 2
+    pixel_height = min([abs(item['geoTransform'][5]) for item in gdal_info]) / 2
     min_x = min([item['geoTransform'][0] for item in gdal_info])
-    max_x = max([item['cornerCoordinates']['lowerRight'][0] for item in gdal_info])
-    min_y = min([item['cornerCoordinates']['lowerRight'][1] for item in gdal_info])
+    max_x = max([item['geoTransform'][0] + item['size'][0] * item['geoTransform'][1] for item in gdal_info])
+    min_y = min([item['geoTransform'][3] + item['size'][1] * item['geoTransform'][5] for item in gdal_info])
     max_y = max([item['geoTransform'][3] for item in gdal_info])
 
     payload = {
@@ -53,8 +54,8 @@ def build_vrt(gdal_info: List[dict]) -> str:
         'pixel_height': pixel_height,
         'min_x': min_x,
         'max_y': max_y,
-        'raster_width': round((max_x - min_x) / pixel_width + 1),
-        'raster_height': round((max_y - min_y) / pixel_height + 1),
+        'raster_width': ceil((max_x - min_x) / pixel_width + 1),
+        'raster_height': ceil((max_y - min_y) / pixel_height + 1),
         # assumed to be the same across all tiles
         'projection_wkt': gdal_info[0]['coordinateSystem']['wkt'].replace('\n', ''),
         'axis_mapping': gdal_info[0]['coordinateSystem']['dataAxisToSRSAxisMapping'],
