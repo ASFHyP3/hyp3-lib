@@ -39,7 +39,7 @@ setup(
 
     install_requires=[
         'boto3',
-        'gdal',
+        'gdal>=3.2',
         'imageio',
         'importlib_metadata',
         'lxml',
