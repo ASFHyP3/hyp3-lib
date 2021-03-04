@@ -10,6 +10,8 @@ from tempfile import NamedTemporaryFile
 
 from osgeo import gdal
 
+from hyp3lib.execute import execute
+
 
 def cogify_dir(directory: str, file_pattern: str = '*.tif'):
     """
@@ -32,10 +34,11 @@ def cogify_file(filename: str):
         filename: GeoTIFF file to convert
     """
     logging.info(f'Converting {filename} to COG')
-    creation_options = ['TILED=YES', 'COMPRESS=DEFLATE', 'NUM_THREADS=ALL_CPUS']
+    execute(f'gdaladdo -r average {filename} 2 4 8 16', uselogging=True)
+    creation_options = ['TILED=YES', 'COMPRESS=DEFLATE', 'NUM_THREADS=ALL_CPUS', 'COPY_SRC_OVERVIEWS=YES']
     with NamedTemporaryFile() as temp_file:
         shutil.copy(filename, temp_file.name)
-        gdal.Translate(filename, temp_file.name, format='GTiff', creationOptions=creation_options, noData=0)
+        gdal.Translate(filename, temp_file.name, format='GTiff', creationOptions=creation_options)
 
 
 def main():
