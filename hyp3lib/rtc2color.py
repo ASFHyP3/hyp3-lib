@@ -169,6 +169,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
 
     # used scale the results to fit inside RGB 1-255 (ints), with 0 for no/bad data
     scale_factor = 1.0 if real else 254.0
+    no_data_value = 0
 
     logging.info('Calculate red channel and save in GeoTIFF')
     red = calculate_color_channel(
@@ -176,6 +177,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     )
     out_band = out_raster.GetRasterBand(1)
     out_band.WriteArray(red)
+    out_band.SetNoDataValue(no_data_value)
     del red
 
     logging.info('Calculate green channel and save in GeoTIFF')
@@ -184,6 +186,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     )
     out_band = out_raster.GetRasterBand(2)
     out_band.WriteArray(green)
+    out_band.SetNoDataValue(no_data_value)
     del green
 
     logging.info('Calculate blue channel and save in GeoTIFF')
@@ -192,6 +195,7 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
     )
     out_band = out_raster.GetRasterBand(3)
     out_band.WriteArray(blue)
+    out_band.SetNoDataValue(no_data_value)
     del blue
 
     out_raster = None  # How to close because gdal is weird
