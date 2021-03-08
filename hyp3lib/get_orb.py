@@ -79,7 +79,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
             "page_size": "1",
         }
 
-        response = requests.get(url='https://qc.sentinel1.eo.esa.int/api/v1/', params=params)
+        response = requests.get(url='https://qc.sentinel1.copernicus.eu/api/v1/', params=params)
         response.raise_for_status()
         qc_data = response.json()
 
