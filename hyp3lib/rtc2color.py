@@ -169,30 +169,23 @@ def rtc2color(copol_tif: Union[str, Path], crosspol_tif: Union[str, Path], thres
 
     # used scale the results to fit inside RGB 1-255 (ints), with 0 for no/bad data
     scale_factor = 1.0 if real else 254.0
+    no_data_value = 0
 
-    logging.info('Calculate red channel and save in GeoTIFF')
-    red = calculate_color_channel(
-        copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='red'
-    )
-    out_band = out_raster.GetRasterBand(1)
-    out_band.WriteArray(red)
-    del red
+    bands = {
+        1: 'red',
+        2: 'green',
+        3: 'teal' if teal else 'blue',
+    }
 
-    logging.info('Calculate green channel and save in GeoTIFF')
-    green = calculate_color_channel(
-        copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='green'
-    )
-    out_band = out_raster.GetRasterBand(2)
-    out_band.WriteArray(green)
-    del green
-
-    logging.info('Calculate blue channel and save in GeoTIFF')
-    blue = calculate_color_channel(
-        copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color='teal' if teal else 'blue'
-    )
-    out_band = out_raster.GetRasterBand(3)
-    out_band.WriteArray(blue)
-    del blue
+    for band_number, color in bands.items():
+        logging.info(f'Calculate {color} channel and save in GeoTIFF')
+        band_data = calculate_color_channel(
+            copol_data, crosspol_data, threshold=threshold, scale_factor=scale_factor, color=color
+        )
+        out_band = out_raster.GetRasterBand(band_number)
+        out_band.WriteArray(band_data)
+        out_band.SetNoDataValue(no_data_value)
+        del band_data
 
     out_raster = None  # How to close because gdal is weird
 
