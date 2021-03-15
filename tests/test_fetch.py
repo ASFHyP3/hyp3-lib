@@ -32,6 +32,7 @@ def test_get_download_path():
     content_disposition_quoted = 'attachment; filename="filename.jpg"'
     content_disposition_unquoted = 'attachment; filename=filename.jpg'
     content_disposition_no_filename = 'attachment;'
+    content_disposition_empty = 'attachment; filename=""'
     dir_as_str = 'dir'
     dir_as_path = Path(dir_as_str)
 
@@ -42,6 +43,9 @@ def test_get_download_path():
     assert result == Path('filename.jpg')
 
     result = fetch._get_download_path(url, content_disposition_no_filename)
+    assert result == Path('foo.bar')
+
+    result = fetch._get_download_path(url, content_disposition_empty)
     assert result == Path('foo.bar')
 
     result = fetch._get_download_path(url)

@@ -25,14 +25,14 @@ def write_credentials_to_netrc_file(username: str, password: str,
 
 
 def _get_download_path(url: str, content_disposition: str = None, directory: Union[Path, str] = '.'):
+    filename = None
     if content_disposition is not None:
         _, params = cgi.parse_header(content_disposition)
         filename = params.get('filename')
-        if filename is not None:
-            return Path(directory) / filename
-    filename = basename(urlparse(url).path)
-    if filename == '':
-        raise ValueError(f'url does not have a valid path: {url}')
+    if not filename:
+        filename = basename(urlparse(url).path)
+    if not filename:
+        raise ValueError(f'could not determine download path for: {url}')
     return Path(directory) / filename
 
 
