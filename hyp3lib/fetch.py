@@ -1,8 +1,10 @@
 """Utilities for fetching things from external endpoints"""
-
+import cgi
 import logging
+from os.path import basename
 from pathlib import Path
 from typing import Union
+from urllib.parse import urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -22,6 +24,18 @@ def write_credentials_to_netrc_file(username: str, password: str,
             f.write(f'machine {domain} login {username} password {password}\n')
 
 
+def _get_download_path(url: str, content_disposition: str = None, directory: Union[Path, str] = '.'):
+    if content_disposition is not None:
+        _, params = cgi.parse_header(content_disposition)
+        filename = params.get('filename')
+        if filename is not None:
+            return Path(directory) / filename
+    filename = basename(urlparse(url).path)
+    if filename == '':
+        raise ValueError(f'url does not have a valid path: {url}')
+    return Path(directory) / filename
+
+
 def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1) -> str:
     """Download a file
 
@@ -37,11 +51,6 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
     """
     logging.info(f'Downloading {url}')
 
-    try:
-        download_path = Path(directory) / url.split("/")[-1]
-    except AttributeError:
-        raise requests.exceptions.InvalidURL(f'Invalid URL provided: {url}')
-
     session = requests.Session()
     retry_strategy = Retry(
         total=retries,
@@ -53,6 +62,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
     session.mount('http://', HTTPAdapter(max_retries=retry_strategy))
 
     with session.get(url, stream=True) as s:
+        download_path = _get_download_path(s.url, s.headers.get('content-disposition'), directory)
         s.raise_for_status()
         with open(download_path, "wb") as f:
             for chunk in s.iter_content(chunk_size=chunk_size):

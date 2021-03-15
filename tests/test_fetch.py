@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 import requests
@@ -24,6 +25,39 @@ def test_write_credentials_to_netrc_file(tmp_path):
     with open(output_file, 'r') as f:
         assert f.read() == 'machine urs.earthdata.nasa.gov login foo password bar\n' \
                            'machine domain login append password this\n'
+
+
+def test_get_download_path():
+    url = 'https://somewebsite.com/foo.bar'
+    content_disposition_quoted = 'attachment; filename="filename.jpg"'
+    content_disposition_unquoted = 'attachment; filename=filename.jpg'
+    content_disposition_no_filename = 'attachment;'
+    dir_as_str = 'dir'
+    dir_as_path = Path(dir_as_str)
+
+    result = fetch._get_download_path(url, content_disposition_quoted)
+    assert result == Path('filename.jpg')
+
+    result = fetch._get_download_path(url, content_disposition_unquoted)
+    assert result == Path('filename.jpg')
+
+    result = fetch._get_download_path(url, content_disposition_no_filename)
+    assert result == Path('foo.bar')
+
+    result = fetch._get_download_path(url)
+    assert result == Path('foo.bar')
+
+    result = fetch._get_download_path(url, directory=dir_as_str)
+    assert result == Path('dir/foo.bar')
+
+    result = fetch._get_download_path(url, directory=dir_as_path)
+    assert result == Path('dir/foo.bar')
+
+    result = fetch._get_download_path(url, content_disposition_unquoted, dir_as_str)
+    assert result == Path('dir/filename.jpg')
+
+    with pytest.raises(ValueError):
+        fetch._get_download_path('https://foo.com')
 
 
 @responses.activate
@@ -63,5 +97,5 @@ def test_download_file_in_chunks(safe_data, tmp_path):
 
 
 def test_download_file_none():
-    with pytest.raises(requests.exceptions.InvalidURL):
+    with pytest.raises(requests.exceptions.MissingSchema):
         _ = fetch.download_file(url=None)
