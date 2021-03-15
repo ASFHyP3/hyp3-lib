@@ -55,41 +55,53 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
     return None
 
 
+def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end_time: datetime):
+    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products'
+    auth = ('gnssguest', 'gnssguest')
+
+    date_format = '%Y-%m-%dT%H:%M:%SZ'
+    params = {
+        'filter': f'(platformname:Sentinel-1 AND producttype:{orbit_type} AND filename:{platform}* '
+                  f'AND beginPosition:[* TO {start_time.strftime(date_format)}] '
+                  f'AND endPosition:[{end_time.strftime(date_format)} TO NOW])',
+        'limit': 1,
+        'offset': 0,
+        'sortedby': 'ingestiondate',
+        'order': 'desc',
+    }
+
+    response = requests.get(search_url, params=params, auth=auth)
+    response.raise_for_status()
+    data = response.json()
+
+    orbit_url = None
+    if data['products']:
+        uuid = data['products'][0]['uuid']
+        orbit_url = f"https://scihub.copernicus.eu/gnss/odata/v1/Products('{uuid}')/$value"
+    return orbit_url
+
+
 def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 'ESA'):
-    """Get the URL of an orbit file from a provider
+    """Get the URL of a Sentinel-1 orbit file from a provider
 
     Args:
-        granule: Granule name to find an orbit file for
+        granule: Sentinel-1 granule name to find an orbit file for
         orbit_type: Orbit type to download
-        provider: Povider name to download the orbit file from
+        provider: Provider name to download the orbit file from
 
     Returns:
         orbit_url: The url to the matched orbit file
     """
     platform = granule[0:3]
-    time_stamps = re.split('_+', granule)[4:6]
+    start_time, end_time = granule.split('_')[4:6]
 
     if provider.upper() == 'ESA':
-        params = {
-            "product_type": orbit_type.upper(),
-            "product_name__startswith": platform,
-            "validity_start__lt": datetime.strptime(time_stamps[0], '%Y%m%dT%H%M%S').strftime('%Y-%m-%dT%H:%M:%S'),
-            "validity_stop__gt": datetime.strptime(time_stamps[1], '%Y%m%dT%H%M%S').strftime('%Y-%m-%dT%H:%M:%S'),
-            "ordering": "-creation_date",
-            "page_size": "1",
-        }
-
-        response = requests.get(url='https://qc.sentinel1.eo.esa.int/api/v1/', params=params)
-        response.raise_for_status()
-        qc_data = response.json()
-
-        orbit_url = None
-        if qc_data["results"]:
-            orbit_url = qc_data["results"][0]["remote_url"]
-        return orbit_url
+        start_time = datetime.strptime(start_time, '%Y%m%dT%H%M%S')
+        end_time = datetime.strptime(end_time, '%Y%m%dT%H%M%S')
+        return _get_esa_orbit_url(orbit_type, platform, start_time, end_time)
 
     elif provider.upper() == 'ASF':
-        orbit_url = _get_asf_orbit_url(orbit_type.lower(), platform, time_stamps[0].replace('T', ''))
+        orbit_url = _get_asf_orbit_url(orbit_type.lower(), platform, start_time.replace('T', ''))
         return orbit_url
 
     raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
