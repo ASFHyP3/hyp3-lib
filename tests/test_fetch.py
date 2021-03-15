@@ -66,8 +66,7 @@ def test_download_file(safe_data, tmp_path):
         text = f.read()
 
     responses.add(
-        responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt', body=text,
-        status=200,
+        responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt', body=text
     )
 
     download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path)
@@ -79,13 +78,25 @@ def test_download_file(safe_data, tmp_path):
 
 
 @responses.activate
+def test_download_file_content_disposition(tmp_path):
+    responses.add(
+        responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt',
+        headers={'content-disposition': 'attachment; filename="filename.jpg"'}
+    )
+
+    download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path)
+
+    assert download_path == os.path.join(tmp_path, 'filename.jpg')
+    assert os.path.exists(download_path)
+
+
+@responses.activate
 def test_download_file_in_chunks(safe_data, tmp_path):
     with open(os.path.join(safe_data, 'granule_name.txt')) as f:
         text = f.read()
 
     responses.add(
-        responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt', body=text,
-        status=200,
+        responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt', body=text
     )
 
     download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path, chunk_size=1)
