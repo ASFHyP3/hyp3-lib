@@ -39,8 +39,8 @@ def test_get_orbit_url_esa_poeorb():
 def test_get_orbit_url_esa_resorb():
     search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products' \
                  '?filter=%28platformname%3ASentinel-1+AND+producttype%3AAUX_RESORB+AND+filename%3AS1A%2A+' \
-                 'AND+beginPosition%3A%5B%2A+TO+2015-06-21T12%3A02%3A32Z%5D+' \
-                 'AND+endPosition%3A%5B2015-06-21T12%3A02%3A20Z+TO+NOW%5D%29' \
+                 'AND+beginPosition%3A%5B%2A+TO+2015-06-21T12%3A02%3A20Z%5D+' \
+                 'AND+endPosition%3A%5B2015-06-21T12%3A02%3A32Z+TO+NOW%5D%29' \
                  '&limit=1&offset=0&sortedby=ingestiondate&order=desc'
     search_response = {'products': [{'uuid': 'myUUID'}]}
     responses.add(responses.GET, search_url, json=search_response)
