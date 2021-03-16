@@ -93,7 +93,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
         orbit_url: The url to the matched orbit file
     """
     platform = granule[0:3]
-    start_time, end_time = granule.split('_')[4:6]
+    start_time, end_time = re.split('_+', granule)[4:6]
 
     if provider.upper() == 'ESA':
         start_time = datetime.strptime(start_time, '%Y%m%dT%H%M%S')
