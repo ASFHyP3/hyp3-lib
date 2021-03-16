@@ -54,16 +54,17 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
     logging.info(f'Downloading {url}')
 
     session = requests.Session()
+    session.auth = auth
+
     retry_strategy = Retry(
         total=retries,
         backoff_factor=backoff_factor,
         status_forcelist=[429, 500, 502, 503, 504],
     )
-
     session.mount('https://', HTTPAdapter(max_retries=retry_strategy))
     session.mount('http://', HTTPAdapter(max_retries=retry_strategy))
 
-    with session.get(url, stream=True, auth=auth) as s:
+    with session.get(url, stream=True) as s:
         download_path = _get_download_path(s.url, s.headers.get('content-disposition'), directory)
         s.raise_for_status()
         with open(download_path, "wb") as f:
