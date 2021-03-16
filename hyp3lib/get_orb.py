@@ -15,7 +15,8 @@ from urllib3.util.retry import Retry
 
 from hyp3lib import OrbitDownloadError
 from hyp3lib.fetch import download_file
-from hyp3lib.verify_opod import verify_opod
+
+ESA_AUTH = ('gnssguest', 'gnssguest')
 
 
 def _get_asf_orbit_url(orbit_type, platform, timestamp):
@@ -57,7 +58,6 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
 
 def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end_time: datetime):
     search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products'
-    auth = ('gnssguest', 'gnssguest')
 
     date_format = '%Y-%m-%dT%H:%M:%SZ'
     params = {
@@ -70,7 +70,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
         'order': 'desc',
     }
 
-    response = requests.get(search_url, params=params, auth=auth)
+    response = requests.get(search_url, params=params, auth=ESA_AUTH)
     response.raise_for_status()
     data = response.json()
 
@@ -107,16 +107,6 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
     raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
 
 
-def _download_and_verify_orbit(url: str, directory: str = ''):
-    orbit_file = download_file(url, directory=directory)
-    try:
-        verify_opod(orbit_file)
-    except ValueError:
-        raise OrbitDownloadError(f'Downloaded an invalid orbit file {orbit_file}')
-
-    return orbit_file
-
-
 def downloadSentinelOrbitFile(
         granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB')
 ):
@@ -133,11 +123,19 @@ def downloadSentinelOrbitFile(
         provider: The provider used to download the orbit file from
 
     """
+    provider_auth_map = {
+        'ESA': ESA_AUTH,
+        'ASF': None,  # use netrc instead of HTTP Basic Auth
+    }
     for orbit_type in orbit_types:
         for provider in providers:
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
-                orbit_file = _download_and_verify_orbit(url, directory=directory)
+                orbit_file = download_file(
+                    url,
+                    directory=directory,
+                    auth=provider_auth_map[provider]
+                )
                 if orbit_file:
                     return orbit_file, provider
             except (requests.RequestException, OrbitDownloadError):
@@ -158,7 +156,7 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument('safe_files', help='Sentinel-1 SAFE file name(s)', nargs="*")
-    parser.add_argument('-p', '--provider', nargs='*', default=['ESA', 'ASF'],  choices=['ESA', 'ASF'],
+    parser.add_argument('-p', '--provider', nargs='*', default=['ESA', 'ASF'], choices=['ESA', 'ASF'],
                         help="Name(s) of the orbit file providers' organization, in order of preference")
     parser.add_argument('-t', '--orbit-types', nargs='*', default=['AUX_POEORB', 'AUX_RESORB'],
                         choices=['MPL_ORBPRE', 'AUX_POEORB', 'AUX_PREORB', 'AUX_RESORB', 'AUX_RESATT'],
