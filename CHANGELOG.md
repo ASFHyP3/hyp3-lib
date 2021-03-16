@@ -8,6 +8,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.6.7](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.6...v1.6.7)
 
+### Added
+* Optional `auth` parameter to `fetch.download_file` to provide basic auth username/password for the download url
+
 ### Changed
 * `fetch.download_file` now uses content disposition header when available to determine filenames
 

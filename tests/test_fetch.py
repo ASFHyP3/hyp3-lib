@@ -107,6 +107,18 @@ def test_download_file_in_chunks(safe_data, tmp_path):
         assert f.read() == text
 
 
+@responses.activate
+def test_download_file_auth(tmp_path):
+    def request_callback(request):
+        assert request.headers['Authorization'] == 'Basic Zm9vOmJhcg=='
+        return 200, {}, 'body'
+
+    responses.add_callback(responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt', callback=request_callback)
+
+    fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path, auth=('foo', 'bar'))
+    assert (tmp_path / 'foobar.txt').exists()
+
+
 def test_download_file_none():
     with pytest.raises(requests.exceptions.MissingSchema):
         _ = fetch.download_file(url=None)
