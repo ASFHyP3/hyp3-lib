@@ -47,7 +47,7 @@ setup(
         'netCDF4',
         'numpy',
         'pillow',
-        'pyproj~=2.0',
+        'pyproj>=2',
         'pyshp',
         'requests',
         'scipy',
