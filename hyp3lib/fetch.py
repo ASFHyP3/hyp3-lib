@@ -3,7 +3,7 @@ import cgi
 import logging
 from os.path import basename
 from pathlib import Path
-from typing import Union
+from typing import Optional, Tuple, Union
 from urllib.parse import urlparse
 
 import requests
@@ -36,7 +36,8 @@ def _get_download_path(url: str, content_disposition: str = None, directory: Uni
     return Path(directory) / filename
 
 
-def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1) -> str:
+def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1,
+                  auth: Optional[Tuple[str, str]] = None) -> str:
     """Download a file
 
     Args:
@@ -45,6 +46,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
         chunk_size: Size to chunk the download into
         retries: Number of retries to attempt
         backoff_factor: Factor for calculating time between retries
+        auth: Username and password for HTTP Basic Auth
 
     Returns:
         download_path: The path to the downloaded file
@@ -61,7 +63,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
     session.mount('https://', HTTPAdapter(max_retries=retry_strategy))
     session.mount('http://', HTTPAdapter(max_retries=retry_strategy))
 
-    with session.get(url, stream=True) as s:
+    with session.get(url, stream=True, auth=auth) as s:
         download_path = _get_download_path(s.url, s.headers.get('content-disposition'), directory)
         s.raise_for_status()
         with open(download_path, "wb") as f:
