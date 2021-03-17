@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.7](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.6...v1.6.7)
+
+### Added
+* Optional `auth` parameter to `fetch.download_file` to provide basic auth username/password for the download url
+
+### Changed
+* `fetch.download_file` now uses content disposition header when available to determine filenames
+* The `get_orb` module now leverages the Copernicus Sentinels POD Data Hub API instead of the deprecated
+  qc.sentinel1.eo.esa.int API
+
 ## [1.6.6](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.5...v1.6.6)
 
 ### Changed
