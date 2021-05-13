@@ -74,7 +74,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
     if threshold is not None:
       print('Applying threshold ({0}) ...'.format(threshold))
       data[data<np.float(threshold)] = noDataValue
-    if noDataValue == np.nan or noDataValue == -np.nan:
+    if np.isnan(noDataValue):
       data[np.isnan(data)==False] = 1
     else:
       data[data>noDataValue] = 1
