@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.8](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.7...v1.6.8)
+
+### Changed
+* `scene.get_download_url` now returns sentinel1.asf.alaska.edu URLs rather than cloudfront.net URLs
+
 ## [1.6.7](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.6...v1.6.7)
 
 ### Added
