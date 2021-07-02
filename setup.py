@@ -1,18 +1,14 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import os
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
-_HERE = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(_HERE, 'README.md'), 'r') as f:
-    long_desc = f.read()
+readme = Path(__file__).parent / 'README.md'
 
 setup(
     name='hyp3lib',
     use_scm_version=True,
     description='Common library for HyP3 plugins',
-    long_description=long_desc,
+    long_description=readme.read_text(),
     long_description_content_type='text/markdown',
 
     url='https://github.com/ASFHyP3/hyp3-lib',
@@ -20,7 +16,7 @@ setup(
     author='ASF APD/Tools Team',
     author_email='uaf-asf-apd@alaska.edu',
 
-    license='BSD-3-Clause',
+    license='BSD',
     include_package_data=True,
 
     classifiers=[
@@ -32,6 +28,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
         'Topic :: Software Development :: Libraries',
         ],
 
@@ -59,6 +56,10 @@ setup(
     extras_require={
         'develop': [
             'botocore',
+            'flake8',
+            'flake8-import-order',
+            'flake8-blind-except',
+            'flake8-builtins',
             'pytest',
             'pytest-cov',
             'pytest-console-scripts',
