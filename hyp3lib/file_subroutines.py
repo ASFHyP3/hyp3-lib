@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import errno
 import glob
 import os
@@ -53,7 +51,7 @@ def get_file_list():
     files.sort(key=lambda row: row[1])
     print(files)
 
-    for i in range(len(files)): 
+    for i in range(len(files)):
         filenames.append(files[i][0])
         filedates.append(files[i][1])
 

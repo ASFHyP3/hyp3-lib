@@ -4,9 +4,6 @@
 #
 #       Large matrices are deleted after they are no longer used.  Not sure if this is more efficient than
 #       the usual garbage collector, but have not seen any issues.
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import math
 
 import numpy as np
