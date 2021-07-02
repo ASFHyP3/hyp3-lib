@@ -1,7 +1,4 @@
 """Creates an arcgis compatible thumbnail"""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 from PIL import Image
 import base64
@@ -39,7 +36,7 @@ def main():
     args = parser.parse_args()
 
     pngtothumb(args.input)
-  
+
 
 if __name__ == '__main__':
     main()

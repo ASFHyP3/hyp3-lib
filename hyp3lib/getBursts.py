@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
 from lxml import etree
 import logging
@@ -20,6 +18,6 @@ def getBursts(mydir,make_tab_flag=True):
                     f1.write("1 {}\n".format(total_bursts))
         f1.close()
         os.chdir(back)
-    return burst_tab 
+    return burst_tab
 
 

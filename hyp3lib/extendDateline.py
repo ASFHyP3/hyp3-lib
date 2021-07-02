@@ -1,7 +1,4 @@
 """Extend the coverage next to the dateline"""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
 from osgeo import ogr

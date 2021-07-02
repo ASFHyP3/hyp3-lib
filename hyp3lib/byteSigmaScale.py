@@ -1,7 +1,4 @@
 """Convert a floating point tiff into a byte tiff using 2-sigma scaling."""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
 import argparse
 from hyp3lib import saa_func_lib as saa
@@ -35,7 +32,7 @@ def byteSigmaScale(infile,outfile):
     mask2 = (data>0).astype(bool)
     mask3 = mask ^ mask2
     data[mask3==True] = 1
-    saa.write_gdal_file_byte(outfile,trans,proj,data,nodata=0) 
+    saa.write_gdal_file_byte(outfile,trans,proj,data,nodata=0)
 
 
 def main():

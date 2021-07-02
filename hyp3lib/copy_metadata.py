@@ -1,7 +1,4 @@
 """Copy metadata from one tif to another"""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
 import argparse
 from hyp3lib import saa_func_lib as saa
@@ -25,7 +22,7 @@ def copy_metadata(infile, outfile):
         ds1 = gdal.Translate('',ds,format='MEM',metadataOptions = ['{}={}'.format(item,md[item])])
         ds = ds1
     gdal.Translate(outfile,ds1)
- 
+
 
 def main():
     """Main entrypoint"""

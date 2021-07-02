@@ -1,6 +1,3 @@
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import csv
 import datetime
 import hashlib
@@ -542,7 +539,7 @@ def do_granule_search(search_str, level, max_results, wget_options=None):
 
     if len(granules.keys()) == 0:
         log.warning('No results')
- 
+
     return granules
 
 
@@ -714,7 +711,7 @@ def download(cfg, keys_queue):
             else:
                 log.info("Completed: %s" % granule) # TODO Add counter
                 add_to_fetched(cfg.already_fetched_file, granule)
- 
+
                 # 162432397 (155M) remaining
                 amt = None
                 total = 0
@@ -732,7 +729,7 @@ def download(cfg, keys_queue):
                         amt = total
 
                 if amt is None:
-                    amt_str = "(none) " 
+                    amt_str = "(none) "
                 elif amt>1024*1024*1024:
                     amt_str = "(%.2f GB) " % (amt/1024.0/1024.0/1024.0)
                 elif amt>1024*1024:
@@ -996,7 +993,7 @@ def main():
 
     n_args = len(args)
     log.debug("Args: " + str(args))
-  
+
     if cfg.wget_options is None:
         cfg.wget_options = ""
 
@@ -1013,7 +1010,7 @@ def main():
         cfg.level = "BROWSE"
     if cfg.rtc:
         cfg.level = "RTC"
- 
+
     if cfg.dataDir is None:
         cfg.dataDir = ""
 

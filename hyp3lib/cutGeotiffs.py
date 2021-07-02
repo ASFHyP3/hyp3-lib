@@ -1,7 +1,4 @@
 """Clip a bunch of geotiffs to the same area"""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 from hyp3lib import saa_func_lib as saa
 import re
 import os
@@ -51,7 +48,7 @@ def cutFiles(arg):
         return(0)
 
     file1 = arg[0]
-   
+
     # Open file1, get projection and pixsize
     dst1 = gdal.Open(file1)
     p1 = dst1.GetProjection()
@@ -69,11 +66,11 @@ def cutFiles(arg):
         for x in range(len(arg)-1):
             file2 = arg[x+1]
 
-            # Open up file2, get projection 
+            # Open up file2, get projection
             dst2 = gdal.Open(file2)
             p2 = dst2.GetProjection()
 
-            # Cut the UTM zone out of projection2 
+            # Cut the UTM zone out of projection2
             ptr = p2.find("UTM zone ")
             zone2 = re.search("(\d+)",p2[ptr:]).groups()
             zone2 = int(zone2[0])
@@ -94,7 +91,7 @@ def cutFiles(arg):
     coords = getCorners(arg[0])
     for x in range (len(arg)-1):
         coords = getOverlap(coords,arg[x+1])
-    
+
     # Check to make sure there was some overlap
     print("Clipping coordinates: {}".format(coords))
     diff1 = (coords[2] - coords[0]) / pixSize

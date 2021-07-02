@@ -1,7 +1,4 @@
 """Convert Geotiff Power to Amplitude"""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 from hyp3lib import saa_func_lib as saa
 import numpy as np
 import argparse

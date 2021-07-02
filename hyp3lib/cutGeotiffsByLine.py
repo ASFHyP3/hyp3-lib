@@ -1,7 +1,4 @@
 """Clip a bunch of geotiffs to the same area"""
-
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import argparse
 import os
 from osgeo import gdal
@@ -25,7 +22,7 @@ def getOrigins(files):
 
 
 def copyOrigins(files,all_coords,all_pixsize):
-    
+
     ul = np.zeros((2,len(files)))
     lr = np.zeros((2,len(files)))
 
@@ -35,7 +32,7 @@ def copyOrigins(files,all_coords,all_pixsize):
         lr[0,i] = coords[2]
         ul[1,i] = coords[1]
         lr[1,i] = coords[3]
- 
+
         if i == 0:
             xres = all_pixsize[i]
             yres = all_pixsize[i]
@@ -52,7 +49,7 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
 
     diff_ul = np.zeros((2,len(files)))
 
-    diff_ul[0] = (max(ul[0])-ul[0])/xres    
+    diff_ul[0] = (max(ul[0])-ul[0])/xres
     diff_ul[1] = -1*(min(ul[1])-ul[1])/(-1*yres)
 
     print("Difference list:")
@@ -67,7 +64,7 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
         diff_ul[1] = diff_ul[1] * -1
     print("Size of output images {} x {}".format(lenx, leny))
 
-    outfiles = []   
+    outfiles = []
     for i in range(len(files)):
         outfile = files[i].replace(".tif","_cut.tif")
         if all_coords is not None:
