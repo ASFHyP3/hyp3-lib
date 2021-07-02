@@ -31,6 +31,5 @@ dependencies:
   - requests
   - scipy
   - six
-  - setuptools_scm
   - statsmodels
   - urllib3
