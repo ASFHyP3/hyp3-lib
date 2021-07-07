@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import, division, unicode_literals
-
 import os
 from osgeo import ogr
 import glob
@@ -24,13 +22,13 @@ def get_bounding_box_file(safeFile):
     (lat2_max,lat2_min,lon2_max,lon2_min) = get_bounding_box(myxml)
 
     if ((lon1_max-lon2_max)>180) or ((lon1_min-lon2_min)>180):
-        if lon1_max < 0: 
+        if lon1_max < 0:
             lon1_max += 360
-        if lon1_min < 0: 
+        if lon1_min < 0:
             lon1_min += 360
-        if lon2_max < 0: 
+        if lon2_max < 0:
             lon2_max += 360
-        if lon2_min < 0: 
+        if lon2_min < 0:
             lon2_min += 360
 
     lat_max = max(lat1_max,lat1_min,lat2_max,lat2_min)
@@ -179,7 +177,7 @@ def get_real_cc(myxml):
         if samp==0 and (abs(line-nl) <= 1):
             lats.append(i[4].text)
             lons.append(i[5].text)
-            
+
     for i in root.iter('geolocationGridPoint'):
         line = int(i[2].text)
         samp = int(i[3].text)
@@ -194,7 +192,7 @@ def get_real_cc(myxml):
         if samp==ns-1 and line==0:
             lats.append(i[4].text)
             lons.append(i[5].text)
-                        
+
     if len(lats) != 4 or len(lons) != 4:
         print("ERROR: Unable to find corner points!")
         exit(1)
@@ -247,13 +245,13 @@ def SelectAllSubswaths(safeFile,lon_min,lat_min,lon_max,lat_max):
     if area1 > 0.0:
         ss.append(1)
         polygon.append(intersect1.GetEnvelope())
-   
+
     if area2 > 0.0:
         ss.append(2)
         polygon.append(intersect2.GetEnvelope())
-        
+
     if area3 > 0.0:
         ss.append(3)
         polygon.append(intersect3.GetEnvelope())
-        
+
     return ss, polygon

@@ -1,4 +1,2 @@
 .*gitleaks.toml$
-.gitlab-ci.yml
 hyp3lib\/get_asf.py
-config\/.*\.xml$
