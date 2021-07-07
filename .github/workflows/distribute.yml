@@ -52,4 +52,4 @@ jobs:
       - name: Pip install ${{ needs.distribute.outputs.SDIST_VERSION }}
         shell: bash -l {0}
         run: |
-          python -m pip install hyp3_lib==${{ needs.distribute.outputs.SDIST_VERSION }}
+          python -m pip install hyp3lib==${{ needs.distribute.outputs.SDIST_VERSION }}
