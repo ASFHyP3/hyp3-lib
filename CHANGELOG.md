@@ -9,6 +9,9 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.6.9]
 
+### Removed
+* Python 3.6 is no longer supported
+
 ### Fixed
 * `JSONDecodeError` in `get_orb._get_esa_orbit_url`
 
