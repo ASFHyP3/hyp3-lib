@@ -7,6 +7,11 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [1.6.9]
+
+### Fixed
+* `JSONDecodeError` in `get_orb._get_esa_orbit_url`
+
 ## [1.6.8](https://github.com/ASFHyP3/hyp3-lib/compare/v1.6.7...v1.6.8)
 
 ### Changed
