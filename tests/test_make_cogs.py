@@ -1,14 +1,14 @@
 import os
 import shutil
-import requests
+
+from osgeo_utils.samples.validate_cloud_optimized_geotiff import validate
 
 from hyp3lib.make_cogs import cogify_dir, cogify_file
 
 
 def _is_cog(filename):
-    with open(filename, 'rb') as f:
-        response = requests.post('http://cog-validate.radiant.earth/api/validate', files={'file': f})
-    return response.status_code == 200
+    warnings, errors, details = validate(filename, full_check=True)
+    return errors == []
 
 
 def test_make_cog(geotiff):
