@@ -23,7 +23,7 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
 
 @responses.activate
 def test_get_orbit_url_esa_poeorb():
-    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products' \
+    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products.json' \
                  '?filter=%28platformname%3ASentinel-1+AND+producttype%3AAUX_POEORB+AND+filename%3AS1A%2A+' \
                  'AND+beginPosition%3A%5B%2A+TO+2015-06-21T12%3A02%3A20Z%5D+' \
                  'AND+endPosition%3A%5B2015-06-21T12%3A02%3A32Z+TO+NOW%5D%29' \
@@ -37,7 +37,7 @@ def test_get_orbit_url_esa_poeorb():
 
 @responses.activate
 def test_get_orbit_url_esa_resorb():
-    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products' \
+    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products.json' \
                  '?filter=%28platformname%3ASentinel-1+AND+producttype%3AAUX_RESORB+AND+filename%3AS1A%2A+' \
                  'AND+beginPosition%3A%5B%2A+TO+2015-06-21T12%3A02%3A20Z%5D+' \
                  'AND+endPosition%3A%5B2015-06-21T12%3A02%3A32Z+TO+NOW%5D%29' \
