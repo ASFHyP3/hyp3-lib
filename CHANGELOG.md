@@ -7,7 +7,7 @@ and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [1.6.9]
+## [1.7.0]
 
 ### Removed
 * Python 3.6 is no longer supported
