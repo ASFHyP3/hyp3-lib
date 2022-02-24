@@ -57,7 +57,7 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
 
 
 def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end_time: datetime):
-    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products'
+    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products.json'
 
     date_format = '%Y-%m-%dT%H:%M:%SZ'
     params = {
