@@ -62,6 +62,9 @@ def cutGeotiffsByLine(files,all_coords=None,all_pixsize=None):
     if leny < 0:
         leny = abs(leny)
         diff_ul[1] = diff_ul[1] * -1
+    if lenx < 0:
+        lenx = abs(lenx)
+        diff_ul[0] = diff_ul[0] * -1
     print("Size of output images {} x {}".format(lenx, leny))
 
     outfiles = []
