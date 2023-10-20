@@ -57,27 +57,27 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
 
 
 def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end_time: datetime):
-    search_url = 'https://scihub.copernicus.eu/gnss/api/stub/products.json'
+    search_url = 'https://catalogue.dataspace.copernicus.eu/odata/v1/Products'
 
     date_format = '%Y-%m-%dT%H:%M:%SZ'
     params = {
-        'filter': f'(platformname:Sentinel-1 AND producttype:{orbit_type} AND filename:{platform}* '
-                  f'AND beginPosition:[* TO {start_time.strftime(date_format)}] '
-                  f'AND endPosition:[{end_time.strftime(date_format)} TO NOW])',
-        'limit': 1,
-        'offset': 0,
-        'sortedby': 'ingestiondate',
-        'order': 'desc',
+        '$filter': f"Collection/Name eq 'SENTINEL-1' and "
+                   f"startswith(Name, '{platform}_OPER_{orbit_type}_OPOD_') and "
+                   f"ContentDate/Start lt {start_time.strftime(date_format)} and "
+                   f"ContentDate/End gt {end_time.strftime(date_format)}",
+        '$orderby': 'ModificationDate desc',
+        '$top': 1,
     }
 
-    response = requests.get(search_url, params=params, auth=ESA_AUTH)
+    response = requests.get(search_url, params=params)
     response.raise_for_status()
     data = response.json()
 
     orbit_url = None
-    if data['products']:
-        uuid = data['products'][0]['uuid']
-        orbit_url = f"https://scihub.copernicus.eu/gnss/odata/v1/Products('{uuid}')/$value"
+    if data['value']:
+        product_id = data['value'][0]['Id']
+        orbit_url = f'https://zipper.dataspace.copernicus.eu/download/{product_id}'
+
     return orbit_url
 
 
