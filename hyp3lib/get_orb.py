@@ -18,6 +18,8 @@ from hyp3lib.fetch import download_file
 
 ESA_AUTH = ('gnssguest', 'gnssguest')
 
+ESA_AUTH_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
+
 
 def _get_asf_orbit_url(orbit_type, platform, timestamp):
     search_url = f'https://s1qc.asf.alaska.edu/{orbit_type.lower()}/'
@@ -79,6 +81,18 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
         orbit_url = f'https://zipper.dataspace.copernicus.eu/download/{product_id}'
 
     return orbit_url
+
+
+def _get_esa_auth_token(username: str, password: str) -> str:
+    data = {
+        'client_id': 'cdse-public',
+        'grant_type': 'password',
+        'username': username,
+        'password': password,
+    }
+    response = requests.post(ESA_AUTH_TOKEN_URL, data=data)
+    response.raise_for_status()
+    return response.json()['access_token']
 
 
 def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 'ESA'):
