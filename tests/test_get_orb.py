@@ -2,7 +2,6 @@ import os
 from unittest.mock import patch
 
 import responses
-from responses import matchers
 
 from hyp3lib import get_orb
 
@@ -37,7 +36,7 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
         method=responses.GET,
         url='https://foo.bar/hello.txt',
         body='content',
-        match=[matchers.header_matcher({"Authorization": "Bearer test-token"})],
+        match=[responses.matchers.header_matcher({"Authorization": "Bearer test-token"})],
     )
 
     with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'), \
