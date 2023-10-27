@@ -36,7 +36,7 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
         method=responses.GET,
         url='https://foo.bar/hello.txt',
         body='content',
-        match=[responses.matchers.header_matcher({"Authorization": "Bearer test-token"})],
+        match=[responses.matchers.header_matcher({'Authorization': 'Bearer test-token'})],
     )
 
     with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'), \
@@ -62,7 +62,7 @@ def test_get_orbit_url_esa_poeorb():
     responses.add(responses.GET, search_url, json=search_response)
 
     orbit_url = get_orb.get_orbit_url(_GRANULE, provider='ESA')
-    assert orbit_url == "https://zipper.dataspace.copernicus.eu/download/myProductId"
+    assert orbit_url == 'https://zipper.dataspace.copernicus.eu/download/myProductId'
 
 
 @responses.activate
@@ -72,7 +72,7 @@ def test_get_orbit_url_esa_resorb():
     responses.add(responses.GET, search_url, json=search_response)
 
     orbit_url = get_orb.get_orbit_url(_GRANULE, provider='ESA', orbit_type='AUX_RESORB')
-    assert orbit_url == "https://zipper.dataspace.copernicus.eu/download/myProductId"
+    assert orbit_url == 'https://zipper.dataspace.copernicus.eu/download/myProductId'
 
 
 def test_get_orbit_url_asf():
