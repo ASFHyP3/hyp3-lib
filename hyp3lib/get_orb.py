@@ -6,7 +6,7 @@ import os
 import re
 import sys
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 import requests
 from lxml import html
@@ -122,7 +122,7 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
 
 def downloadSentinelOrbitFile(
         granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB'),
-        esa_credentials: Optional[tuple[str, str]] = None,
+        esa_credentials: Optional[Tuple[str, str]] = None,
 ):
     """Download a Sentinel-1 Orbit file
 
