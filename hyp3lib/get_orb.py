@@ -66,7 +66,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
                    f"startswith(Name, '{platform}_OPER_{orbit_type}_OPOD_') and "
                    f"ContentDate/Start lt {start_time.strftime(date_format)} and "
                    f"ContentDate/End gt {end_time.strftime(date_format)}",
-        '$orderby': 'ModificationDate desc',
+        '$orderby': 'Name desc',
         '$top': 1,
     }
 
