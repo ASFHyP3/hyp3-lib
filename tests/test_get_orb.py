@@ -2,6 +2,7 @@ import os
 from unittest.mock import patch
 
 import responses
+from responses import matchers
 
 from hyp3lib import get_orb
 
@@ -32,11 +33,21 @@ def test_get_esa_auth_token():
 
 @responses.activate
 def test_download_sentinel_orbit_file_esa(tmp_path):
-    responses.add(responses.GET, 'https://foo.bar/hello.txt', body='content')
+    responses.add(
+        method=responses.GET,
+        url='https://foo.bar/hello.txt',
+        body='content',
+        match=[matchers.header_matcher({"Authorization": "Bearer test-token"})],
+    )
 
-    with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'):
-        responses.add(responses.GET, 'https://foo.bar/hello.txt', body='content')
-        orbit_file, provider = get_orb.downloadSentinelOrbitFile(_GRANULE, providers=('ESA',), directory=str(tmp_path))
+    with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'), \
+            patch('hyp3lib.get_orb._get_esa_auth_token', return_value='test-token'):
+        orbit_file, provider = get_orb.downloadSentinelOrbitFile(
+            _GRANULE,
+            providers=('ESA',),
+            directory=str(tmp_path),
+            esa_credentials=('user', 'pass'),
+        )
 
     assert provider == 'ESA'
     assert os.path.exists(orbit_file)

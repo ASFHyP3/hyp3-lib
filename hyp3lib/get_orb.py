@@ -131,6 +131,7 @@ def downloadSentinelOrbitFile(
         directory: Directory to save the orbit files into
         providers: Iterable of providers to attempt to download the orbit file from, in order of preference
         orbit_types: Iterable of orbit file types to attempt to download, in order of preference
+        esa_credentials: Copernicus Data Space Ecosystem (CDSE) username and password
 
     Returns: Tuple of:
         orbit_file: The downloaded orbit file

@@ -47,6 +47,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
         retries: Number of retries to attempt
         backoff_factor: Factor for calculating time between retries
         auth: Username and password for HTTP Basic Auth
+        token: Token for HTTP Bearer authentication
 
     Returns:
         download_path: The path to the downloaded file
