@@ -37,7 +37,7 @@ def _get_download_path(url: str, content_disposition: str = None, directory: Uni
 
 
 def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1,
-                  auth: Optional[Tuple[str, str]] = None) -> str:
+                  auth: Optional[Tuple[str, str]] = None, token: Optional[str] = None) -> str:
     """Download a file
 
     Args:
@@ -47,6 +47,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
         retries: Number of retries to attempt
         backoff_factor: Factor for calculating time between retries
         auth: Username and password for HTTP Basic Auth
+        token: Token for HTTP Bearer authentication
 
     Returns:
         download_path: The path to the downloaded file
@@ -55,6 +56,8 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
 
     session = requests.Session()
     session.auth = auth
+    if token:
+        session.headers.update({'Authorization': f'Bearer {token}'})
 
     retry_strategy = Retry(
         total=retries,

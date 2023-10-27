@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0]
+
+### Added
+* `fetch.download_file` now supports Bearer authentication via a new `token` parameter
+### Changed
+* `get_orb.downloadSentinelOrbitFile` now queries the new Copernicus Data Space Ecosystem for the `ESA` provider. 
+  A new `esa_credentials` parameter must be provided when using the `ESA` provider.
+
 ## [1.7.1]
 
 ### Added
