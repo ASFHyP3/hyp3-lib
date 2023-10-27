@@ -6,9 +6,9 @@ jobs:
   flake8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.x
 
@@ -22,25 +22,5 @@ jobs:
           flake8 --max-line-length=120 --import-order-style=pycharm --statistics \
               --application-import-names hyp3lib --ignore=A,B,E,I,W,N8
 
-  gitleaks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Scan for secrets with gitleaks
-        uses: zricethezav/gitleaks-action@master
-
-  trufflehog:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v1
-        with:
-          python-version: 3.x
-
-      - uses: ASFHyP3/actions/trufflehog@main
+  call-secrets-analysis-workflow:
+    uses: ASFHyP3/actions/.github/workflows/reusable-secrets-analysis.yml@v0.8.3
