@@ -9,6 +9,28 @@ _GRANULE = 'S1A_IW_SLC__1SSV_20150621T120220_20150621T120232_006471_008934_72D8'
 
 
 @responses.activate
+def test_get_esa_auth_token():
+    url = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
+    request_payload = {
+        'client_id': 'cdse-public',
+        'grant_type': 'password',
+        'username': 'myUsername',
+        'password': 'myPassword',
+    }
+    response_payload = {
+        'access_token': 'ABC123',
+    }
+    responses.add(
+        responses.POST,
+        url=url,
+        match=[responses.matchers.urlencoded_params_matcher(request_payload)],
+        json=response_payload,
+    )
+
+    assert get_orb._get_esa_auth_token('myUsername', 'myPassword') == 'ABC123'
+
+
+@responses.activate
 def test_download_sentinel_orbit_file_esa(tmp_path):
     responses.add(responses.GET, 'https://foo.bar/hello.txt', body='content')
 
