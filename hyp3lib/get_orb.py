@@ -6,6 +6,7 @@ import os
 import re
 import sys
 from datetime import datetime
+from typing import Optional
 
 import requests
 from lxml import html
@@ -15,8 +16,6 @@ from urllib3.util.retry import Retry
 
 from hyp3lib import OrbitDownloadError
 from hyp3lib.fetch import download_file
-
-ESA_AUTH = ('gnssguest', 'gnssguest')
 
 ESA_AUTH_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
 
@@ -122,7 +121,8 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
 
 
 def downloadSentinelOrbitFile(
-        granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB')
+        granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB'),
+        esa_credentials: Optional[tuple[str, str]] = None,
 ):
     """Download a Sentinel-1 Orbit file
 
@@ -137,18 +137,17 @@ def downloadSentinelOrbitFile(
         provider: The provider used to download the orbit file from
 
     """
-    provider_auth_map = {
-        'ESA': ESA_AUTH,
-        'ASF': None,  # use netrc instead of HTTP Basic Auth
-    }
+    if 'ESA' in providers and esa_credentials is None:
+        raise ValueError('esa_credentials must be provided if ESA in providers')
     for orbit_type in orbit_types:
         for provider in providers:
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
+                token = _get_esa_auth_token(*esa_credentials) if provider == 'ESA' else None
                 orbit_file = download_file(
                     url,
                     directory=directory,
-                    auth=provider_auth_map[provider]
+                    token=token,
                 )
                 if orbit_file:
                     return orbit_file, provider
