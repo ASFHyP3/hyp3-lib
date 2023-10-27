@@ -42,7 +42,7 @@ setup(
         'lxml',
         'matplotlib',
         'netCDF4',
-        'numpy',
+        'numpy<1.24',
         'pillow',
         'pyproj>=2',
         'pyshp',
