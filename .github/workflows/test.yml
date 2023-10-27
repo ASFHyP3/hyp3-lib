@@ -17,9 +17,3 @@ jobs:
       local_package_name: hyp3_gamma
       python_versions: >-
         ['3.7', '3.8', '3.9', '3.10']
-
-  pytest:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
