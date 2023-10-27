@@ -14,6 +14,6 @@ jobs:
   call-pytest-workflow:
     uses: ASFHyP3/actions/.github/workflows/reusable-pytest.yml@v0.8.3
     with:
-      local_package_name: hyp3_gamma
+      local_package_name: hyp3lib
       python_versions: >-
         ['3.7', '3.8', '3.9', '3.10']
