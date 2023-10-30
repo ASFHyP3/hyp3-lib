@@ -17,29 +17,32 @@ from urllib3.util.retry import Retry
 from hyp3lib import OrbitDownloadError
 from hyp3lib.fetch import download_file
 
-ESA_AUTH_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
+ESA_CREATE_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
+ESA_DELETE_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/account/sessions'
 
 
 class EsaToken:
+    """Context manager for authentication tokens for the ESA Copernicus Data Space Ecosystem (CDSE)"""
 
-    def __init__(self, username, password):
+    def __init__(self, username: str, password: str):
         """
         Args:
-            **options: GDAL Config `option=value` keyword arguments.
+            username: CDSE username
+            password: CDSE password
         """
         self.username = username
         self.password = password
         self.token = None
         self.session_id = None
 
-    def __enter__(self):
+    def __enter__(self) -> str:
         data = {
             'client_id': 'cdse-public',
             'grant_type': 'password',
             'username': self.username,
             'password': self.password,
         }
-        response = requests.post(ESA_AUTH_TOKEN_URL, data=data)
+        response = requests.post(ESA_CREATE_TOKEN_URL, data=data)
         response.raise_for_status()
         self.session_id = response.json()['session_state']
         self.token = response.json()['access_token']
@@ -47,7 +50,7 @@ class EsaToken:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         response = requests.delete(
-            url=f'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/account/sessions/{self.session_id}',
+            url=f'{ESA_DELETE_TOKEN_URL}/{self.session_id}',
             headers={'Authorization': f'Bearer {self.token}', 'Content-Type': 'application/json'},
         )
         response.raise_for_status()

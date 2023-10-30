@@ -10,7 +10,7 @@ _GRANULE = 'S1A_IW_SLC__1SSV_20150621T120220_20150621T120232_006471_008934_72D8'
 
 @responses.activate
 def test_esa_token():
-    url = get_orb.ESA_AUTH_TOKEN_URL
+    url = get_orb.ESA_CREATE_TOKEN_URL
     request_payload = {
         'client_id': 'cdse-public',
         'grant_type': 'password',
@@ -28,7 +28,7 @@ def test_esa_token():
         json=response_payload,
     )
 
-    url = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/account/sessions/mySessionId'
+    url = f'{get_orb.ESA_DELETE_TOKEN_URL}/mySessionId'
     headers = {
         'Authorization': 'Bearer ABC123',
         'Content-Type': 'application/json',
