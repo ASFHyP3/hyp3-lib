@@ -20,6 +20,39 @@ from hyp3lib.fetch import download_file
 ESA_AUTH_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
 
 
+class EsaToken:
+
+    def __init__(self, username, password):
+        """
+        Args:
+            **options: GDAL Config `option=value` keyword arguments.
+        """
+        self.username = username
+        self.password = password
+        self.token = None
+        self.session_id = None
+
+    def __enter__(self):
+        data = {
+            'client_id': 'cdse-public',
+            'grant_type': 'password',
+            'username': self.username,
+            'password': self.password,
+        }
+        response = requests.post(ESA_AUTH_TOKEN_URL, data=data)
+        response.raise_for_status()
+        self.session_id = response.json()['session_state']
+        self.token = response.json()['access_token']
+        return self.token
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        response = requests.delete(
+            url=f'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/account/sessions/{self.session_id}',
+            headers={'Authorization': f'Bearer {self.token}', 'Content-Type': 'application/json'},
+        )
+        response.raise_for_status()
+
+
 def _get_asf_orbit_url(orbit_type, platform, timestamp):
     search_url = f'https://s1qc.asf.alaska.edu/{orbit_type.lower()}/'
 
@@ -81,19 +114,6 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
 
     return orbit_url
 
-
-def _get_esa_auth_token(username: str, password: str) -> str:
-    data = {
-        'client_id': 'cdse-public',
-        'grant_type': 'password',
-        'username': username,
-        'password': password,
-    }
-    response = requests.post(ESA_AUTH_TOKEN_URL, data=data)
-    response.raise_for_status()
-    return response.json()['access_token']
-
-
 def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 'ESA'):
     """Get the URL of a Sentinel-1 orbit file from a provider
 
@@ -144,12 +164,11 @@ def downloadSentinelOrbitFile(
         for provider in providers:
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
-                token = _get_esa_auth_token(*esa_credentials) if provider == 'ESA' else None
-                orbit_file = download_file(
-                    url,
-                    directory=directory,
-                    token=token,
-                )
+                if provider == 'ESA':
+                    with EsaToken(*esa_credentials) as token:
+                        orbit_file = download_file(url, directory=directory, token=token)
+                else:
+                    orbit_file = download_file(url, directory=directory)
                 if orbit_file:
                     return orbit_file, provider
             except (requests.RequestException, OrbitDownloadError):

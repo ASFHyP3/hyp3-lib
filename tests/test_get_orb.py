@@ -9,7 +9,7 @@ _GRANULE = 'S1A_IW_SLC__1SSV_20150621T120220_20150621T120232_006471_008934_72D8'
 
 
 @responses.activate
-def test_get_esa_auth_token():
+def test_esa_token():
     url = get_orb.ESA_AUTH_TOKEN_URL
     request_payload = {
         'client_id': 'cdse-public',
@@ -19,6 +19,7 @@ def test_get_esa_auth_token():
     }
     response_payload = {
         'access_token': 'ABC123',
+        'session_state': 'mySessionId'
     }
     responses.add(
         responses.POST,
@@ -27,7 +28,19 @@ def test_get_esa_auth_token():
         json=response_payload,
     )
 
-    assert get_orb._get_esa_auth_token('myUsername', 'myPassword') == 'ABC123'
+    url = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/account/sessions/mySessionId'
+    headers = {
+        'Authorization': 'Bearer ABC123',
+        'Content-Type': 'application/json',
+    }
+    responses.add(
+        responses.DELETE,
+        url=url,
+        match=[responses.matchers.header_matcher(headers)],
+    )
+
+    with get_orb.EsaToken(username='myUsername', password='myPassword') as token:
+        assert token == 'ABC123'
 
 
 @responses.activate
@@ -40,7 +53,7 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
     )
 
     with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'), \
-            patch('hyp3lib.get_orb._get_esa_auth_token', return_value='test-token'):
+            patch('hyp3lib.get_orb._get_esa_auth_token', return_value='test-token'):  # FIXME
         orbit_file, provider = get_orb.downloadSentinelOrbitFile(
             _GRANULE,
             providers=('ESA',),
