@@ -53,7 +53,9 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
     )
 
     with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'), \
-            patch('hyp3lib.get_orb._get_esa_auth_token', return_value='test-token'):  # FIXME
+            patch('hyp3lib.get_orb.EsaToken.__enter__', return_value='test-token'), \
+            patch('hyp3lib.fetch.download_file', return_value=str(tmp_path / 'hello.txt')), \
+            patch('hyp3lib.get_orb.EsaToken.__exit__'):
         orbit_file, provider = get_orb.downloadSentinelOrbitFile(
             _GRANULE,
             providers=('ESA',),
