@@ -48,7 +48,7 @@ def test_esa_token():
 
 @responses.activate
 def test_download_sentinel_orbit_file_esa(tmp_path):
-    responses.add(
+    url_request = responses.add(
         method=responses.GET,
         url='https://foo.bar/hello.txt',
         body='content',
@@ -57,7 +57,6 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
 
     with patch('hyp3lib.get_orb.get_orbit_url', return_value='https://foo.bar/hello.txt'), \
             patch('hyp3lib.get_orb.EsaToken.__enter__', return_value='test-token'), \
-            patch('hyp3lib.fetch.download_file', return_value=str(tmp_path / 'hello.txt')), \
             patch('hyp3lib.get_orb.EsaToken.__exit__'):
         orbit_file, provider = get_orb.downloadSentinelOrbitFile(
             _GRANULE,
@@ -69,6 +68,7 @@ def test_download_sentinel_orbit_file_esa(tmp_path):
     assert provider == 'ESA'
     assert os.path.exists(orbit_file)
     assert orbit_file == str(tmp_path / 'hello.txt')
+    assert url_request.call_count == 1
 
 
 @responses.activate
