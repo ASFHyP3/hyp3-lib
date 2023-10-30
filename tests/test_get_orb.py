@@ -21,7 +21,7 @@ def test_esa_token():
         'access_token': 'ABC123',
         'session_state': 'mySessionId'
     }
-    responses.add(
+    get_request = responses.add(
         responses.POST,
         url=url,
         match=[responses.matchers.urlencoded_params_matcher(request_payload)],
@@ -33,7 +33,7 @@ def test_esa_token():
         'Authorization': 'Bearer ABC123',
         'Content-Type': 'application/json',
     }
-    responses.add(
+    delete_request = responses.add(
         responses.DELETE,
         url=url,
         match=[responses.matchers.header_matcher(headers)],
@@ -41,6 +41,9 @@ def test_esa_token():
 
     with get_orb.EsaToken(username='myUsername', password='myPassword') as token:
         assert token == 'ABC123'
+
+    assert get_request.call_count == 1
+    assert delete_request.call_count == 1
 
 
 @responses.activate
