@@ -2,7 +2,7 @@
 
 ## Common library for HyP3 plugins
 
-### Please note that the use `hyp3lib` version 2 or less is **_NOT_** recommended. 
+### Please note that the use of `hyp3lib` version 2 or less is **_NOT_** recommended. 
 
 This library is outdated and largely untested, containing a broad collection of scripts/tools developed for upstream packages that have since undergone many *major* releases. 
 
