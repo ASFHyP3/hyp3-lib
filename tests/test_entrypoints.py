@@ -16,6 +16,11 @@ def test_byteSigmaScale(script_runner):
     assert ret.success
 
 
+def test_createAmp(script_runner):
+    ret = script_runner.run('createAmp.py', '-h')
+    assert ret.success
+
+
 def test_cutGeotiffs(script_runner):
     ret = script_runner.run('cutGeotiffs.py', '-h')
     assert ret.success
@@ -36,8 +41,23 @@ def test_makeAsfBrowse(script_runner):
     assert ret.success
 
 
+def test_make_cogs(script_runner):
+    ret = script_runner.run('make_cogs.py', '-h')
+    assert ret.success
+
+
+def test_raster_boundary2shape(script_runner):
+    ret = script_runner.run('raster_boundary2shape.py', '-h')
+    assert ret.success
+
+
 def test_resample_geotiff(script_runner):
     ret = script_runner.run('resample_geotiff.py', '-h')
+    assert ret.success
+
+
+def test_rtc2color(script_runner):
+    ret = script_runner.run('rtc2color.py', '-h')
     assert ret.success
 
 
