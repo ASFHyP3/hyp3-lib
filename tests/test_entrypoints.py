@@ -21,11 +21,6 @@ def test_createAmp(script_runner):
     assert ret.success
 
 
-def test_cutGeotiffs(script_runner):
-    ret = script_runner.run('cutGeotiffs.py', '-h')
-    assert ret.success
-
-
 def test_get_asf(script_runner):
     ret = script_runner.run('get_asf.py', '-h')
     assert ret.success
@@ -63,9 +58,4 @@ def test_rtc2color(script_runner):
 
 def test_SLC_copy_S1_fullSW(script_runner):
     ret = script_runner.run('SLC_copy_S1_fullSW.py', '-h')
-    assert ret.success
-
-
-def test_utm2dem(script_runner):
-    ret = script_runner.run('utm2dem.py', '-h')
     assert ret.success

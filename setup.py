@@ -75,7 +75,6 @@ setup(
     entry_points={'console_scripts': [
         'byteSigmaScale.py = hyp3lib.byteSigmaScale:main',
         'createAmp.py = hyp3lib.createAmp:main',
-        'cutGeotiffs.py = hyp3lib.cutGeotiffs:main',
         'get_asf.py = hyp3lib.get_asf:main',
         'get_orb.py = hyp3lib.get_orb:main',
         'makeAsfBrowse.py = hyp3lib.makeAsfBrowse:main',
@@ -84,7 +83,6 @@ setup(
         'resample_geotiff.py = hyp3lib.resample_geotiff:main',
         'rtc2color.py = hyp3lib.rtc2color:main',
         'SLC_copy_S1_fullSW.py = hyp3lib.SLC_copy_S1_fullSW:main',
-        'utm2dem.py = hyp3lib.utm2dem:main',
         ]
     },
 
