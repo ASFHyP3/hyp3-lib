@@ -14,6 +14,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Remove
 * All hyp3lib functionality not currently being used by one of these GitHub orgs: ASFHyP3, asfadmin, ASFOpenSARLab, access-cloud-based-insar, dbekaert, ASFBinderRecipes, or insarlab. For a full list of the deleted files, see [here](https://github.com/ASFHyP3/hyp3-lib/pull/286).
+* Removed now unused dependencies from `pyproject.toml` and `environment.yml`
 
 ## [2.0.2]
 
