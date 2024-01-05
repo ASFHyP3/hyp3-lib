@@ -12,7 +12,6 @@ dependencies:
   - flake8-builtins
   - setuptools
   - setuptools_scm
-  - wheel
   - pytest
   - pytest-console-scripts
   - pytest-cov
