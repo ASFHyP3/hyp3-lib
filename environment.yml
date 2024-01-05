@@ -3,7 +3,20 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  # For running
   - pip
+  - boto3
+  - gdal
+  - importlib_metadata
+  - lxml
+  - netCDF4
+  - numpy<1.24
+  - pillow
+  - requests
+  - scipy
+  - six
+  - statsmodels
+  - urllib3
   # For packaging, and testing
   - build
   - flake8
@@ -17,20 +30,3 @@ dependencies:
   - pytest-console-scripts
   - pytest-cov
   - responses
-  # For running
-  - boto3
-  - gdal
-  - imageio
-  - importlib_metadata
-  - lxml
-  - matplotlib
-  - netCDF4
-  - numpy<1.24
-  - pillow
-  - pyproj>=2
-  - pyshp
-  - requests
-  - scipy
-  - six
-  - statsmodels
-  - urllib3
