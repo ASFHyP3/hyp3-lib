@@ -75,7 +75,6 @@ setup(
     entry_points={'console_scripts': [
         'byteSigmaScale.py = hyp3lib.byteSigmaScale:main',
         'createAmp.py = hyp3lib.createAmp:main',
-        'get_asf.py = hyp3lib.get_asf:main',
         'get_orb.py = hyp3lib.get_orb:main',
         'makeAsfBrowse.py = hyp3lib.makeAsfBrowse:main',
         'make_cogs.py = hyp3lib.make_cogs:main',
