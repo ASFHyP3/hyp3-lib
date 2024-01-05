@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0]
+
+### Remove
+* All hyp3lib functionality not currently being used by one of these GitHub orgs: ASFHyP3, asfadmin, ASFOpenSARLab, access-cloud-based-insar, dbekaert. For a full list of the deleted files, see [here](https://github.com/ASFHyP3/hyp3-lib/pull/286).
+
 ## [2.0.2]
 
 ### Fixed
