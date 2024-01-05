@@ -8,8 +8,12 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.0.0]
 
+### Changed
+* Switched to src layout
+* Converted the package's setup.py to a pyproject.toml
+
 ### Remove
-* All hyp3lib functionality not currently being used by one of these GitHub orgs: ASFHyP3, asfadmin, ASFOpenSARLab, access-cloud-based-insar, dbekaert. For a full list of the deleted files, see [here](https://github.com/ASFHyP3/hyp3-lib/pull/286).
+* All hyp3lib functionality not currently being used by one of these GitHub orgs: ASFHyP3, asfadmin, ASFOpenSARLab, access-cloud-based-insar, dbekaert, ASFBinderRecipes. For a full list of the deleted files, see [here](https://github.com/ASFHyP3/hyp3-lib/pull/286).
 
 ## [2.0.2]
 
