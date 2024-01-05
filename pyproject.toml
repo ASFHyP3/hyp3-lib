@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "hyp3lib"
 requires-python = ">=3.7"
 authors = [
-    {name="tools-bot", email="UAF-asf-apd@alaska.edu"},
+    {name="ASF APD/Tools Team", email="UAF-asf-apd@alaska.edu"},
 ]
 description = "Common library for HyP3 plugins"
 license = {text = "BSD-3-Clause"}
