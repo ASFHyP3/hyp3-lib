@@ -8,9 +8,6 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.0.0]
 
-### Added
-* GitHub Action for test coverage
-
 ### Changed
 * `hyp3lib` now uses a `src` layout per this [recommendation](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/).
 * `hyp3lib` now only uses `pyproject.toml` for package creation now that `setuptools` recommends [not using setup.py](https://setuptools.pypa.io/en/latest/userguide/quickstart.html#setuppy-discouraged).
