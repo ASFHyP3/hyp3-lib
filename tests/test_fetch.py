@@ -23,8 +23,10 @@ def test_write_credentials_to_netrc_file(tmp_path):
 
     fetch.write_credentials_to_netrc_file('append', 'this', domain='domain', append=True)
     with open(output_file, 'r') as f:
-        assert f.read() == 'machine urs.earthdata.nasa.gov login foo password bar\n' \
-                           'machine domain login append password this\n'
+        assert (
+            f.read() == 'machine urs.earthdata.nasa.gov login foo password bar\n'
+            'machine domain login append password this\n'
+        )
 
 
 def test_get_download_path():
@@ -82,8 +84,9 @@ def test_download_file(safe_data, tmp_path):
 @responses.activate
 def test_download_file_content_disposition(tmp_path):
     responses.add(
-        responses.GET, 'http://hyp3.asf.alaska.edu/foobar.txt',
-        headers={'content-disposition': 'attachment; filename="filename.jpg"'}
+        responses.GET,
+        'http://hyp3.asf.alaska.edu/foobar.txt',
+        headers={'content-disposition': 'attachment; filename="filename.jpg"'},
     )
 
     download_path = fetch.download_file('http://hyp3.asf.alaska.edu/foobar.txt', directory=tmp_path)

@@ -70,8 +70,9 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
     response = session.get(search_url)
     response.raise_for_status()
     tree = html.fromstring(response.content)
-    file_list = [file for file in tree.xpath('//a[@href]//@href')
-                 if file.startswith(platform) and file.endswith('.EOF')]
+    file_list = [
+        file for file in tree.xpath('//a[@href]//@href') if file.startswith(platform) and file.endswith('.EOF')
+    ]
 
     d1 = 0
     best = None
@@ -99,9 +100,9 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
     date_format = '%Y-%m-%dT%H:%M:%SZ'
     params = {
         '$filter': f"Collection/Name eq 'SENTINEL-1' and "
-                   f"startswith(Name, '{platform}_OPER_{orbit_type}_OPOD_') and "
-                   f"ContentDate/Start lt {start_time.strftime(date_format)} and "
-                   f"ContentDate/End gt {end_time.strftime(date_format)}",
+        f"startswith(Name, '{platform}_OPER_{orbit_type}_OPOD_') and "
+        f'ContentDate/Start lt {start_time.strftime(date_format)} and '
+        f'ContentDate/End gt {end_time.strftime(date_format)}',
         '$orderby': 'Name desc',
         '$top': 1,
     }
@@ -116,6 +117,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
         orbit_url = f'https://zipper.dataspace.copernicus.eu/download/{product_id}'
 
     return orbit_url
+
 
 def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 'ESA'):
     """Get the URL of a Sentinel-1 orbit file from a provider
@@ -144,8 +146,11 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
 
 
 def downloadSentinelOrbitFile(
-        granule: str, directory: str = '', providers=('ESA', 'ASF'), orbit_types=('AUX_POEORB', 'AUX_RESORB'),
-        esa_credentials: Optional[Tuple[str, str]] = None,
+    granule: str,
+    directory: str = '',
+    providers=('ESA', 'ASF'),
+    orbit_types=('AUX_POEORB', 'AUX_RESORB'),
+    esa_credentials: Optional[Tuple[str, str]] = None,
 ):
     """Download a Sentinel-1 Orbit file
 
@@ -191,13 +196,24 @@ def main():
         description=__doc__,
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    parser.add_argument('safe_files', help='Sentinel-1 SAFE file name(s)', nargs="*")
-    parser.add_argument('-p', '--provider', nargs='*', default=['ESA', 'ASF'], choices=['ESA', 'ASF'],
-                        help="Name(s) of the orbit file providers' organization, in order of preference")
-    parser.add_argument('-t', '--orbit-types', nargs='*', default=['AUX_POEORB', 'AUX_RESORB'],
-                        choices=['MPL_ORBPRE', 'AUX_POEORB', 'AUX_PREORB', 'AUX_RESORB', 'AUX_RESATT'],
-                        help="Name(s) of the orbit file providers' organization, in order of preference. "
-                             "See https://qc.sentinel1.eo.esa.int/")
+    parser.add_argument('safe_files', help='Sentinel-1 SAFE file name(s)', nargs='*')
+    parser.add_argument(
+        '-p',
+        '--provider',
+        nargs='*',
+        default=['ESA', 'ASF'],
+        choices=['ESA', 'ASF'],
+        help="Name(s) of the orbit file providers' organization, in order of preference",
+    )
+    parser.add_argument(
+        '-t',
+        '--orbit-types',
+        nargs='*',
+        default=['AUX_POEORB', 'AUX_RESORB'],
+        choices=['MPL_ORBPRE', 'AUX_POEORB', 'AUX_PREORB', 'AUX_RESORB', 'AUX_RESATT'],
+        help="Name(s) of the orbit file providers' organization, in order of preference. "
+        'See https://qc.sentinel1.eo.esa.int/',
+    )
     parser.add_argument('-d', '--directory', default=os.getcwd(), help='Download files to this directory')
     args = parser.parse_args()
 
@@ -212,10 +228,10 @@ def main():
             orbit_file, provided_by = downloadSentinelOrbitFile(
                 safe, directory=args.directory, providers=args.provider, orbit_types=args.orbit_types
             )
-            logging.info("Downloaded orbit file {} from {}".format(orbit_file, provided_by))
+            logging.info('Downloaded orbit file {} from {}'.format(orbit_file, provided_by))
         except OrbitDownloadError as e:
             logging.warning(f'WARNING: unable to download orbit file for {safe}\n    {e}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

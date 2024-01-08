@@ -38,11 +38,7 @@ def test_upload_file_to_s3(tmp_path, s3_stubber):
     tag_params = {
         'Bucket': 'myBucket',
         'Key': 'myFile.zip',
-        'Tagging': {
-            'TagSet': [
-                {'Key': 'file_type', 'Value': 'product'}
-            ]
-        }
+        'Tagging': {'TagSet': [{'Key': 'file_type', 'Value': 'product'}]},
     }
     s3_stubber.add_response(method='put_object', expected_params=expected_params, service_response={})
     s3_stubber.add_response(method='put_object_tagging', expected_params=tag_params, service_response={})
@@ -62,11 +58,7 @@ def test_upload_file_to_s3_with_prefix(tmp_path, s3_stubber):
     tag_params = {
         'Bucket': 'myBucket',
         'Key': 'myPrefix/myFile.txt',
-        'Tagging': {
-            'TagSet': [
-                {'Key': 'file_type', 'Value': 'product'}
-            ]
-        }
+        'Tagging': {'TagSet': [{'Key': 'file_type', 'Value': 'product'}]},
     }
     s3_stubber.add_response(method='put_object', expected_params=expected_params, service_response={})
     s3_stubber.add_response(method='put_object_tagging', expected_params=tag_params, service_response={})

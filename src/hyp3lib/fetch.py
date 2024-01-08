@@ -13,8 +13,9 @@ from urllib3.util.retry import Retry
 EARTHDATA_LOGIN_DOMAIN = 'urs.earthdata.nasa.gov'
 
 
-def write_credentials_to_netrc_file(username: str, password: str,
-                                    domain: str = EARTHDATA_LOGIN_DOMAIN, append: bool = False):
+def write_credentials_to_netrc_file(
+    username: str, password: str, domain: str = EARTHDATA_LOGIN_DOMAIN, append: bool = False
+):
     """Write credentials to .netrc file"""
     netrc_file = Path.home() / '.netrc'
     if netrc_file.exists() and not append:
@@ -36,8 +37,15 @@ def _get_download_path(url: str, content_disposition: str = None, directory: Uni
     return Path(directory) / filename
 
 
-def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, retries=2, backoff_factor=1,
-                  auth: Optional[Tuple[str, str]] = None, token: Optional[str] = None) -> str:
+def download_file(
+    url: str,
+    directory: Union[Path, str] = '.',
+    chunk_size=None,
+    retries=2,
+    backoff_factor=1,
+    auth: Optional[Tuple[str, str]] = None,
+    token: Optional[str] = None,
+) -> str:
     """Download a file
 
     Args:
@@ -70,7 +78,7 @@ def download_file(url: str, directory: Union[Path, str] = '.', chunk_size=None, 
     with session.get(url, stream=True) as s:
         download_path = _get_download_path(s.url, s.headers.get('content-disposition'), directory)
         s.raise_for_status()
-        with open(download_path, "wb") as f:
+        with open(download_path, 'wb') as f:
             for chunk in s.iter_content(chunk_size=chunk_size):
                 if chunk:
                     f.write(chunk)
