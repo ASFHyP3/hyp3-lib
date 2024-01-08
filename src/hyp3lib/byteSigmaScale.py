@@ -1,9 +1,11 @@
 """Convert a floating point tiff into a byte tiff using 2-sigma scaling."""
-import os
 import argparse
-from hyp3lib import saa_func_lib as saa
+import os
+
 import numpy as np
 from osgeo import gdal
+
+from hyp3lib import saa_func_lib as saa
 
 
 def get2sigmacutoffs(fi):

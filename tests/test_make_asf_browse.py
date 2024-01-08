@@ -1,8 +1,8 @@
 import logging
 import os
 
-from osgeo import gdal
 from PIL import Image
+from osgeo import gdal
 
 from hyp3lib.makeAsfBrowse import makeAsfBrowse
 

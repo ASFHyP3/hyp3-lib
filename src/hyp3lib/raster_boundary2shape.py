@@ -5,7 +5,7 @@ import os
 
 from scipy import ndimage
 
-from hyp3lib.asf_geometry import geotiff2boundary_mask, data_geometry2shape
+from hyp3lib.asf_geometry import data_geometry2shape, geotiff2boundary_mask
 from hyp3lib.asf_time_series import raster_metadata
 
 

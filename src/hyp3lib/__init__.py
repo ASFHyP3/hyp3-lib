@@ -11,6 +11,7 @@ from hyp3lib.exceptions import (
     OrbitDownloadError,
 )
 
+
 try:
     __version__ = version(__name__)
 except PackageNotFoundError:

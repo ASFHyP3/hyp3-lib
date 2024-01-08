@@ -1,10 +1,11 @@
 """re-process S1 SLC imagery into gamma format SLCs"""
-import logging
 import argparse
-from hyp3lib.execute import execute
-from hyp3lib.getParameter import getParameter
+import logging
 import os
 import shutil
+
+from hyp3lib.execute import execute
+from hyp3lib.getParameter import getParameter
 
 
 def SLC_copy_S1_fullSW(path, slcname, tabin, burst_tab, mode=2, dem=None, dempath=None, raml=10, azml=2):
