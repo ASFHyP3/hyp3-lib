@@ -6,7 +6,7 @@ on:
       - opened
     branches:
       - main
-  
+
 jobs:
   call-release-workflow:
     # Docs: https://github.com/ASFHyP3/actions
