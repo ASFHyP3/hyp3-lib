@@ -61,18 +61,18 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
     data = inBand.ReadAsArray()
     minValue = np.min(data)
 
-    ### Check for black fill
+    # Check for black fill
     if minValue > 0:
         data /= data
         colFirst = 0
         rowFirst = 0
     else:
-        data[np.isnan(data) == True] = noDataValue
+        data[np.isnan(data) is True] = noDataValue
         if threshold is not None:
             print('Applying threshold ({0}) ...'.format(threshold))
             data[data < np.float(threshold)] = noDataValue
         if np.isnan(noDataValue):
-            data[np.isnan(data) == False] = 1
+            data[np.isnan(data) is False] = 1
         else:
             data[data > noDataValue] = 1
         if use_closing:
@@ -126,7 +126,7 @@ def cut_blackfill(data, geoTrans):
     colFirst = rowProfile.index(1)
     originX += colFirst * pixelSize
     originY -= rowFirst * pixelSize
-    data = data[rowFirst : rows + rowFirst, colFirst : cols + colFirst]
+    data = data[rowFirst:rows + rowFirst, colFirst:cols + colFirst]
     geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
 
     return (data, colFirst, rowFirst, geoTrans)
@@ -245,7 +245,7 @@ def geometry2shape(fields, values, spatialRef, merge, shapeFile):
             fieldDefinition.SetPrecision(8)
         outLayer.CreateField(fieldDefinition)
     featureDefinition = outLayer.GetLayerDefn()
-    if merge == True:
+    if merge is True:
         combine = ogr.Geometry(ogr.wkbMultiPolygon)
         for value in values:
             combine = combine.Union(value['geometry'])
@@ -283,7 +283,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans, classes,
     originY = geoTrans[3] + 10 * pixelSize
     geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
     mask = np.zeros((rows + 20, cols + 20), dtype=np.float32)
-    mask[10 : rows + 10, 10 : cols + 10] = data
+    mask[10:rows + 10, 10:cols + 10] = data
     data = mask
 
     # Save in memory
@@ -342,7 +342,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans, classes,
                     outFeature.SetField('size', classes[ii]['class'])
         centroid = geometry.Centroid().ExportToWkt()
         outFeature.SetField('centroid', centroid)
-        if fill == False and area > threshold:
+        if fill is False and area > threshold:
             outLayer.SetFeature(outFeature)
         else:
             outLayer.DeleteFeature(outFeature.GetFID())
@@ -555,7 +555,7 @@ def raster_meta(rasterFile):
 
 
 def overlapMask(meta, maskShape, invert, outFile):
-    ### Extract metadata
+    # Extract metadata
     posting = meta['pixelSize']
     # proj = meta['proj']
     imageEPSG = meta['epsg']
@@ -564,7 +564,7 @@ def overlapMask(meta, maskShape, invert, outFile):
     dataCols = meta['cols']
     geoEPSG = 4326
 
-    ### Extract mask polygon
+    # Extract mask polygon
     ogrDriver = ogr.GetDriverByName('ESRI Shapefile')
     inShape = ogrDriver.Open(maskShape)
     outLayer = inShape.GetLayer()
@@ -573,14 +573,14 @@ def overlapMask(meta, maskShape, invert, outFile):
     if geoEPSG != outEPSG:
         raise GeometryError(f'Expecting mask file with EPSG code: {geoEPSG}')
 
-    ### Define re-projection from geographic to UTM
+    # Define re-projection from geographic to UTM
     inProj = osr.SpatialReference()
     inProj.ImportFromEPSG(4326)
     outProj = osr.SpatialReference()
     outProj.ImportFromEPSG(imageEPSG)
     transform = osr.CoordinateTransformation(inProj, outProj)
 
-    ### Loop through features
+    # Loop through features
     for boundary in multiBoundary:
         for feature in outLayer:
             outMultipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
@@ -591,7 +591,7 @@ def overlapMask(meta, maskShape, invert, outFile):
                     overlap.Transform(transform)
                     outMultipolygon.AddGeometry(overlap)
 
-    ### Save intersection polygon in memory
+    # Save intersection polygon in memory
     spatialRef = osr.SpatialReference()
     spatialRef.ImportFromEPSG(imageEPSG)
     memDriver = ogr.GetDriverByName('Memory')
@@ -606,13 +606,13 @@ def overlapMask(meta, maskShape, invert, outFile):
     outLayer.CreateFeature(outFeature)
     outFeature = None
 
-    ### Calculate extent
+    # Calculate extent
     (aoiMinX, aoiMaxX, aoiMinY, aoiMaxY) = outLayer.GetExtent()
     aoiLines = int(np.rint((aoiMaxY - aoiMinY) / posting))
     aoiSamples = int(np.rint((aoiMaxX - aoiMinX) / posting))
     maskGeoTrans = (aoiMinX, posting, 0, aoiMaxY, 0, -posting)
 
-    ### Rasterize mask polygon
+    # Rasterize mask polygon
     gdalDriver = gdal.GetDriverByName('MEM')
     outRaster = gdalDriver.Create('', aoiSamples, aoiLines, 1, gdal.GDT_Float32)
     outRaster.SetGeoTransform((aoiMinX, posting, 0, aoiMaxY, 0, -posting))
@@ -625,11 +625,11 @@ def overlapMask(meta, maskShape, invert, outFile):
     outVector = None
     outRaster = None
 
-    ### Invert mask (if requested)
-    if invert == True:
+    # Invert mask (if requested)
+    if invert is True:
         mask = 1.0 - mask
 
-    ### Final adjustments
+    # Final adjustments
     mask = mask[:dataRows, :dataCols]
     mask[mask == 0] = np.nan
 
@@ -647,7 +647,7 @@ def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):
     maskPixelSize = maskGeoTrans[1]
     offsetX = int(np.rint((maskOriginX - dataOriginX) / maskPixelSize))
     offsetY = int(np.rint((dataOriginY - maskOriginY) / maskPixelSize))
-    data = data[offsetY : maskRows + offsetY, offsetX : maskCols + offsetX]
+    data = data[offsetY:maskRows + offsetY, offsetX:maskCols + offsetX]
     data *= mask
 
     return data
@@ -699,7 +699,7 @@ def geotiff2boundary_ext(inGeotiff, maskFile, geographic):
     outLayer = None
 
     # Convert geometry from projected to geographic coordinates (if requested)
-    if geographic == True:
+    if geographic is True:
         (multipolygon, outSpatialRef) = geometry_proj2geo(multipolygon, inSpatialRef)
         return (multipolygon, outSpatialRef)
     else:

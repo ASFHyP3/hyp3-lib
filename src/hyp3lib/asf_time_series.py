@@ -19,7 +19,7 @@ tolerance = 0.00005
 def initializeNetcdf(ncFile, meta):
     dataset = nc.Dataset(ncFile, 'w', format='NETCDF4')
 
-    ### Define global attributes
+    # Define global attributes
     dataset.Conventions = 'CF-1.7'
     dataset.institution = meta['institution']
     dataset.title = meta['title']
@@ -30,14 +30,14 @@ def initializeNetcdf(ncFile, meta):
     dataset.history = '{0}: netCDF file created'.format(timestamp)
     dataset.featureType = 'timeSeries'
 
-    ### Create dimensions
+    # Create dimensions
     dataset.createDimension('xgrid', meta['cols'])
     dataset.createDimension('ygrid', meta['rows'])
     dataset.createDimension('time', None)
     dataset.createDimension('nchar', 100)
 
-    ### Create variables - time, coordinates, values
-    ## time
+    # Create variables - time, coordinates, values
+    # time
     time = dataset.createVariable('time', np.float32, ('time',))
     time.axis = 'T'
     time.long_name = 'serial date'
@@ -47,7 +47,7 @@ def initializeNetcdf(ncFile, meta):
     time.fill_value = 0
     time.reference = 'center time of image'
 
-    ## map projection
+    # map projection
     projSpatialRef = osr.SpatialReference()
     projSpatialRef.ImportFromEPSG(int(meta['epsg']))
     wkt = projSpatialRef.ExportToWkt()
@@ -63,7 +63,7 @@ def initializeNetcdf(ncFile, meta):
     projection.projection_y_coordinate = 'ygrid'
     projection.units = 'meters'
 
-    ## coordinate: x grid
+    # coordinate: x grid
     xgrid = dataset.createVariable('xgrid', np.float32, ('xgrid'))
     xgrid.axis = 'X'
     xgrid.long_name = 'projection_grid_y_center'
@@ -71,7 +71,7 @@ def initializeNetcdf(ncFile, meta):
     xgrid.units = 'meters'
     xgrid.fill_value = np.nan
 
-    ## coordinate: y grid
+    # coordinate: y grid
     ygrid = dataset.createVariable('ygrid', np.float32, ('ygrid'))
     ygrid.axis = 'Y'
     ygrid.long_name = 'projection_grid_x_center'
@@ -79,17 +79,17 @@ def initializeNetcdf(ncFile, meta):
     ygrid.units = 'meters'
     ygrid.fill_value = np.nan
 
-    ## image
+    # image
     image = dataset.createVariable('image', np.float32, ('time', 'ygrid', 'xgrid'), zlib=True)
     image.long_name = meta['imgLongName']
     image.units = meta['imgUnits']
     image.fill_value = meta['imgNoData']
 
-    ## name
+    # name
     name = dataset.createVariable('granule', 'S1', ('time', 'nchar'))
     name.long_name = 'name of the granule'
 
-    ### Fill in coordinates
+    # Fill in coordinates
     xCoordinate = np.arange(meta['minX'], meta['maxX'], meta['pixelSize'])
     xgrid[:] = xCoordinate
     yCoordinate = np.arange(meta['maxY'], meta['minY'], -meta['pixelSize'])
@@ -115,7 +115,7 @@ def nc2meta(ncFile):
 
     meta = {}
 
-    ### Global attributes
+    # Global attributes
     meta['conventions'] = dataset.Conventions
     meta['institution'] = dataset.institution
     meta['title'] = dataset.title
@@ -124,7 +124,7 @@ def nc2meta(ncFile):
     meta['reference'] = dataset.reference
     meta['history'] = dataset.history
 
-    ### Coordinates
+    # Coordinates
     xGrid = dataset.variables['xgrid']
     (meta['cols'],) = xGrid.shape
     meta['pixelSize'] = xGrid[1] - xGrid[0]
@@ -135,18 +135,18 @@ def nc2meta(ncFile):
     meta['minY'] = np.min(yGrid) - meta['pixelSize']
     meta['maxY'] = np.max(yGrid)
 
-    ### Time reference
+    # Time reference
     time = dataset.variables['time']
     (meta['timeCount'],) = time.shape
     meta['refTime'] = time.units[14:]
 
-    ### Map projection: EPSG
+    # Map projection: EPSG
     proj = dataset.variables['Transverse_Mercator']
     projSpatialRef = osr.SpatialReference()
     projSpatialRef.ImportFromWkt(proj.crs_wkt)
     meta['epsg'] = int(projSpatialRef.GetAttrValue('AUTHORITY', 1))
 
-    ### Image metadata
+    # Image metadata
     image = dataset.variables['image']
     meta['imgLongName'] = image.long_name
     meta['imgUnits'] = image.units
@@ -160,7 +160,7 @@ def nc2meta(ncFile):
 def addImage2netcdf(image, ncFile, granule, imgTime):
     dataset = nc.Dataset(ncFile, 'a')
 
-    ### Updating time
+    # Updating time
     time = dataset.variables['time']
     name = dataset.variables['granule']
     data = dataset.variables['image']
@@ -237,7 +237,8 @@ def vector_meta(vectorFile):
     return (fields, proj, extent, features)
 
 
-def raster_metadata(input):
+# FIXME: arg name is shadowing python builtin
+def raster_metadata(input):  # noqa: A002
     # Set up shapefile attributes
     fields = []
     field = {}
@@ -299,7 +300,7 @@ def raster_metadata(input):
 
 
 def netcdf2boundary_mask(ncFile, geographic):
-    ### Extract metadata
+    # Extract metadata
     meta = nc2meta(ncFile)
     cols = meta['cols']
     rows = meta['rows']
@@ -307,12 +308,12 @@ def netcdf2boundary_mask(ncFile, geographic):
     proj.ImportFromEPSG(meta['epsg'])
     geoTrans = (meta['minX'], meta['pixelSize'], 0, meta['maxY'], 0, -meta['pixelSize'])
 
-    ### Reading time series
+    # Reading time series
     dataset = nc.Dataset(ncFile, 'r')
     image = dataset.variables['image'][:]
     dataset.close()
 
-    ### Save in memory
+    # Save in memory
     data = image[0, :, :] / image[0, :, :]
     image = None
     gdalDriver = gdal.GetDriverByName('Mem')
@@ -324,7 +325,7 @@ def netcdf2boundary_mask(ncFile, geographic):
     inBand = None
     data = None
 
-    ### Polygonize the raster image
+    # Polygonize the raster image
     inBand = outRaster.GetRasterBand(1)
     ogrDriver = ogr.GetDriverByName('Memory')
     outVector = ogrDriver.CreateDataSource('out')
@@ -334,7 +335,7 @@ def netcdf2boundary_mask(ncFile, geographic):
     gdal.Polygonize(inBand, inBand, outLayer, 0, [], None)
     outRaster = None
 
-    ### Extract geometry from layer
+    # Extract geometry from layer
     inSpatialRef = outLayer.GetSpatialRef()
     multipolygon = ogr.Geometry(ogr.wkbMultiPolygon)
     for outFeature in outLayer:
@@ -343,8 +344,8 @@ def netcdf2boundary_mask(ncFile, geographic):
         outFeature = None
     outLayer = None
 
-    ### Convert geometry from projected to geographic coordinates (if requested)
-    if geographic == True:
+    # Convert geometry from projected to geographic coordinates (if requested)
+    if geographic is True:
         (multipolygon, outSpatialRef) = geometry_proj2geo(multipolygon, inSpatialRef)
         return (multipolygon, outSpatialRef)
     else:
@@ -354,7 +355,7 @@ def netcdf2boundary_mask(ncFile, geographic):
 def time_series_slice(ncFile, x, y, typeXY):
     timeSeries = nc.Dataset(ncFile, 'r')
 
-    ### Extract information for variables: image, time, granule
+    # Extract information for variables: image, time, granule
     timeRef = timeSeries.variables['time'].getncattr('units')[14:]
     timeRef = datetime.strptime(timeRef, '%Y-%m-%d %H:%M:%S')
     time = timeSeries.variables['time'][:].tolist()
@@ -368,7 +369,7 @@ def time_series_slice(ncFile, x, y, typeXY):
     data = timeSeries.variables['image']
     # numGranules = len(time)
 
-    ### Define geo transformation and map proejction
+    # Define geo transformation and map proejction
     # originX = xGrid[0]
     # originY = yGrid[0]
     pixelSize = xGrid[1] - xGrid[0]
@@ -379,7 +380,7 @@ def time_series_slice(ncFile, x, y, typeXY):
     else:
         raise GeometryError('Could not find map projection information!')
 
-    ### Work out line/sample from various input types
+    # Work out line/sample from various input types
     if typeXY == 'pixel':
         sample = x
         line = y
@@ -401,8 +402,8 @@ def time_series_slice(ncFile, x, y, typeXY):
         line = yGrid.tolist().index(y)
     value = data[:, sample, line]
 
-    ### Work on time series
-    ## Fill in gaps by interpolation
+    # Work on time series
+    # Fill in gaps by interpolation
     startDate = timestamp[0].date()
     stopDate = timestamp[len(timestamp) - 1].date()
     refDates = np.arange(startDate, stopDate + timedelta(days=12), 12).tolist()
@@ -428,7 +429,7 @@ def time_series_slice(ncFile, x, y, typeXY):
             refType.append('acquired')
     allValues = np.asarray(allValues)
 
-    ## Smoothing the time line with localized regression (LOESS)
+    # Smoothing the time line with localized regression (LOESS)
     lowess = sm.nonparametric.lowess
     smooth = lowess(allValues, np.arange(len(allValues)), frac=0.08, it=0)[:, 1]
 

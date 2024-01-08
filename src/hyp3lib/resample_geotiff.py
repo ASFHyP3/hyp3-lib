@@ -171,10 +171,10 @@ def resample_geotiff(geotiff, width, outFormat, outFile, use_nn=False):
         if path != '':
             os.chdir(path)
         zipFile = os.path.basename(outFile.replace(orgExt, '.kmz'))
-        zip = zipfile.ZipFile(zipFile, 'w', zipfile.ZIP_DEFLATED)
-        zip.write(os.path.basename(kmlFile))
-        zip.write(os.path.basename(pngFile))
-        zip.close()
+        zipobj = zipfile.ZipFile(zipFile, 'w', zipfile.ZIP_DEFLATED)
+        zipobj.write(os.path.basename(kmlFile))
+        zipobj.write(os.path.basename(pngFile))
+        zipobj.close()
         os.chdir(back)
 
         # Clean up - remove temporary GeoTIFF, KML and PNG

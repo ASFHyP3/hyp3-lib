@@ -55,7 +55,8 @@ def SLC_copy_S1_fullSW(path, slcname, tabin, burst_tab, mode=2, dem=None, dempat
         mliwidth = getParameter('../{}.mli.par'.format(slcname), 'range_samples')
         mlinline = getParameter('../{}.mli.par'.format(slcname), 'azimuth_lines')
 
-        cmd = 'GC_map_mod ../{SLC}.mli.par  - {DP}/{DEM}.par {DP}/{DEM}.dem 2 2 demseg.par demseg ../{SLC}.mli  MAP2RDC inc pix ls_map 1 1'.format(
+        # FIXME: Convert to an f-string
+        cmd = 'GC_map_mod ../{SLC}.mli.par  - {DP}/{DEM}.par {DP}/{DEM}.dem 2 2 demseg.par demseg ../{SLC}.mli  MAP2RDC inc pix ls_map 1 1'.format(  # noqa: E501
             SLC=slcname, DEM=dem, DP=dempath
         )
         execute(cmd, uselogging=True)
@@ -65,7 +66,8 @@ def SLC_copy_S1_fullSW(path, slcname, tabin, burst_tab, mode=2, dem=None, dempat
         cmd = 'geocode MAP2RDC demseg {} HGT_SAR_{}_{} {} {}'.format(demwidth, raml, azml, mliwidth, mlinline)
         execute(cmd, uselogging=True)
 
-        cmd = 'gc_map ../{SLC}.mli.par - {DP}/{DEM}.par 1 demseg.par demseg map_to_rdc 2 2 pwr_sim_map - - inc_flat'.format(
+        # FIXME: Convert to an f-string
+        cmd = 'gc_map ../{SLC}.mli.par - {DP}/{DEM}.par 1 demseg.par demseg map_to_rdc 2 2 pwr_sim_map - - inc_flat'.format(  # noqa: E501
             SLC=slcname, DP=dempath, DEM=dem
         )
         execute(cmd, uselogging=True)

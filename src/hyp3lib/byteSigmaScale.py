@@ -35,7 +35,7 @@ def byteSigmaScale(infile, outfile):
     (x, y, trans, proj, data) = saa.read_gdal_file(saa.open_gdal_file(outfile))
     mask2 = (data > 0).astype(bool)
     mask3 = mask ^ mask2
-    data[mask3 == True] = 1
+    data[mask3 is True] = 1
     saa.write_gdal_file_byte(outfile, trans, proj, data, nodata=0)
 
 
