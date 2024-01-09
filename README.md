@@ -1,12 +1,12 @@
 # HyP3-lib
 
 ## CURRENTLY UNDER CONSTRUCTION!!!
-HyP3-lib is currently undergoing a major redesign and many utilities that are no longer used by ASF have been removed between version 2 and version 3. In addition, we plan to significantly further migrate some remaining functionality to other project and to significantly refactor what remains. For this reason, **if you are using HyP3-lib we strongly recommend pinning to major versions at this time**. We further recommend not using this library in production until its version 4 release.
+HyP3-lib is currently undergoing a major redesign and many utilities that are no longer used by ASF have been removed between version 2 and version 3. In addition, we plan to migrate some remaining functionality to other projects and to significantly refactor what remains. For this reason, **if you are using HyP3-lib we strongly recommend pinning to major versions at this time**. We further recommend not using this library in production until its version 4 release.
 
-The use of `hyp3lib` version 2 or less is **_NOT_** recommended.
+The use of HyP3-lib version 2 or less is **_NOT_** recommended.
 
 ## HyP3-lib: A Common library for HyP3 plugins
-The goal of this package is to provide ASF's various HyP3 plugins with a common set of utilities they can use to perform common tasks. This could include tasks such as downloading Sentinel-1 orbit data, or verifying that NASA EarthData credentials are available.
+The goal of this package is to provide ASF's various HyP3 plugins with a set of utilities they can use to perform common tasks. This could include tasks such as downloading Sentinel-1 orbit data, or verifying that NASA EarthData credentials are available.
 
 If you're a MintPy user looking to crop HyP3 products, please see our [Time Series Analysis with HyP3 and Mintpy Tutorial](https://hyp3-docs.asf.alaska.edu/tutorials/mintpy).
 
