@@ -1,7 +1,9 @@
 import os
 import shutil
-import pytest
 from pathlib import Path
+
+import pytest
+
 
 _HERE = os.path.dirname(__file__)
 

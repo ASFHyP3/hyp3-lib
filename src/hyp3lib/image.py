@@ -1,8 +1,9 @@
 """Tools for working with images"""
 
-from PIL import Image
-from typing import Tuple
 from pathlib import Path
+from typing import Tuple
+
+from PIL import Image
 
 
 def create_thumbnail(input_image: Path, size: Tuple[int, int] = (100, 100), output_dir: Path = None) -> Path:

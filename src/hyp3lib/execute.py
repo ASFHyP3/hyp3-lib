@@ -9,8 +9,9 @@ from typing import Optional, TextIO, Union
 from hyp3lib import ExecuteError
 
 
-def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Optional[TextIO] = None,
-            uselogging: bool = False) -> str:
+def execute(
+    cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Optional[TextIO] = None, uselogging: bool = False
+) -> str:
     """
     Run a command in a subprocess and perform some post-process verification of
     the command's execution
@@ -46,7 +47,7 @@ def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Opti
             else:
                 print('Proc: ' + line)
             if logfile is not None:
-                logfile.write("%s\n" % line)
+                logfile.write('%s\n' % line)
 
     if uselogging:
         logging.info('Finished: ' + cmd)
@@ -93,6 +94,6 @@ def execute(cmd: str, expected: Optional[Union[str, Path]] = None, logfile: Opti
                 logging.info('Expected output file not found: ' + expected)
             else:
                 print('Expected output file not found: ' + expected)
-            raise ExecuteError("Expected output file not found: " + expected)
+            raise ExecuteError('Expected output file not found: ' + expected)
 
     return output

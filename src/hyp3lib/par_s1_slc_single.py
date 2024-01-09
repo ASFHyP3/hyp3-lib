@@ -10,7 +10,7 @@ from hyp3lib.get_orb import downloadSentinelOrbitFile
 
 def make_cmd(swath, acquisition_date, out_dir, pol=None):
     """Assemble the par_S1_SLC gamma commands
-    
+
     Args:
         swath: Swath to process
         acquisition_date: The acquisition date of the SLC imagery
@@ -27,10 +27,12 @@ def make_cmd(swath, acquisition_date, out_dir, pol=None):
         n = glob.glob(f'annotation/s1*-iw{swath}*{pol}*')[0]
         o = glob.glob(f'annotation/calibration/calibration-s1*-iw{swath}*{pol}*')[0]
         p = glob.glob(f'annotation/calibration/noise-s1*-iw{swath}*{pol}*')[0]
-    
-    cmd = f'par_S1_SLC {m} {n} {o} {p} {out_dir}/{acquisition_date}_00{swath}.slc.par ' \
-          f'{out_dir}/{acquisition_date}_00{swath}.slc {out_dir}/{acquisition_date}_00{swath}.tops_par'
-    
+
+    cmd = (
+        f'par_S1_SLC {m} {n} {o} {p} {out_dir}/{acquisition_date}_00{swath}.slc.par '
+        f'{out_dir}/{acquisition_date}_00{swath}.slc {out_dir}/{acquisition_date}_00{swath}.tops_par'
+    )
+
     return cmd
 
 
@@ -91,5 +93,5 @@ def par_s1_slc_single(safe_dir, pol='vv', orbit_file=None):
 
     # Make a raster version of swath 3
     width = getParameter(f'{acquisition_date}_003.slc.par', 'range_samples')
-    execute(f"rasSLC {acquisition_date}_003.slc {width} 1 0 50 10")
+    execute(f'rasSLC {acquisition_date}_003.slc {width} 1 0 50 10')
     os.chdir(wrk)

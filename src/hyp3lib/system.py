@@ -17,7 +17,7 @@ def gamma_version():
             raise
 
         try:
-            with open(f"{gamma_home}/ASF_Gamma_version.txt") as f:
+            with open(f'{gamma_home}/ASF_Gamma_version.txt') as f:
                 gamma_ver = f.readlines()[-1].strip()
         except IOError:
             logging.warning(
@@ -46,7 +46,7 @@ def isce_version():
         raise
 
     # prefer the conda reported version number; requires shell for active conda env
-    version = subprocess.check_output('conda list | grep isce | awk \'{print $2}\'', shell=True, text=True)
+    version = subprocess.check_output("conda list | grep isce | awk '{print $2}'", shell=True, text=True)
     if version:
         return version.strip()
 

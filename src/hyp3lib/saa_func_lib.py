@@ -29,12 +29,12 @@ def read_gdal_file(filehandle, band=1, gcps=False):
     geoproj = filehandle.GetProjection()
     banddata = filehandle.GetRasterBand(band)
     # type = gdal.GetDataTypeName(banddata.DataType).lower()
-    min = banddata.GetMinimum()
-    max = banddata.GetMaximum()
-    if min is None or max is None:
-        (min, max) = banddata.ComputeRasterMinMax(1)
+    data_min = banddata.GetMinimum()
+    data_max = banddata.GetMaximum()
+    if data_min is None or data_max is None:
+        (data_min, data_max) = banddata.ComputeRasterMinMax(1)
     data = banddata.ReadAsArray()
-    if gcps == False:
+    if gcps is False:
         return filehandle.RasterXSize, filehandle.RasterYSize, geotransform, geoproj, data
     else:
         gcp = filehandle.GetGCPs()
@@ -85,7 +85,7 @@ def getCorners(fi):
 
 def getPixSize(fi):
     (x1, y1, t1, p1) = read_gdal_file_geo(open_gdal_file(fi))
-    return (t1[1])
+    return t1[1]
 
 
 # Get the UTM zone
@@ -99,10 +99,10 @@ def get_zone(lon_min, lon_max):
 def get_utm_proj(lon_min, lon_max, lat_min, lat_max):
     zone = get_zone(lon_min, lon_max)
     if (lat_min + lat_max) / 2 > 0:
-        proj = ('EPSG:326%02d' % int(zone))
+        proj = 'EPSG:326%02d' % int(zone)
     else:
-        proj = ('EPSG:327%02d' % int(zone))
-    print("Found proj {}".format(proj))
+        proj = 'EPSG:327%02d' % int(zone)
+    print('Found proj {}'.format(proj))
     return proj
 
 
@@ -110,8 +110,8 @@ def get_utm_proj(lon_min, lon_max, lat_min, lat_max):
 def reproject_gcs_to_utm(infile, outfile, pixSize):
     lon_min, lon_max, lat_min, lat_max = getCorners(infile)
     proj = get_utm_proj(lon_min, lon_max, lat_min, lat_max)
-    print("Using pixel size {}".format(pixSize))
-    print("Translating {} to make {}".format(infile, outfile))
+    print('Using pixel size {}'.format(pixSize))
+    print('Translating {} to make {}'.format(infile, outfile))
     gdal.Warp(outfile, infile, dstSRS=proj, xRes=pixSize, yRes=pixSize, creationOptions=['COMPRESS=LZW'])
 
 
@@ -129,8 +129,8 @@ def get_corners(originx, originy, xsize, ysize, xres, yres):
 
 
 def open_gdal_file_forscanline(file, x, y, trans, proj, dt='UInt16'):
-    format = "GTiff"
-    driver = gdal.GetDriverByName(format)
+    image_format = 'GTiff'
+    driver = gdal.GetDriverByName(image_format)
     if dt == 'UInt16':
         dst_datatype = gdal.GDT_UInt16
     elif dt == 'Float32':
@@ -149,8 +149,8 @@ def write_gdal_file_byscanline(driver, xoff, yoff, data, band=1):
 
 def write_gdal_file(filename, geotransform, geoproj, data, gcps='', gcpproj=''):
     (x, y) = data.shape
-    format = "GTiff"
-    driver = gdal.GetDriverByName(format)
+    image_format = 'GTiff'
+    driver = gdal.GetDriverByName(image_format)
     dst_datatype = gdal.GDT_Int16
     dst_ds = driver.Create(filename, y, x, 1, dst_datatype)
     northing = geotransform[0]
@@ -171,8 +171,8 @@ def write_gdal_file(filename, geotransform, geoproj, data, gcps='', gcpproj=''):
 
 def write_gdal_file_float(filename, geotransform, geoproj, data, nodata=None):
     (x, y) = data.shape
-    format = "GTiff"
-    driver = gdal.GetDriverByName(format)
+    image_format = 'GTiff'
+    driver = gdal.GetDriverByName(image_format)
     dst_datatype = gdal.GDT_Float32
     dst_ds = driver.Create(filename, y, x, 1, dst_datatype)
     northing = geotransform[0]
@@ -193,8 +193,8 @@ def write_gdal_file_float(filename, geotransform, geoproj, data, nodata=None):
 
 def write_gdal_file_byte(filename, geotransform, geoproj, data, nodata=None):
     (x, y) = data.shape
-    format = "GTiff"
-    driver = gdal.GetDriverByName(format)
+    image_format = 'GTiff'
+    driver = gdal.GetDriverByName(image_format)
     dst_datatype = gdal.GDT_Byte
     dst_ds = driver.Create(filename, y, x, 1, dst_datatype)
     geotransform = [item for item in geotransform]
@@ -210,8 +210,8 @@ def write_gdal_file_byte(filename, geotransform, geoproj, data, nodata=None):
 def write_gdal_file_rgb(filename, geotransform, geoproj, b1, b2, b3, metadata=None):
     options = []
     (x, y) = b1.shape
-    format = "GTiff"
-    driver = gdal.GetDriverByName(format)
+    image_format = 'GTiff'
+    driver = gdal.GetDriverByName(image_format)
     dst_datatype = gdal.GDT_Byte
     dst_ds = driver.Create(filename, y, x, 3, dst_datatype, options)
     dst_ds.SetGeoTransform(geotransform)
@@ -228,8 +228,8 @@ def write_gdal_file_rgb(filename, geotransform, geoproj, b1, b2, b3, metadata=No
 def write_gdal_file_rgba(filename, geotransform, geoproj, b1, b2, b3, b4):
     options = []
     (x, y) = b1.shape
-    format = "GTiff"
-    driver = gdal.GetDriverByName(format)
+    image_format = 'GTiff'
+    driver = gdal.GetDriverByName(image_format)
     dst_datatype = gdal.GDT_Byte
     dst_ds = driver.Create(filename, y, x, 4, dst_datatype, options)
     dst_ds.SetGeoTransform(geotransform)

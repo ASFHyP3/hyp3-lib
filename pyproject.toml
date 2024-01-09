@@ -29,7 +29,7 @@ dependencies = [
     "importlib_metadata",
     "lxml",
     "netCDF4",
-    "numpy<1.24",
+    "numpy",
     "pillow",
     "requests",
     "scipy",
