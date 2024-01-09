@@ -1,14 +1,35 @@
 # HyP3-lib
 
-## Common library for HyP3 plugins
+## CURRENTLY UNDER CONSTRUCTION!!!
+HyP3-lib is currently undergoing a major redesign and many utilities that are no longer used by ASF have been removed between version 2 and version 3. In addition, we plan to significantly further migrate some remaining functionality to other project and to significantly refactor what remains. For this reason, **if you are using HyP3-lib we strongly recommend pinning to major versions at this time**. We further recommend not using this library in production until its version 4 release.
 
-### Please note that the use of `hyp3lib` version 2 or less is **_NOT_** recommended. 
+The use of `hyp3lib` version 2 or less is **_NOT_** recommended.
 
-This library is outdated and largely untested, containing a broad collection of scripts/tools developed for upstream packages that have since undergone many *major* releases. 
-
-HyP3 plugins only use a subset of this repository, and version 3 will include drastic changes to reduce the library's scope to *just* those codes supporting HyP3 plugin development. We suggest *not* using this library, *especially* in a production environment, until version 3.0. 
+## HyP3-lib: A Common library for HyP3 plugins
+The goal of this package is to provide ASF's various HyP3 plugins with a common set of utilities they can use to perform common tasks. This could include tasks such as downloading Sentinel-1 orbit data, or verifying that NASA EarthData credentials are available.
 
 If you're a MintPy user looking to crop HyP3 products, please see our [Time Series Analysis with HyP3 and Mintpy Tutorial](https://hyp3-docs.asf.alaska.edu/tutorials/mintpy).
 
-For other uses, we suggest checking out our [`asf-tools`](https://github.com/ASFHyP3/asf-tools) Python library and/or the [HyP3 Python SDK](https://github.com/ASFHyP3/hyp3-sdk). 
+If you are looking for a way to request HyP3 products via Python, we suggest checkout our [HyP3 Python SDK](https://github.com/ASFHyP3/hyp3-sdk).
 
+If you are looking for workflows that take advantage of our HyP3 on-demand products, we suggest checking out our [`asf-tools`](https://github.com/ASFHyP3/asf-tools) Python library.
+
+## License
+The HyP3-lib package is licensed under the BSD 3-Clause license. See the LICENSE file for more details.
+
+## Code of conduct
+We strive to create a welcoming and inclusive community for all contributors to HyP3-lib. As such, all contributors to this project are expected to adhere to our code of conduct.
+
+Please see `CODE_OF_CONDUCT.md` for the full code of conduct text.
+
+## Contributing
+Contributions to the HyP3-lib library are welcome! If you would like to contribute, please submit a pull request on the GitHub repository.
+
+## Contact Us
+Want to talk about HyP3-lib? We would love to hear from you!
+
+Found a bug? Want to request a feature?
+[open an issue](https://github.com/ASFHyP3/hyp3-lib/issues/new)
+
+General questions? Suggestions? Or just want to talk to the team?
+[chat with us on gitter](https://gitter.im/ASFHyP3/community)
