@@ -1,9 +1,8 @@
 # HyP3-lib
 
-## CURRENTLY UNDER CONSTRUCTION!!!
-HyP3-lib is currently undergoing a major redesign and many utilities that are no longer used by ASF have been removed between version 2 and version 3. In addition, we plan to migrate some remaining functionality to other projects and to significantly refactor what remains. For this reason, **if you are using HyP3-lib we strongly recommend pinning to major versions at this time**. We further recommend not using this library in production until its version 4 release.
+> [!WARNING]
+> HyP3-lib is currently undergoing a major redesign and many utilities that are no longer used by existing HyP3 plugins have been removed between version 2 and version 3. In addition, we plan to migrate some remaining functionality to other projects and to significantly refactor what remains. For this reason, **if you are using HyP3-lib we strongly recommend pinning to major versions at this time**. We further recommend not using this library in production until its version 4 release.
 
-The use of HyP3-lib version 2 or less is **_NOT_** recommended.
 
 ## HyP3-lib: A Common library for HyP3 plugins
 The goal of this package is to provide ASF's various HyP3 plugins with a set of utilities they can use to perform common tasks. This could include tasks such as downloading Sentinel-1 orbit data, or verifying that NASA EarthData credentials are available.
@@ -12,18 +11,20 @@ If you're a MintPy user looking to crop HyP3 products, please see our [Time Seri
 
 If you are looking for a way to request HyP3 products via Python, we suggest checkout our [HyP3 Python SDK](https://github.com/ASFHyP3/hyp3-sdk).
 
-If you are looking for workflows that take advantage of our HyP3 on-demand products, we suggest checking out our [`asf-tools`](https://github.com/ASFHyP3/asf-tools) Python library.
+If you are looking for workflows that take advantage of our HyP3 on-demand products, we suggest checking out our [ASF Tools](https://github.com/ASFHyP3/asf-tools) Python library.
 
 ## License
-The HyP3-lib package is licensed under the BSD 3-Clause license. See the LICENSE file for more details.
+The HyP3-lib package is licensed under the BSD 3-Clause license. See the [`LICENSE`](LICENSE) file for more details.
 
 ## Code of conduct
 We strive to create a welcoming and inclusive community for all contributors to HyP3-lib. As such, all contributors to this project are expected to adhere to our code of conduct.
 
-Please see `CODE_OF_CONDUCT.md` for the full code of conduct text.
+Please see [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for the full code of conduct text.
 
 ## Contributing
-Contributions to the HyP3-lib library are welcome! If you would like to contribute, please submit a pull request on the GitHub repository.
+Contributions to the HyP3-lib library are welcome! Whether you're finding bugs, adding new features, fixing anything broken, or improving documentation, get started by submitting an issue or pull request!
+
+Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for more info.
 
 ## Contact Us
 Want to talk about HyP3-lib? We would love to hear from you!
