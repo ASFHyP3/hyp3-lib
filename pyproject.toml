@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyp3lib"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 readme = "README.md"
 authors = [
     {name="ASF APD/Tools Team", email="UAF-asf-apd@alaska.edu"},
@@ -17,16 +17,15 @@ classifiers=[
     "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
     "boto3",
     "gdal",
-    "importlib_metadata",
     "lxml",
     "netCDF4",
     "numpy",

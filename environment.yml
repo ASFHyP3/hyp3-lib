@@ -3,11 +3,11 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - python>=3.9
   - pip
   # For running
   - boto3
   - gdal
-  - importlib_metadata
   - lxml
   - netCDF4
   - numpy
