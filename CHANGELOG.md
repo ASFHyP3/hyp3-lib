@@ -15,6 +15,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 * Updated formatting using Ruff to pass flake8 check.
 
 ### Remove
+* Support for Python 3.7 and 3.8 has been dropped in line with NumPy and the larger scientific python ecosystem, as described in [NEP-0029](https://numpy.org/neps/nep-0029-deprecation_policy.html) and [SEPC-0000](https://scientific-python.org/specs/spec-0000/)
 * All hyp3lib functionality not currently being used by one of these GitHub orgs: ASFHyP3, asfadmin, ASFOpenSARLab, access-cloud-based-insar, dbekaert, ASFBinderRecipes, or insarlab. For a full list of the deleted files, see [here](https://github.com/ASFHyP3/hyp3-lib/pull/286).
 * Removed now unused dependencies from `pyproject.toml` and `environment.yml`.
 
