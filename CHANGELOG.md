@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0]
+
+### Changed
+* `hyp3lib` now uses a `src` layout per this [recommendation](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/).
+* `hyp3lib` now only uses `pyproject.toml` for package creation now that `setuptools` recommends [not using setup.py](https://setuptools.pypa.io/en/latest/userguide/quickstart.html#setuppy-discouraged).
+* Updated GitHub Actions to current HyP3 standards.
+* Updated formatting using Ruff to pass flake8 check.
+
+### Remove
+* Support for Python 3.7 and 3.8 has been dropped in line with NumPy and the larger scientific python ecosystem, as described in [NEP-0029](https://numpy.org/neps/nep-0029-deprecation_policy.html) and [SEPC-0000](https://scientific-python.org/specs/spec-0000/)
+* All hyp3lib functionality not currently being used by one of these GitHub orgs: ASFHyP3, asfadmin, ASFOpenSARLab, access-cloud-based-insar, dbekaert, ASFBinderRecipes, or insarlab. For a full list of the deleted files, see [here](https://github.com/ASFHyP3/hyp3-lib/pull/286).
+* Removed now unused dependencies from `pyproject.toml` and `environment.yml`.
+
 ## [2.0.2]
 
 ### Fixed

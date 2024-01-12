@@ -1,2 +1,101 @@
 [build-system]
-requires = ["setuptools>=42", "wheel", "setuptools_scm[toml]>=3.4"]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyp3lib"
+requires-python = ">=3.9"
+readme = "README.md"
+authors = [
+    {name="ASF APD/Tools Team", email="UAF-asf-apd@alaska.edu"},
+]
+description = "Common library for HyP3 plugins"
+license = {text = "BSD-3-Clause"}
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "boto3",
+    "gdal",
+    "lxml",
+    "netCDF4",
+    "numpy",
+    "pillow",
+    "requests",
+    "scipy",
+    "six",
+    "statsmodels",
+    "urllib3",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+develop = [
+    "botocore",
+    "flake8",
+    "flake8-import-order",
+    "flake8-blind-except",
+    "flake8-builtins",
+    "pytest",
+    "pytest-cov",
+    "pytest-console-scripts",
+    "responses",
+]
+
+[project.scripts]
+"byteSigmaScale.py" = "hyp3lib.byteSigmaScale:main"
+"createAmp.py" = "hyp3lib.createAmp:main"
+"get_orb.py" = "hyp3lib.get_orb:main"
+"makeAsfBrowse.py" = "hyp3lib.makeAsfBrowse:main"
+"make_cogs.py" = "hyp3lib.make_cogs:main"
+"raster_boundary2shape.py" = "hyp3lib.raster_boundary2shape:main"
+"resample_geotiff.py" = "hyp3lib.resample_geotiff:main"
+"rtc2color.py" = "hyp3lib.rtc2color:main"
+"SLC_copy_S1_fullSW.py" = "hyp3lib.SLC_copy_S1_fullSW:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+script_launch_mode = "subprocess"
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false
+script-files = ["scripts/GC_map_mod"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "single"
+
+[tool.ruff.lint]
+extend-select = [
+    "I",   # isort: https://docs.astral.sh/ruff/rules/#isort-i
+    # "UP",  # pyupgrade: https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    # "D",   # pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
+    # "ANN", # annotations: https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
+    # "PTH", # use-pathlib-pth: https://docs.astral.sh/ruff/rules/#flake8-use-pathlib-pth
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+lines-after-imports = 2
+
+[tool.setuptools_scm]
