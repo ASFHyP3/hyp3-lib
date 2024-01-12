@@ -32,7 +32,6 @@ dependencies = [
     "pillow",
     "requests",
     "scipy",
-    "six",
     "statsmodels",
     "urllib3",
 ]
