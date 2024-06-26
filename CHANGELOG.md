@@ -8,7 +8,7 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.1.0]
 
-## Removed
+### Removed
 * Support for Python 3.8 and 3.9 has been dropped, 3.10 is now the minimum version.
 
 
