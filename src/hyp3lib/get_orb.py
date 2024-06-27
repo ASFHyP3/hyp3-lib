@@ -7,16 +7,15 @@ import re
 import sys
 from datetime import datetime
 from typing import Optional, Tuple
+from urllib.parse import urlparse
 
 import requests
 from lxml import html
 from requests.adapters import HTTPAdapter
-from six.moves.urllib.parse import urlparse
 from urllib3.util.retry import Retry
 
 from hyp3lib import OrbitDownloadError
 from hyp3lib.fetch import download_file
-
 
 ESA_CREATE_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
 ESA_DELETE_TOKEN_URL = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/account/sessions'

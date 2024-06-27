@@ -1,2 +1,0 @@
-.*gitleaks.toml$
-hyp3lib\/get_asf.py
