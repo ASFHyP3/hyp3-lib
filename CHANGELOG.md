@@ -10,11 +10,6 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 * Support for Python 3.8 and 3.9 has been dropped, 3.10 is now the minimum version.
-
-
-## [3.0.1]
-
-### Removed
 * The `six` package has been dropped as a dependency as it's no longer used since we don't support Python 2 anymore.
 
 ## [3.0.0]
