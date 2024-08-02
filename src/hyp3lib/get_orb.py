@@ -145,6 +145,21 @@ def get_orbit_url(granule: str, orbit_type: str = 'AUX_POEORB', provider: str = 
     raise OrbitDownloadError(f'Unknown orbit file provider {provider}')
 
 
+def _get_s1_orbits_orbit_url(orbit_type: str, granule: str):
+    search_url = f'http://127.0.0.1:8000/scene/{granule}?orbit_type={orbit_type}'
+    return search_url
+
+
+def downloadOrbitFileFromS1Orbits(
+        granule: str,
+        directory: str = '',
+        orbit_type: str = 'AUX_POEORB'
+):
+    orbit_url = _get_s1_orbits_orbit_url(orbit_type, granule)
+    orbit_file = download_file(orbit_url, directory=directory)
+    return orbit_file
+
+
 def downloadSentinelOrbitFile(
     granule: str,
     directory: str = '',
