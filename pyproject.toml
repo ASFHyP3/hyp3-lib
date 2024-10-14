@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hyp3lib"
-# FIXME: standard lib `cgi` module removed in 3.13: https://docs.python.org/3.12/library/cgi.html
+# FIXME: standard lib `cgi` module removed in 3.13: https://github.com/ASFHyP3/hyp3-lib/issues/300
 requires-python = ">=3.10,<3.13"
 readme = "README.md"
 authors = [
