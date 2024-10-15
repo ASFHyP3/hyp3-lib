@@ -1,6 +1,6 @@
 """Utilities for fetching things from external endpoints"""
-import cgi
 import logging
+from email.message import Message
 from os.path import basename
 from pathlib import Path
 from typing import Optional, Tuple, Union
@@ -29,8 +29,9 @@ def write_credentials_to_netrc_file(
 def _get_download_path(url: str, content_disposition: str = None, directory: Union[Path, str] = '.'):
     filename = None
     if content_disposition is not None:
-        _, params = cgi.parse_header(content_disposition)
-        filename = params.get('filename')
+        message = Message()
+        message['content-type'] = content_disposition
+        filename = message.get_param('filename')
     if not filename:
         filename = basename(urlparse(url).path)
     if not filename:
