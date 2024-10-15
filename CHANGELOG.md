@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2]
+
+### Fixed
+* Support Python 3.13 by replacing the `cgi` module with the `email.message` module as described in [PEP 594](https://peps.python.org/pep-0594/#cgi). Fixes <https://github.com/ASFHyP3/hyp3-lib/issues/300>.
+
 ## [3.1.1]
 
 ### Fixed
