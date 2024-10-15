@@ -3,7 +3,8 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.10
+  # FIXME: standard lib `cgi` module removed in 3.13: https://github.com/ASFHyP3/hyp3-lib/issues/300
+  - python>=3.10,<3.13
   - pip
   # For running
   - boto3
@@ -17,7 +18,7 @@ dependencies:
   - statsmodels
   - urllib3
   # For packaging, and testing
-  - build
+  - python-build
   - flake8
   - flake8-import-order
   - flake8-blind-except
