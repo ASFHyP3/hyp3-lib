@@ -1,4 +1,5 @@
 """Convert a floating point tiff into a byte tiff using 2-sigma scaling."""
+
 import argparse
 import os
 
