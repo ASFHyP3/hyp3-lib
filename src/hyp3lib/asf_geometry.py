@@ -126,7 +126,7 @@ def cut_blackfill(data, geoTrans):
     colFirst = rowProfile.index(1)
     originX += colFirst * pixelSize
     originY -= rowFirst * pixelSize
-    data = data[rowFirst:rows + rowFirst, colFirst:cols + colFirst]
+    data = data[rowFirst : rows + rowFirst, colFirst : cols + colFirst]
     geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
 
     return (data, colFirst, rowFirst, geoTrans)
@@ -283,7 +283,7 @@ def data_geometry2shape_ext(data, fields, values, spatialRef, geoTrans, classes,
     originY = geoTrans[3] + 10 * pixelSize
     geoTrans = (originX, pixelSize, 0, originY, 0, -pixelSize)
     mask = np.zeros((rows + 20, cols + 20), dtype=np.float32)
-    mask[10:rows + 10, 10:cols + 10] = data
+    mask[10 : rows + 10, 10 : cols + 10] = data
     data = mask
 
     # Save in memory
@@ -647,7 +647,7 @@ def apply_mask(data, dataGeoTrans, mask, maskGeoTrans):
     maskPixelSize = maskGeoTrans[1]
     offsetX = int(np.rint((maskOriginX - dataOriginX) / maskPixelSize))
     offsetY = int(np.rint((dataOriginY - maskOriginY) / maskPixelSize))
-    data = data[offsetY:maskRows + offsetY, offsetX:maskCols + offsetX]
+    data = data[offsetY : maskRows + offsetY, offsetX : maskCols + offsetX]
     data *= mask
 
     return data
