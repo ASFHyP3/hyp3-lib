@@ -40,10 +40,7 @@ dynamic = ["version"]
 [project.optional-dependencies]
 develop = [
     "botocore",
-    "flake8",
-    "flake8-import-order",
-    "flake8-blind-except",
-    "flake8-builtins",
+    "ruff",
     "pytest",
     "pytest-cov",
     "pytest-console-scripts",
@@ -73,8 +70,12 @@ script-files = ["scripts/GC_map_mod"]
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools_scm]
+
 [tool.ruff]
 line-length = 120
+# The directories to consider when resolving first- vs. third-party imports.
+# See: https://docs.astral.sh/ruff/settings/#src
 src = ["src", "tests"]
 
 [tool.ruff.format]
@@ -84,6 +85,7 @@ quote-style = "single"
 [tool.ruff.lint]
 extend-select = [
     "I",   # isort: https://docs.astral.sh/ruff/rules/#isort-i
+    # TODO: Uncomment the following extensions and address their warnings:
     # "UP",  # pyupgrade: https://docs.astral.sh/ruff/rules/#pyupgrade-up
     # "D",   # pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
     # "ANN", # annotations: https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
@@ -96,5 +98,3 @@ convention = "google"
 [tool.ruff.lint.isort]
 case-sensitive = true
 lines-after-imports = 2
-
-[tool.setuptools_scm]

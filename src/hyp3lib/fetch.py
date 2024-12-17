@@ -1,4 +1,5 @@
 """Utilities for fetching things from external endpoints"""
+
 import logging
 from email.message import Message
 from os.path import basename
