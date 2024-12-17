@@ -70,8 +70,12 @@ script-files = ["scripts/GC_map_mod"]
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools_scm]
+
 [tool.ruff]
 line-length = 120
+# The directories to consider when resolving first- vs. third-party imports.
+# See: https://docs.astral.sh/ruff/settings/#src
 src = ["src", "tests"]
 
 [tool.ruff.format]
@@ -94,5 +98,3 @@ convention = "google"
 [tool.ruff.lint.isort]
 case-sensitive = true
 lines-after-imports = 2
-
-[tool.setuptools_scm]
