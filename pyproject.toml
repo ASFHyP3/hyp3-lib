@@ -81,6 +81,7 @@ quote-style = "single"
 [tool.ruff.lint]
 extend-select = [
     "I",   # isort: https://docs.astral.sh/ruff/rules/#isort-i
+    # TODO: Uncomment the following extensions and address their warnings:
     # "UP",  # pyupgrade: https://docs.astral.sh/ruff/rules/#pyupgrade-up
     # "D",   # pydocstyle: https://docs.astral.sh/ruff/rules/#pydocstyle-d
     # "ANN", # annotations: https://docs.astral.sh/ruff/rules/#flake8-annotations-ann
