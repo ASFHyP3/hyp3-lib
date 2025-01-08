@@ -222,13 +222,13 @@ def vector_meta(vectorFile):
     features = []
     featureCount = layer.GetFeatureCount()
     for kk in range(featureCount):
-        value = {}
+        value: dict = {}
         feature = layer.GetFeature(kk)
         for ii in range(fieldCount):
             if fields[ii]['type'] == ogr.OFTInteger:
                 value[fields[ii]['name']] = int(feature.GetField(ii))
             elif fields[ii]['type'] == ogr.OFTReal:
-                value[fields[ii]['name']] = float(feature.GetField(ii))  # type: ignore [assignment]
+                value[fields[ii]['name']] = float(feature.GetField(ii))
             else:
                 value[fields[ii]['name']] = feature.GetField(ii)
         value['geometry'] = feature.GetGeometryRef().ExportToWkt()
@@ -241,11 +241,11 @@ def vector_meta(vectorFile):
 def raster_metadata(input):  # noqa: A002
     # Set up shapefile attributes
     fields = []
-    field = {}
+    field: dict = {}
     values = []
     field['name'] = 'granule'
     field['type'] = ogr.OFTString
-    field['width'] = 254  # type: ignore [assignment]
+    field['width'] = 254
     fields.append(field)
     field = {}
     field['name'] = 'epsg'
@@ -274,7 +274,7 @@ def raster_metadata(input):  # noqa: A002
     field = {}
     field['name'] = 'pixel'
     field['type'] = ogr.OFTString
-    field['width'] = 8  # type: ignore [assignment]
+    field['width'] = 8
     fields.append(field)
 
     # Extract other raster image metadata
