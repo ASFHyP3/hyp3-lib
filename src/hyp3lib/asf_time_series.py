@@ -182,7 +182,7 @@ def filter_change(image, kernelSize, iterations):
             if image[ii, kk] == 1:
                 negativeChange[ii, kk] = 1
             elif image[ii, kk] == 2:
-                noChange = 1
+                noChange = np.ones_like(noChange)
             elif image[ii, kk] == 3:
                 positiveChange[ii, kk] = 1
     image = None
@@ -228,7 +228,7 @@ def vector_meta(vectorFile):
             if fields[ii]['type'] == ogr.OFTInteger:
                 value[fields[ii]['name']] = int(feature.GetField(ii))
             elif fields[ii]['type'] == ogr.OFTReal:
-                value[fields[ii]['name']] = float(feature.GetField(ii))
+                value[fields[ii]['name']] = float(feature.GetField(ii))  # type: ignore [assignment]
             else:
                 value[fields[ii]['name']] = feature.GetField(ii)
         value['geometry'] = feature.GetGeometryRef().ExportToWkt()
@@ -245,7 +245,7 @@ def raster_metadata(input):  # noqa: A002
     values = []
     field['name'] = 'granule'
     field['type'] = ogr.OFTString
-    field['width'] = 254
+    field['width'] = 254  # type: ignore [assignment]
     fields.append(field)
     field = {}
     field['name'] = 'epsg'
@@ -274,7 +274,7 @@ def raster_metadata(input):  # noqa: A002
     field = {}
     field['name'] = 'pixel'
     field['type'] = ogr.OFTString
-    field['width'] = 8
+    field['width'] = 8  # type: ignore [assignment]
     fields.append(field)
 
     # Extract other raster image metadata
@@ -427,11 +427,10 @@ def time_series_slice(ncFile, x, y, typeXY):
             index = datestamp.index(refDates[ii])
             allValues.append(value[index])
             refType.append('acquired')
-    allValues = np.asarray(allValues)
 
     # Smoothing the time line with localized regression (LOESS)
     lowess = sm.nonparametric.lowess
-    smooth = lowess(allValues, np.arange(len(allValues)), frac=0.08, it=0)[:, 1]
+    smooth = lowess(np.asarray(allValues), np.arange(len(allValues)), frac=0.08, it=0)[:, 1]
 
     sd = seasonal_decompose(x=smooth, model='additive', freq=4)
 

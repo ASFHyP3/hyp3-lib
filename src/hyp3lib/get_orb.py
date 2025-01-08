@@ -33,12 +33,12 @@ class EsaToken:
         """
         self.username = username
         self.password = password
-        self.token = None
+        self.token: str | None = None
         self.session_id = None
 
     def __enter__(self) -> str:
         data = {
-            'client_id': 'cdse-public',
+            'client _id': 'cdse-public',
             'grant_type': 'password',
             'username': self.username,
             'password': self.password,
@@ -47,6 +47,7 @@ class EsaToken:
         response.raise_for_status()
         self.session_id = response.json()['session_state']
         self.token = response.json()['access_token']
+        assert self.token is not None
         return self.token
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -67,6 +68,7 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
         backoff_factor=10,
         status_forcelist=[429, 500, 503, 504],
     )
+    assert hostname is not None
     session.mount(hostname, HTTPAdapter(max_retries=retries))
     response = session.get(search_url)
     response.raise_for_status()
@@ -75,7 +77,7 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
         file for file in tree.xpath('//a[@href]//@href') if file.startswith(platform) and file.endswith('.EOF')
     ]
 
-    d1 = 0
+    d1 = 0.0
     best = None
     for file in file_list:
         file = file.strip()
@@ -108,7 +110,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
         '$top': 1,
     }
 
-    response = requests.get(search_url, params=params)
+    response = requests.get(search_url, params=params) # type: ignore [arg-type]
     response.raise_for_status()
     data = response.json()
 
@@ -174,7 +176,7 @@ def downloadSentinelOrbitFile(
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
                 if provider == 'ESA':
-                    with EsaToken(*esa_credentials) as token:
+                    with EsaToken(*esa_credentials) as token:  # type: ignore [misc] 
                         orbit_file = download_file(url, directory=directory, token=token)
                 else:
                     orbit_file = download_file(url, directory=directory)

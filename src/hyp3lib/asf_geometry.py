@@ -70,7 +70,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
         data[np.isnan(data) is True] = noDataValue
         if threshold is not None:
             print('Applying threshold ({0}) ...'.format(threshold))
-            data[data < np.float(threshold)] = noDataValue
+            data[data < np.float64(threshold)] = noDataValue
         if np.isnan(noDataValue):
             data[np.isnan(data) is False] = 1
         else:
@@ -400,7 +400,7 @@ def raster2csv(fields, values, csvFile):
             line.append(value[name])
 
     with open(csvFile, 'wb') as outF:
-        writer = csv.writer(outF, delimiter=';')
+        writer = csv.writer(outF, delimiter=';')  # type: ignore [arg-type]
         writer.writerow(header)
         writer.writerow(line)
 
@@ -820,7 +820,7 @@ def list2shape(csvFile, shapeFile):
     values = []
     field['name'] = 'granule'
     field['type'] = ogr.OFTString
-    field['width'] = 254
+    field['width'] = 254  # type: ignore [assignment]
     fields.append(field)
 
     files = [line.strip() for line in open(csvFile)]

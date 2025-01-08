@@ -27,7 +27,7 @@ def write_credentials_to_netrc_file(
             f.write(f'machine {domain} login {username} password {password}\n')
 
 
-def _get_download_path(url: str, content_disposition: str = None, directory: Union[Path, str] = '.'):
+def _get_download_path(url: str, content_disposition: str | None = None, directory: Union[Path, str] = '.'):
     filename = None
     if content_disposition is not None:
         message = Message()
@@ -35,7 +35,7 @@ def _get_download_path(url: str, content_disposition: str = None, directory: Uni
         filename = message.get_param('filename')
     if not filename:
         filename = basename(urlparse(url).path)
-    if not filename:
+    if not isinstance(filename, str):
         raise ValueError(f'could not determine download path for: {url}')
     return Path(directory) / filename
 
@@ -79,7 +79,9 @@ def download_file(
     session.mount('http://', HTTPAdapter(max_retries=retry_strategy))
 
     with session.get(url, stream=True) as s:
-        download_path = _get_download_path(s.url, s.headers.get('content-disposition'), directory)
+        headers = s.headers.get('content-disposition')
+        assert headers is not None
+        download_path = _get_download_path(s.url, headers, directory)
         s.raise_for_status()
         with open(download_path, 'wb') as f:
             for chunk in s.iter_content(chunk_size=chunk_size):
