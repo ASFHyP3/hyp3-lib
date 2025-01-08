@@ -107,5 +107,5 @@ warn_unreachable = true
 strict_equality = true
 check_untyped_defs = true
 exclude = [
-    "/build/",
+    "/build/"
 ]
