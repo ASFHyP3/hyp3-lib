@@ -124,4 +124,4 @@ def test_download_file_auth(tmp_path):
 
 def test_download_file_none():
     with pytest.raises(requests.exceptions.MissingSchema):
-        _ = fetch.download_file(url=None) # type: ignore [arg-type]
+        _ = fetch.download_file(url=None)  # type: ignore [arg-type]
