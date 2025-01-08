@@ -175,6 +175,7 @@ def downloadSentinelOrbitFile(
         for provider in providers:
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
+                orbit_file: str | None = None
                 if provider == 'ESA':
                     with EsaToken(*esa_credentials) as token:  # type: ignore [misc] 
                         orbit_file = download_file(url, directory=directory, token=token)
