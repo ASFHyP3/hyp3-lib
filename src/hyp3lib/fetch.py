@@ -35,9 +35,9 @@ def _get_download_path(url: str, content_disposition: str | None = None, directo
         filename = message.get_param('filename')
     if not filename:
         filename = basename(urlparse(url).path)
-    if not isinstance(filename, str):
+    if not filename:
         raise ValueError(f'could not determine download path for: {url}')
-    return Path(directory) / filename
+    return Path(directory) / filename  # type: ignore [operator]
 
 
 def download_file(
@@ -79,9 +79,7 @@ def download_file(
     session.mount('http://', HTTPAdapter(max_retries=retry_strategy))
 
     with session.get(url, stream=True) as s:
-        headers = s.headers.get('content-disposition')
-        assert headers is not None
-        download_path = _get_download_path(s.url, headers, directory)
+        download_path = _get_download_path(s.url, s.headers.get('content-disposition'), directory)
         s.raise_for_status()
         with open(download_path, 'wb') as f:
             for chunk in s.iter_content(chunk_size=chunk_size):
