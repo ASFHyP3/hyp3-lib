@@ -38,7 +38,7 @@ class EsaToken:
 
     def __enter__(self) -> str:
         data = {
-            'client _id': 'cdse-public',
+            'client_id': 'cdse-public',
             'grant_type': 'password',
             'username': self.username,
             'password': self.password,
