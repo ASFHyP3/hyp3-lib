@@ -110,7 +110,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
         '$top': 1,
     }
 
-    response = requests.get(search_url, params=params) # type: ignore [arg-type]
+    response = requests.get(search_url, params=params)  # type: ignore [arg-type]
     response.raise_for_status()
     data = response.json()
 
@@ -177,7 +177,7 @@ def downloadSentinelOrbitFile(
                 url = get_orbit_url(granule, orbit_type, provider=provider)
                 orbit_file: str | None = None
                 if provider == 'ESA':
-                    with EsaToken(*esa_credentials) as token:  # type: ignore [misc] 
+                    with EsaToken(*esa_credentials) as token:  # type: ignore [misc]
                         orbit_file = download_file(url, directory=directory, token=token)
                 else:
                     orbit_file = download_file(url, directory=directory)
