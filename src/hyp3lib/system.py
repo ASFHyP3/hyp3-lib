@@ -21,9 +21,9 @@ def gamma_version():
                 gamma_ver = f.readlines()[-1].strip()
         except IOError:
             logging.warning(
-                f"No GAMMA_VERSION environment variable or ASF_Gamma_version.txt "
-                f"file found in GAMMA_HOME:\n     {os.getenv('GAMMA_HOME')}\n"
-                f"Attempting to parse GAMMA version from its install directory"
+                f'No GAMMA_VERSION environment variable or ASF_Gamma_version.txt '
+                f'file found in GAMMA_HOME:\n     {os.getenv("GAMMA_HOME")}\n'
+                f'Attempting to parse GAMMA version from its install directory'
             )
             gamma_ver = os.path.basename(gamma_home).split('-')[-1]
     try:
