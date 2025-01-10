@@ -101,7 +101,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
     search_url = 'https://catalogue.dataspace.copernicus.eu/odata/v1/Products'
 
     date_format = '%Y-%m-%dT%H:%M:%SZ'
-    params = {
+    params: dict = {
         '$filter': f"Collection/Name eq 'SENTINEL-1' and "
         f"startswith(Name, '{platform}_OPER_{orbit_type}_OPOD_') and "
         f'ContentDate/Start lt {start_time.strftime(date_format)} and '
@@ -110,7 +110,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
         '$top': 1,
     }
 
-    response = requests.get(search_url, params=params)  # type: ignore [arg-type]
+    response = requests.get(search_url, params=params)
     response.raise_for_status()
     data = response.json()
 
@@ -177,7 +177,8 @@ def downloadSentinelOrbitFile(
                 url = get_orbit_url(granule, orbit_type, provider=provider)
                 orbit_file: str | None = None
                 if provider == 'ESA':
-                    with EsaToken(*esa_credentials) as token:  # type: ignore [misc]
+                    assert esa_credentials is not None
+                    with EsaToken(*esa_credentials) as token:
                         orbit_file = download_file(url, directory=directory, token=token)
                 else:
                     orbit_file = download_file(url, directory=directory)

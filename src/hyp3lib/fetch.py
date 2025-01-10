@@ -37,7 +37,8 @@ def _get_download_path(url: str, content_disposition: str | None = None, directo
         filename = basename(urlparse(url).path)
     if not filename:
         raise ValueError(f'could not determine download path for: {url}')
-    return Path(directory) / filename  # type: ignore [operator]
+    assert isinstance(filename, str)
+    return Path(directory) / filename
 
 
 def download_file(

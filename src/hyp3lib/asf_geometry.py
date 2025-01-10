@@ -816,11 +816,11 @@ def generate_tile_shape(shapeFile, minLat, maxLat, minLon, maxLon, step):
 def list2shape(csvFile, shapeFile):
     # Set up shapefile attributes
     fields = []
-    field = {}
+    field: dict = {}
     values = []
     field['name'] = 'granule'
     field['type'] = ogr.OFTString
-    field['width'] = 254  # type: ignore [assignment]
+    field['width'] = 254
     fields.append(field)
 
     files = [line.strip() for line in open(csvFile)]
