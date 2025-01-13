@@ -208,7 +208,7 @@ def write_gdal_file_byte(filename, geotransform, geoproj, data, nodata=None):
 
 
 def write_gdal_file_rgb(filename, geotransform, geoproj, b1, b2, b3, metadata=None):
-    options = []
+    options: list = []
     (x, y) = b1.shape
     image_format = 'GTiff'
     driver = gdal.GetDriverByName(image_format)
@@ -226,7 +226,7 @@ def write_gdal_file_rgb(filename, geotransform, geoproj, b1, b2, b3, metadata=No
 
 
 def write_gdal_file_rgba(filename, geotransform, geoproj, b1, b2, b3, b4):
-    options = []
+    options: list = []
     (x, y) = b1.shape
     image_format = 'GTiff'
     driver = gdal.GetDriverByName(image_format)
