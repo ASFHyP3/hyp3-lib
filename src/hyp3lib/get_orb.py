@@ -33,7 +33,7 @@ class EsaToken:
         """
         self.username = username
         self.password = password
-        self.token = None
+        self.token: str | None = None
         self.session_id = None
 
     def __enter__(self) -> str:
@@ -47,6 +47,7 @@ class EsaToken:
         response.raise_for_status()
         self.session_id = response.json()['session_state']
         self.token = response.json()['access_token']
+        assert self.token is not None
         return self.token
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -67,6 +68,7 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
         backoff_factor=10,
         status_forcelist=[429, 500, 503, 504],
     )
+    assert hostname is not None
     session.mount(hostname, HTTPAdapter(max_retries=retries))
     response = session.get(search_url)
     response.raise_for_status()
@@ -75,7 +77,7 @@ def _get_asf_orbit_url(orbit_type, platform, timestamp):
         file for file in tree.xpath('//a[@href]//@href') if file.startswith(platform) and file.endswith('.EOF')
     ]
 
-    d1 = 0
+    d1 = 0.0
     best = None
     for file in file_list:
         file = file.strip()
@@ -99,7 +101,7 @@ def _get_esa_orbit_url(orbit_type: str, platform: str, start_time: datetime, end
     search_url = 'https://catalogue.dataspace.copernicus.eu/odata/v1/Products'
 
     date_format = '%Y-%m-%dT%H:%M:%SZ'
-    params = {
+    params: dict = {
         '$filter': f"Collection/Name eq 'SENTINEL-1' and "
         f"startswith(Name, '{platform}_OPER_{orbit_type}_OPOD_') and "
         f'ContentDate/Start lt {start_time.strftime(date_format)} and '
@@ -173,7 +175,9 @@ def downloadSentinelOrbitFile(
         for provider in providers:
             try:
                 url = get_orbit_url(granule, orbit_type, provider=provider)
+                orbit_file: str | None = None
                 if provider == 'ESA':
+                    assert esa_credentials is not None
                     with EsaToken(*esa_credentials) as token:
                         orbit_file = download_file(url, directory=directory, token=token)
                 else:

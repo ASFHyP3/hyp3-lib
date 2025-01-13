@@ -182,7 +182,7 @@ def filter_change(image, kernelSize, iterations):
             if image[ii, kk] == 1:
                 negativeChange[ii, kk] = 1
             elif image[ii, kk] == 2:
-                noChange = 1
+                noChange = np.ones_like(noChange)
             elif image[ii, kk] == 3:
                 positiveChange[ii, kk] = 1
     image = None
@@ -222,7 +222,7 @@ def vector_meta(vectorFile):
     features = []
     featureCount = layer.GetFeatureCount()
     for kk in range(featureCount):
-        value = {}
+        value: dict = {}
         feature = layer.GetFeature(kk)
         for ii in range(fieldCount):
             if fields[ii]['type'] == ogr.OFTInteger:
@@ -241,7 +241,7 @@ def vector_meta(vectorFile):
 def raster_metadata(input):  # noqa: A002
     # Set up shapefile attributes
     fields = []
-    field = {}
+    field: dict = {}
     values = []
     field['name'] = 'granule'
     field['type'] = ogr.OFTString
@@ -427,11 +427,10 @@ def time_series_slice(ncFile, x, y, typeXY):
             index = datestamp.index(refDates[ii])
             allValues.append(value[index])
             refType.append('acquired')
-    allValues = np.asarray(allValues)
 
     # Smoothing the time line with localized regression (LOESS)
     lowess = sm.nonparametric.lowess
-    smooth = lowess(allValues, np.arange(len(allValues)), frac=0.08, it=0)[:, 1]
+    smooth = lowess(np.asarray(allValues), np.arange(len(allValues)), frac=0.08, it=0)[:, 1]
 
     sd = seasonal_decompose(x=smooth, model='additive', freq=4)
 

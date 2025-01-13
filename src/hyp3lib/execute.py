@@ -80,6 +80,8 @@ def execute(
         raise ExecuteError(tool + ': ' + last)
 
     if expected is not None:
+        if isinstance(expected, Path):
+            expected = str(expected)
         if uselogging:
             logging.info('Checking for expected output: ' + expected)
         else:

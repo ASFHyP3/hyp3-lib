@@ -28,9 +28,7 @@ def makeAsfBrowse(geotiff: str, base_name: str, use_nn=False, width: int = 2048)
     tiff = None  # How to close with gdal
 
     if tiff_width < width:
-        logging.warning(
-            f'Requested image dimension of {width} exceeds GeoTIFF width {tiff_width}.' f' Using GeoTIFF width'
-        )
+        logging.warning(f'Requested image dimension of {width} exceeds GeoTIFF width {tiff_width}. Using GeoTIFF width')
         browse_width = tiff_width
     else:
         browse_width = width
@@ -55,7 +53,7 @@ def main():
         '-n',
         '--nearest-neighbor',
         action='store_true',
-        help="use GDAL's GRIORA_NearestNeighbour interpolation instead" ' of GRIORA_Cubic to resample the GeoTIFF',
+        help="use GDAL's GRIORA_NearestNeighbour interpolation instead of GRIORA_Cubic to resample the GeoTIFF",
     )
     parser.add_argument('-w', '--width', default=2048, help='browse image width')
     args = parser.parse_args()

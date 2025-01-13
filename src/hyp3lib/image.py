@@ -6,7 +6,7 @@ from typing import Tuple
 from PIL import Image
 
 
-def create_thumbnail(input_image: Path, size: Tuple[int, int] = (100, 100), output_dir: Path = None) -> Path:
+def create_thumbnail(input_image: Path, size: Tuple[int, int] = (100, 100), output_dir: Path | None = None) -> Path:
     """Create a thumbnail from an image
 
     Args:

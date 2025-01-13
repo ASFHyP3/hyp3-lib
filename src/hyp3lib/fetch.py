@@ -27,7 +27,7 @@ def write_credentials_to_netrc_file(
             f.write(f'machine {domain} login {username} password {password}\n')
 
 
-def _get_download_path(url: str, content_disposition: str = None, directory: Union[Path, str] = '.'):
+def _get_download_path(url: str, content_disposition: str | None = None, directory: Union[Path, str] = '.'):
     filename = None
     if content_disposition is not None:
         message = Message()
@@ -37,6 +37,7 @@ def _get_download_path(url: str, content_disposition: str = None, directory: Uni
         filename = basename(urlparse(url).path)
     if not filename:
         raise ValueError(f'could not determine download path for: {url}')
+    assert isinstance(filename, str)
     return Path(directory) / filename
 
 
