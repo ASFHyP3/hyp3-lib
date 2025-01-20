@@ -40,7 +40,7 @@ def isce_version():
     #       self reported version of ISCE with the conda install of ISCE 2.4.1
     #       is 2.3 (import isce; isce.__version__).
     try:
-        import isce
+        import isce  # type: ignore[import-not-found]
     except ImportError:
         logging.error('ISCE is not installed.')
         raise
