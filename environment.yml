@@ -6,7 +6,7 @@ dependencies:
   - python>=3.10
   - pip
   # For running
-  - boto3
+  - boto3<1.36.0  # FIXME: https://asfdaac.atlassian.net/browse/TOOL-3445
   - gdal
   - lxml
   - netCDF4
