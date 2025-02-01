@@ -24,7 +24,7 @@ classifiers=[
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "boto3",
+    "boto3>=1.36.0",
     "gdal",
     "lxml",
     "netCDF4",
