@@ -18,7 +18,6 @@ dependencies:
   - urllib3
   # For packaging, and testing
   - python-build
-  - types-lxml
   - setuptools
   - setuptools_scm
   - pytest
