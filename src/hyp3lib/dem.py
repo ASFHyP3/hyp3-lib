@@ -4,7 +4,6 @@ from pathlib import Path
 from subprocess import PIPE, run
 from tempfile import TemporaryDirectory
 
-from lxml import etree
 from osgeo import gdal, ogr, osr
 
 from hyp3lib import DemError
