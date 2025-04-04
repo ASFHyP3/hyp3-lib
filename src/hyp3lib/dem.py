@@ -57,19 +57,14 @@ def _shift_for_antimeridian(dem_file_paths: list[str], directory: Path) -> list[
     return shifted_file_paths
 
 
-def _convert_to_height_above_ellipsoid(dem_file: Path) -> None:
+def _convert_to_height_above_ellipsoid(dem_file: Path, bounds: tuple[float, float, float, float]) -> None:
     dem_info = gdal.Info(str(dem_file), format='json')
     with NamedTemporaryFile() as geoid_file:
         gdal.Warp(
             geoid_file.name,
             GEOID,
             dstSRS=dem_info['coordinateSystem']['wkt'],
-            outputBounds=[
-                dem_info['cornerCoordinates']['lowerLeft'][0],
-                dem_info['cornerCoordinates']['lowerLeft'][1],
-                dem_info['cornerCoordinates']['upperRight'][0],
-                dem_info['cornerCoordinates']['upperRight'][1],
-            ],
+            outputBounds=bounds,
             xRes=dem_info['geoTransform'][1],
             yRes=-dem_info['geoTransform'][5],
             targetAlignedPixels=True,
@@ -145,6 +140,6 @@ def prepare_dem_geotiff(
             )
 
     if height_above_ellipsoid:
-        _convert_to_height_above_ellipsoid(output_name)
+        _convert_to_height_above_ellipsoid(output_name, [minx, miny, maxx, maxy])
 
     return output_name
