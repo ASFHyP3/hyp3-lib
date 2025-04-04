@@ -1,4 +1,5 @@
 """Small utility functions"""
+
 from osgeo import gdal
 
 
