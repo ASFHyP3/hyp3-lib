@@ -108,7 +108,7 @@ def test_prepare_dem_geotiff_antimeridian(tmp_path):
     }
     geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
 
-    dem.prepare_dem_geotiff(str(dem_geotiff), geometry, epsg_code=32601, pixel_size=30.0)
+    dem.prepare_dem_geotiff(dem_geotiff, geometry, epsg_code=32601, pixel_size=30.0)
     assert dem_geotiff.exists()
 
     info = gdal.Info(str(dem_geotiff), format='json')
