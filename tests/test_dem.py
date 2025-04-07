@@ -55,7 +55,7 @@ def test_get_file_paths():
 
 
 def test_get_dem_features():
-    assert len(list(dem._get_dem_features())) == 26976
+    assert len(list(dem._get_dem_features())) == 27757
 
 
 def test_prepare_dem_geotiff_no_coverage():
@@ -98,11 +98,11 @@ def test_prepare_dem_geotiff_antimeridian(tmp_path):
         'type': 'Polygon',
         'coordinates': [
             [
-                    [179.5, 51.4],
-                    [179.5, 51.6],
-                    [180.5, 51.6],
-                    [180.5, 51.4],
-                    [179.5, 51.4],
+                [179.5, 51.4],
+                [179.5, 51.6],
+                [180.5, 51.6],
+                [180.5, 51.4],
+                [179.5, 51.4],
             ]
         ],
     }
@@ -132,17 +132,17 @@ def test_prepare_dem_geotiff_invalid_extent():
         'type': 'Polygon',
         'coordinates': [
             [
-                [-180.1, 10.16],
-                [-180.1, 10.86],
-                [-179.9, 10.86],
-                [-179.9, 10.16],
-                [-180.1, 10.16],
+                [-200.1, 56.16],
+                [-200.1, 56.86],
+                [-199.9, 56.86],
+                [-199.9, 56.16],
+                [-200.1, 56.16],
             ]
         ],
     }
     geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
 
-    with pytest.raises(DemError):
+    with pytest.raises(DemError, match='is not between \-200 and \+200 degrees longitude'):
         dem.prepare_dem_geotiff(Path('dem.tif'), geometry, epsg_code=32631, pixel_size=60)
 
     geojson = {
@@ -159,7 +159,7 @@ def test_prepare_dem_geotiff_invalid_extent():
     }
     geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
 
-    with pytest.raises(DemError):
+    with pytest.raises(DemError, match='is not between \-200 and \+200 degrees longitude'):
         dem.prepare_dem_geotiff(Path('dem.tif'), geometry, epsg_code=32631, pixel_size=60)
 
     geojson = {
@@ -176,5 +176,5 @@ def test_prepare_dem_geotiff_invalid_extent():
     }
     geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
 
-    with pytest.raises(DemError):
+    with pytest.raises(DemError, match='coordinates outside \-180 to \+180 degrees longitude'):
         dem.prepare_dem_geotiff(Path('dem.tif'), geometry, epsg_code=32631, pixel_size=60, height_above_ellipsoid=True)
