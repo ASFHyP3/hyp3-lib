@@ -8,7 +8,7 @@ from hyp3lib import DemError
 from hyp3lib.util import GDALConfigManager
 
 
-DEM_GEOJSON = '/vsicurl/https://asf-dem-west.s3.amazonaws.com/v2/cop30-2021-with-cop90-us-west-2-mirror.geojson'
+DEM_GEOJSON = '/vsicurl/https://asf-dem-west.s3.amazonaws.com/v2/cop30_20250404.geojson'
 GEOID = '/vsicurl/https://asf-dem-west.s3.amazonaws.com/GEOID/us_nga_egm2008_1.tif'
 
 gdal.UseExceptions()
@@ -36,25 +36,6 @@ def _get_dem_file_paths(geometry: ogr.Geometry) -> list[str]:
         if feature.GetGeometryRef().Intersects(geometry):
             file_paths.append(feature.GetField('file_path'))
     return file_paths
-
-
-def _shift_for_antimeridian(dem_file_paths: list[str], directory: Path) -> list[str]:
-    shifted_file_paths = []
-    for file_path in dem_file_paths:
-        if '_W' in file_path:
-            shifted_file_path = str(directory / Path(file_path).with_suffix('.vrt').name)
-            corners = gdal.Info(file_path, format='json')['cornerCoordinates']
-            output_bounds = [
-                corners['upperLeft'][0] + 360,
-                corners['upperLeft'][1],
-                corners['lowerRight'][0] + 360,
-                corners['lowerRight'][1],
-            ]
-            gdal.Translate(shifted_file_path, file_path, format='VRT', outputBounds=output_bounds)
-            shifted_file_paths.append(shifted_file_path)
-        else:
-            shifted_file_paths.append(file_path)
-    return shifted_file_paths
 
 
 def _convert_to_height_above_ellipsoid(dem_file: Path) -> None:
@@ -103,30 +84,34 @@ def prepare_dem_geotiff(
 
     Args:
         output_name: Path for the output GeoTIFF
-        geometry: Geometry in EPSG:4326 (lon/lat) projection for which to prepare a DEM mosaic. MULTIPOLYGON geometries
-          are assumed to cross the antimeridian with one polygon in each hemisphere.
+        geometry: Geometry in EPSG:4326 (lon/lat) projection for which to prepare a DEM mosaic. Must be a POLYGON with
+          longitude coordinates between -180 and +200 degrees.
         epsg_code: EPSG code for the output GeoTIFF projection.
         pixel_size: Pixel size for the DEM in units of the DEM's projection
         buffer_size_in_degrees: Extent of the output geotiff will be the extent of the buffered input geometry.
         height_above_ellipsoid:
           If False, output pixel values will be meters above mean sea level.
           If True, the output pixel values will be meters above the ellipsoid.
+          Only supported for geometries between -180 and +180 degrees longitude (i.e. geometries not crossing the antimeridian).
     """
+    if geometry.GetGeometryName() != 'POLYGON':
+        raise DemError(f'{geometry.GetGeometryName()} geometry is invalid; only POLYGON is supported.')
+
     if not _intersects_dem(geometry):
         raise DemError(f'Copernicus GLO-30 Public DEM does not intersect this geometry: {geometry}')
 
     buffered_geometry = geometry.Buffer(buffer_size_in_degrees)
+    minx, maxx, miny, maxy = buffered_geometry.GetEnvelope()
+    if not (-180 <= minx <= maxx <= 200):
+        raise DemError(f'Extent of buffered geometry ({minx} - {maxx}) is not between -180 and +200 degrees longitude.')
+
+    if 180 < maxx and height_above_ellipsoid:
+        raise DemError('height_above_ellipsoid is not supported for geometries with coordinates between +180 and +200 degrees longitude.')
 
     with GDALConfigManager(GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR'):
         with TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             dem_file_paths = _get_dem_file_paths(buffered_geometry)
-
-            minx, maxx, miny, maxy = buffered_geometry.GetEnvelope()
-            if buffered_geometry.GetGeometryName() == 'MULTIPOLYGON':
-                if height_above_ellipsoid:
-                    raise DemError('height_above_ellipsoid is not supported for geometries crossing the antimeridian.')
-                dem_file_paths = _shift_for_antimeridian(dem_file_paths, temp_path)
 
             dem_vrt = temp_path / 'dem.vrt'
             gdal.BuildVRT(str(dem_vrt), dem_file_paths)
