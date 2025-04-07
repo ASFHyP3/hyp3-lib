@@ -106,7 +106,9 @@ def prepare_dem_geotiff(
         raise DemError(f'Extent of buffered geometry ({minx} - {maxx}) is not between -180 and +200 degrees longitude.')
 
     if 180 < maxx and height_above_ellipsoid:
-        raise DemError('height_above_ellipsoid is not supported for geometries with coordinates between +180 and +200 degrees longitude.')
+        raise DemError(
+            'height_above_ellipsoid is not supported for geometries with coordinates between +180 and +200 degrees longitude.'
+        )
 
     with GDALConfigManager(GDAL_DISABLE_READDIR_ON_OPEN='EMPTY_DIR'):
         with TemporaryDirectory() as temp_dir:

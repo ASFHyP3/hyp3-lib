@@ -92,6 +92,30 @@ def test_prepare_dem_geotiff(tmp_path):
     assert info['size'] == [377, 1289]
 
 
+def test_prepare_dem_geotiff_antimeridian(tmp_path):
+    dem_geotiff = tmp_path / 'dem.tif'
+    geojson = {
+        'type': 'Polygon',
+        'coordinates': [
+            [
+                    [179.5, 51.4],
+                    [179.5, 51.6],
+                    [180.5, 51.6],
+                    [180.5, 51.4],
+                    [179.5, 51.4],
+            ]
+        ],
+    }
+    geometry = ogr.CreateGeometryFromJson(json.dumps(geojson))
+
+    dem.prepare_dem_geotiff(str(dem_geotiff), geometry, epsg_code=32601, pixel_size=30.0)
+    assert dem_geotiff.exists()
+
+    info = gdal.Info(str(dem_geotiff), format='json')
+    assert info['geoTransform'] == [256530.0, 30.0, 0.0, 5719530.0, 0.0, -30.0]
+    assert info['size'] == [2345, 647]
+
+
 def test_prepare_dem_geotiff_invalid_shape():
     geojson = {
         'type': 'Point',
