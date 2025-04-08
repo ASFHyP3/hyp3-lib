@@ -116,6 +116,10 @@ def prepare_dem_geotiff(
 
             dem_vrt = temp_path / 'dem.vrt'
             gdal.BuildVRT(str(dem_vrt), dem_file_paths)
+            # This is required to ensure the VRT is treated as a point dataset
+            vrt_ds = gdal.Open(str(dem_vrt), gdal.GA_Update)
+            vrt_ds.SetMetadataItem('AREA_OR_POINT', 'Point')
+            vrt_ds = None
             gdal.Warp(
                 str(output_name),
                 str(dem_vrt),
