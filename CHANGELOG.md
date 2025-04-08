@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [PEP 440](https://www.python.org/dev/peps/pep-0440/)
 and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0]
+
+### Added
+- `dem` submodule using an updated version of the HyP3-Gamma COP-30 DEM stitching functionality to facilitate DEM download and stitching for multiple HyP3 workflows.
+
 ## [3.1.4]
 
 ### Added
