@@ -24,7 +24,7 @@ classifiers=[
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "boto3",
+    "boto3>=1.36.0",
     "gdal",
     "lxml",
     "netCDF4",
@@ -99,6 +99,12 @@ convention = "google"
 case-sensitive = true
 lines-after-imports = 2
 
+[tool.ruff.lint.flake8-annotations]
+suppress-dummy-args = true
+
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/*" = ["D1", "ANN"]
+
 [tool.mypy]
 python_version = "3.10"
 warn_redundant_casts = true
@@ -106,6 +112,10 @@ warn_unused_ignores = true
 warn_unreachable = true
 strict_equality = true
 check_untyped_defs = true
+install_types = true
+non_interactive = true
+pretty = true
+disable_error_code = ["import-untyped"]
 exclude = [
     "/build/"
 ]

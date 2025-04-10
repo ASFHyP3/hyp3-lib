@@ -6,7 +6,7 @@ dependencies:
   - python>=3.10
   - pip
   # For running
-  - boto3
+  - boto3>=1.36.0
   - gdal
   - lxml
   - netCDF4
@@ -18,12 +18,11 @@ dependencies:
   - urllib3
   # For packaging, and testing
   - python-build
-  - ruff
-  - mypy
-  - types-lxml
   - setuptools
   - setuptools_scm
   - pytest
   - pytest-console-scripts
   - pytest-cov
   - responses
+  - pip:
+    - -r requirements-static.txt
