@@ -36,11 +36,6 @@ def test_make_cogs(script_runner):
     assert ret.success
 
 
-def test_raster_boundary2shape(script_runner):
-    ret = script_runner.run(['raster_boundary2shape.py', '-h'])
-    assert ret.success
-
-
 def test_resample_geotiff(script_runner):
     ret = script_runner.run(['resample_geotiff.py', '-h'])
     assert ret.success
