@@ -1,8 +1,5 @@
 # HyP3-lib: A Common library for HyP3 plugins
 
-> [!WARNING]
-> HyP3-lib is currently undergoing a major redesign and many utilities that are no longer used by existing HyP3 plugins have been removed between version 2 and version 3. In addition, we plan to migrate some remaining functionality to other projects and to significantly refactor what remains. For this reason, **if you are using HyP3-lib we strongly recommend pinning to major versions at this time**. We further recommend not using this library in production until its version 4 release.
-
 ## Purpose
 The goal of this package is to provide ASF's various HyP3 plugins with a set of utilities they can use to perform common tasks. This could include tasks such as downloading Sentinel-1 orbit data, or verifying that NASA EarthData credentials are available.
 
