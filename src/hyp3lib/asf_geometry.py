@@ -1,4 +1,5 @@
 import csv
+import math
 import os
 
 import numpy as np
@@ -7,7 +8,13 @@ from osgeo.gdalconst import GA_ReadOnly
 from scipy import ndimage
 
 from hyp3lib import GeometryError
-from hyp3lib.saa_func_lib import get_zone
+
+
+def get_zone(lon_min, lon_max):
+    center_lon = (lon_min + lon_max) / 2
+    zf = (center_lon + 180) / 6 + 1
+    zone = math.floor(zf)
+    return zone
 
 
 # Determine the boundary polygon of a GeoTIFF file
