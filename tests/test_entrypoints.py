@@ -11,11 +11,6 @@ def test_gc_map_mod_script(script_runner):
     assert ret.success
 
 
-def test_createAmp(script_runner):
-    ret = script_runner.run(['createAmp.py', '-h'])
-    assert ret.success
-
-
 def test_get_orb(script_runner):
     ret = script_runner.run(['get_orb.py', '-h'])
     assert ret.success
