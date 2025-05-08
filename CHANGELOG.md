@@ -8,8 +8,18 @@ and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.0]
 
-### Changed
+### Removed
 - Remove code that was moved to `hyp3-gamma`
+  - `getParameter.py`
+  - `makeAsfBrowse.py`
+  - `system.py` and tests
+  - `byteSigmaScale.py`
+  - `make_cogs.py` and tests
+  - `raster_boundary2shape.py`
+  - `par_s1_slc_single.py`
+  - `SLC_copy_S1_fullsw.py`
+  - `createAmp.py`
+  - `saa_func_lib.py`
 
 ## [3.2.0]
 
