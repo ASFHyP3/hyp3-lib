@@ -7,7 +7,7 @@ dependencies:
   - pip
   # For running
   - boto3>=1.36.0
-  - gdal
+  - gdal<3.11.1 # FIXME: https://github.com/ASFHyP3/hyp3-lib/issues/370
   - lxml
   - netCDF4
   - numpy
