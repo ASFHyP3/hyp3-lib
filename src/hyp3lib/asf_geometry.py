@@ -83,7 +83,7 @@ def geotiff2boundary_mask(inGeotiff, tsEPSG, threshold, use_closing=True):
         else:
             data[data > noDataValue] = 1
         if use_closing:
-            data = ndimage.binary_closing(data, iterations=10, structure=np.ones((3, 3))).astype(data.dtype)
+            data = ndimage.binary_closing(data, iterations=10, structure=np.ones((3, 3))).astype(data.dtype)  # type: ignore[arg-type]
         inRaster = None
 
         (data, colFirst, rowFirst, geoTrans) = cut_blackfill(data, geoTrans)
