@@ -16,8 +16,7 @@ updates:
         patterns:
           - "*"
     ignore:
-      - dependency-name: gdal
-        versions: ["3.11.1"] # FIXME: https://github.com/ASFHyP3/hyp3-lib/issues/370
+      - dependency-name: gdal # FIXME: https://github.com/ASFHyP3/hyp3-lib/issues/370
   - package-ecosystem: github-actions
     directory: /
     schedule:
