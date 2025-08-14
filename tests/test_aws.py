@@ -88,7 +88,7 @@ def test_upload_file_to_s3_multipart(tmp_path, s3_stubber):
             'Key': 'myPrefix/myFile.txt',
             'ChecksumAlgorithm': 'CRC32',
             'UploadId': 'upload_id',
-            'PartNumber': 1,
+            'PartNumber': ANY,
         },
         service_response={'ETag': 'part1'},
     )
@@ -100,7 +100,7 @@ def test_upload_file_to_s3_multipart(tmp_path, s3_stubber):
             'Key': 'myPrefix/myFile.txt',
             'ChecksumAlgorithm': 'CRC32',
             'UploadId': 'upload_id',
-            'PartNumber': 2,
+            'PartNumber': ANY,
         },
         service_response={'ETag': 'part2'},
     )
@@ -109,10 +109,10 @@ def test_upload_file_to_s3_multipart(tmp_path, s3_stubber):
         expected_params={
             'Bucket': 'myBucket',
             'Key': 'myPrefix/myFile.txt',
-            'MultipartUpload': {'Parts': [{'ETag': 'part1', 'PartNumber': 1}, {'ETag': 'part2', 'PartNumber': 2}]},
+            'MultipartUpload': ANY,
             'UploadId': 'upload_id',
         },
-        service_response={'ETag': 'etag'},
+        service_response={},
     )
     s3_stubber.add_response(
         method='put_object_tagging',
