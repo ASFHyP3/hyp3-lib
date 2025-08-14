@@ -11,9 +11,19 @@ updates:
       interval: weekly
     labels:
       - bumpless
+    groups:
+      pip-deps:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: gdal # FIXME: https://github.com/ASFHyP3/hyp3-lib/issues/370
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     labels:
       - bumpless
+    groups:
+      github-actions-deps:
+        patterns:
+          - "*"

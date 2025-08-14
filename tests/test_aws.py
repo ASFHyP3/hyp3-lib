@@ -67,3 +67,62 @@ def test_upload_file_to_s3_with_prefix(tmp_path, s3_stubber):
     file_to_upload = tmp_path / 'myFile.txt'
     file_to_upload.touch()
     aws.upload_file_to_s3(file_to_upload, 'myBucket', 'myPrefix')
+
+
+def test_upload_file_to_s3_multipart(tmp_path, s3_stubber):
+    s3_stubber.add_response(
+        method='create_multipart_upload',
+        expected_params={
+            'Bucket': 'myBucket',
+            'Key': 'myPrefix/myFile.txt',
+            'ContentType': 'text/plain',
+            'ChecksumAlgorithm': 'CRC32',
+        },
+        service_response={'UploadId': 'upload_id'},
+    )
+    s3_stubber.add_response(
+        method='upload_part',
+        expected_params={
+            'Body': ANY,
+            'Bucket': 'myBucket',
+            'Key': 'myPrefix/myFile.txt',
+            'ChecksumAlgorithm': 'CRC32',
+            'UploadId': 'upload_id',
+            'PartNumber': ANY,
+        },
+        service_response={'ETag': 'part1'},
+    )
+    s3_stubber.add_response(
+        method='upload_part',
+        expected_params={
+            'Body': ANY,
+            'Bucket': 'myBucket',
+            'Key': 'myPrefix/myFile.txt',
+            'ChecksumAlgorithm': 'CRC32',
+            'UploadId': 'upload_id',
+            'PartNumber': ANY,
+        },
+        service_response={'ETag': 'part2'},
+    )
+    s3_stubber.add_response(
+        method='complete_multipart_upload',
+        expected_params={
+            'Bucket': 'myBucket',
+            'Key': 'myPrefix/myFile.txt',
+            'MultipartUpload': ANY,
+            'UploadId': 'upload_id',
+        },
+        service_response={},
+    )
+    s3_stubber.add_response(
+        method='put_object_tagging',
+        expected_params={
+            'Bucket': 'myBucket',
+            'Key': 'myPrefix/myFile.txt',
+            'Tagging': {'TagSet': [{'Key': 'file_type', 'Value': 'product'}]},
+        },
+        service_response={},
+    )
+    file_to_upload = tmp_path / 'myFile.txt'
+    file_to_upload.write_text('a' * 10_000_000)
+    aws.upload_file_to_s3(file_to_upload, 'myBucket', 'myPrefix', chunk_size=8_000_000)
