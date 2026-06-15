@@ -406,7 +406,7 @@ def time_series_slice(ncFile, x, y, typeXY):
     # Fill in gaps by interpolation
     startDate = timestamp[0].date()
     stopDate = timestamp[len(timestamp) - 1].date()
-    refDates = np.arange(startDate, stopDate + timedelta(days=12), 12).tolist()
+    refDates = np.arange(startDate, stopDate + timedelta(days=12), 12).tolist()  # type: ignore[call-overload]
     datestamp = []
     for t in time:
         datestamp.append((timeRef + timedelta(seconds=t)).date())
