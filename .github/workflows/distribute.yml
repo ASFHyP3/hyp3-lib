@@ -16,7 +16,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -30,7 +30,7 @@ jobs:
           python -m build
 
       - name: upload to PyPI.org
-        uses: pypa/gh-action-pypi-publish@v1.14.0
+        uses: pypa/gh-action-pypi-publish@v1.14.1
         with:
           user: __token__
           password: ${{ secrets.TOOLS_PYPI_PAK }}
@@ -44,7 +44,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: mamba-org/setup-micromamba@v3
         with:
